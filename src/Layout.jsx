@@ -230,19 +230,19 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Mobile Bottom Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#0A1A2F]/90 backdrop-blur-xl border-t border-[#D7E5FF] dark:border-slate-800 pb-safe">
-        <div className="flex items-center justify-around h-16">
-          {navItems.slice(0, 5).map((item) => (
+        <div className="flex items-center justify-evenly h-14 w-full max-w-full px-1">
+          {navItems.map((item) => (
             <Link
               key={item.path}
               to={createPageUrl(item.path)}
-              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
+              className={`flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 min-w-0 flex-1 transition-all ${
                 isActive(item.path)
                   ? 'text-[#243B73] dark:text-[#3E82FC]'
                   : 'text-[#0A1A2F]/50 dark:text-white/50'
               }`}
             >
-              <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'scale-110' : ''} transition-transform`} />
-              <span className="text-xs font-medium">{item.name}</span>
+              <item.icon className={`w-5 h-5 shrink-0 ${isActive(item.path) ? 'scale-110' : ''} transition-transform`} />
+              <span className="text-[10px] font-medium truncate max-w-full">{item.name}</span>
             </Link>
           ))}
         </div>
