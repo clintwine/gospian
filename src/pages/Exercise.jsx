@@ -129,9 +129,9 @@ export default function Exercise() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-4 sm:mb-6 md:mb-8">
         <div className="flex items-center gap-4">
           <Link to={createPageUrl('Exercises')}>
             <Button variant="ghost" size="icon" className="shrink-0">

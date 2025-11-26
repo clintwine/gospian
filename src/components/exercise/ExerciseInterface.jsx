@@ -98,19 +98,19 @@ export default function ExerciseInterface({
   const progress = ((questionNumber - 1) / questionsCount) * 100;
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto px-1">
       {/* Progress Header */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium">Question {questionNumber} of {questionsCount}</span>
-          <span className="text-sm text-muted-foreground">{correctCount} correct</span>
+          <span className="text-xs sm:text-sm font-medium">Question {questionNumber} of {questionsCount}</span>
+          <span className="text-xs sm:text-sm text-muted-foreground">{correctCount} correct</span>
         </div>
         <Progress value={progress} className="h-2" />
       </div>
 
       {/* Audio Player */}
-      <Card className="mb-6 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
-        <CardContent className="p-8 flex flex-col items-center">
+      <Card className="mb-4 sm:mb-6 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
+        <CardContent className="p-6 sm:p-8 flex flex-col items-center">
           <motion.button
             onClick={handlePlaySound}
             disabled={isPlaying}
@@ -145,7 +145,7 @@ export default function ExerciseInterface({
       </Card>
 
       {/* Answer Options */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
         <AnimatePresence>
           {currentQuestion.options.map((option, index) => {
             const isSelected = selectedAnswer?.name === option.name;
@@ -163,7 +163,7 @@ export default function ExerciseInterface({
                   variant="outline"
                   onClick={() => handleAnswer(option)}
                   disabled={showFeedback || !hasPlayed}
-                  className={`w-full h-14 text-base font-medium transition-all ${
+                  className={`w-full h-12 sm:h-14 text-sm sm:text-base font-medium transition-all ${
                     !hasPlayed 
                       ? 'opacity-50 cursor-not-allowed'
                       : isCorrectAnswer
@@ -223,7 +223,7 @@ export default function ExerciseInterface({
       </AnimatePresence>
 
       {!hasPlayed && !showFeedback && (
-        <p className="text-center text-muted-foreground text-sm">
+        <p className="text-center text-muted-foreground text-xs sm:text-sm px-2">
           Play the audio first to reveal answer options
         </p>
       )}

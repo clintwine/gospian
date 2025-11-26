@@ -107,7 +107,7 @@ export default function Profile() {
   const stats = userStats || { xp: 0, level: 1, streak: 0 };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Profile Header */}
       <Card className="border-0 shadow-xl mb-6 overflow-hidden">
         <div className="h-24 bg-gradient-to-r from-[#0A1A2F] to-[#243B73]" />

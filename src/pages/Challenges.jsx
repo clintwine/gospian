@@ -89,19 +89,19 @@ export default function Challenges() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-2">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-1 sm:mb-2">
           Challenges
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Test your skills and earn bonus XP
         </p>
       </div>
 
       {/* Challenge Cards */}
-      <div className="grid sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {CHALLENGES.map((challenge) => {
           const isLocked = userLevel < challenge.requiresLevel;
           const isCompleted = challenge.id === 'daily' && dailyChallengeCompleted;

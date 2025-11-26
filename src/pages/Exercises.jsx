@@ -109,31 +109,31 @@ export default function Exercises() {
   const userLevel = userStats?.level || 1;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-2">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-1 sm:mb-2">
           Exercises
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Practice and improve your ear training skills
         </p>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-8">
-        <Tabs value={categoryFilter} onValueChange={setCategoryFilter} className="w-full sm:w-auto">
-          <TabsList className="grid w-full grid-cols-4 sm:w-auto sm:inline-flex bg-[#D7E5FF]/50 dark:bg-slate-800">
-            <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
-            <TabsTrigger value="intervals" className="text-xs sm:text-sm flex items-center gap-1">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
+        <Tabs value={categoryFilter} onValueChange={setCategoryFilter} className="w-full sm:w-auto overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-4 sm:w-auto sm:inline-flex bg-[#D7E5FF]/50 dark:bg-slate-800 min-w-max">
+            <TabsTrigger value="all" className="text-[10px] sm:text-xs md:text-sm px-2 sm:px-3">All</TabsTrigger>
+            <TabsTrigger value="intervals" className="text-[10px] sm:text-xs md:text-sm flex items-center gap-1 px-2 sm:px-3">
               <Music className="w-3 h-3 hidden sm:block" />
               Intervals
             </TabsTrigger>
-            <TabsTrigger value="chords" className="text-xs sm:text-sm flex items-center gap-1">
+            <TabsTrigger value="chords" className="text-[10px] sm:text-xs md:text-sm flex items-center gap-1 px-2 sm:px-3">
               <Headphones className="w-3 h-3 hidden sm:block" />
               Chords
             </TabsTrigger>
-            <TabsTrigger value="scales" className="text-xs sm:text-sm flex items-center gap-1">
+            <TabsTrigger value="scales" className="text-[10px] sm:text-xs md:text-sm flex items-center gap-1 px-2 sm:px-3">
               <Waves className="w-3 h-3 hidden sm:block" />
               Scales
             </TabsTrigger>
@@ -155,7 +155,7 @@ export default function Exercises() {
       </div>
 
       {/* Exercise Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {filteredExercises.map((exercise, index) => {
           const isLocked = 
             (exercise.difficulty === 'intermediate' && userLevel < 3) ||

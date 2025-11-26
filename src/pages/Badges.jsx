@@ -156,25 +156,25 @@ export default function Badges() {
   const lockedBadges = ALL_BADGES.filter(badge => !badge.requirement(userStats, exerciseResults));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-2">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-1 sm:mb-2">
           Badges & Achievements
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           {earnedBadges.length} of {ALL_BADGES.length} badges earned
         </p>
       </div>
 
       {/* Earned Badges */}
       {earnedBadges.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-[#2A9D8F]" />
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#2A9D8F]" />
             Earned ({earnedBadges.length})
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {earnedBadges.map((badge) => {
               const Icon = badge.icon;
               return (
@@ -199,11 +199,11 @@ export default function Badges() {
 
       {/* Locked Badges */}
       <div>
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Lock className="w-5 h-5 text-muted-foreground" />
+        <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
           Locked ({lockedBadges.length})
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {lockedBadges.map((badge) => {
             const Icon = badge.icon;
             return (

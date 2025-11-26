@@ -168,7 +168,7 @@ export default function DailyChallenge() {
 
   if (gameState === 'ready') {
     return (
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+      <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         <Link to={createPageUrl('Challenges')}>
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -222,7 +222,7 @@ export default function DailyChallenge() {
     const accuracy = questionsAnswered > 0 ? Math.round((score / questionsAnswered) * 100) : 0;
 
     return (
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+      <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         <Card className="border-0 shadow-2xl overflow-hidden">
           <div className="bg-gradient-to-br from-[#E9C46A] to-[#F4A261] p-8 text-center text-white">
             <Trophy className="w-16 h-16 mx-auto mb-4" />
@@ -267,7 +267,7 @@ export default function DailyChallenge() {
 
   // Playing state
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+    <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Header with Timer */}
       <div className="flex items-center justify-between mb-6">
         <div>
