@@ -73,7 +73,7 @@ export default function Layout({ children, currentPageName }) {
   const isActive = (path) => currentPageName === path;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0A1A2F] transition-colors duration-300">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#F8FAFC] dark:bg-[#0A1A2F] transition-colors duration-300">
       <style>{`
         :root {
           --intonaro-navy: #0A1A2F;
@@ -87,6 +87,16 @@ export default function Layout({ children, currentPageName }) {
         .dark {
           --background: 222.2 84% 4.9%;
           --foreground: 210 40% 98%;
+        }
+        html, body {
+          overflow-x: hidden;
+          width: 100%;
+          max-width: 100vw;
+        }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+          .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+          }
         }
       `}</style>
 
@@ -239,8 +249,10 @@ export default function Layout({ children, currentPageName }) {
       </nav>
 
       {/* Main Content */}
-      <main className="pt-16 lg:pt-20 pb-20 lg:pb-8 min-h-screen">
-        {children}
+      <main className="pt-14 lg:pt-20 pb-20 lg:pb-8 min-h-screen w-full overflow-x-hidden">
+        <div className="w-full max-w-full">
+          {children}
+        </div>
       </main>
     </div>
   );

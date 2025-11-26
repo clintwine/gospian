@@ -84,13 +84,13 @@ export default function Dashboard() {
   const stats = userStats || { xp: 0, level: 1, streak: 0, freeze_tokens: 0 };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Welcome Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-2">
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-1 sm:mb-2">
           Welcome back, {user?.full_name?.split(' ')[0] || 'Musician'}!
         </h1>
-        <p className="text-muted-foreground">Continue your ear training journey</p>
+        <p className="text-sm sm:text-base text-muted-foreground">Continue your ear training journey</p>
       </div>
 
       {/* Stats Overview - Mobile */}
@@ -105,9 +105,9 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Main Actions */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           <ContinueTrainingCard 
             exerciseType={stats.current_exercise_type}
             progress={stats.current_exercise_progress || 0}
@@ -117,8 +117,8 @@ export default function Dashboard() {
 
           {/* Quick Start Exercises */}
           <div>
-            <h2 className="text-lg font-semibold mb-4 text-[#0A1A2F] dark:text-white">Quick Start</h2>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#0A1A2F] dark:text-white">Quick Start</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <ExerciseCard
                 type="intervals"
                 title="Interval Recognition"
@@ -157,7 +157,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Column - Stats & Progress */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* XP Card - Desktop */}
           <Card className="hidden lg:block border-0 shadow-lg bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
             <CardContent className="p-6">
@@ -169,30 +169,30 @@ export default function Dashboard() {
 
           {/* Quick Stats */}
           <Card className="border-0 shadow-lg">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardHeader className="pb-2 px-4 sm:px-6">
+              <CardTitle className="text-sm sm:text-base font-semibold flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[#3E82FC]" />
                 Your Stats
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 rounded-xl bg-[#D7E5FF]/50 dark:bg-slate-800">
-                <p className="text-2xl font-bold text-[#243B73] dark:text-[#3E82FC]">
+            <CardContent className="grid grid-cols-3 gap-2 sm:gap-4 px-4 sm:px-6">
+              <div className="text-center p-2 sm:p-3 rounded-xl bg-[#D7E5FF]/50 dark:bg-slate-800">
+                <p className="text-lg sm:text-2xl font-bold text-[#243B73] dark:text-[#3E82FC]">
                   {stats.exercises_completed || 0}
                 </p>
-                <p className="text-xs text-muted-foreground">Exercises</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Exercises</p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-[#2A9D8F]/10">
-                <p className="text-2xl font-bold text-[#2A9D8F]">
+              <div className="text-center p-2 sm:p-3 rounded-xl bg-[#2A9D8F]/10">
+                <p className="text-lg sm:text-2xl font-bold text-[#2A9D8F]">
                   {stats.perfect_scores || 0}
                 </p>
-                <p className="text-xs text-muted-foreground">Perfect</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Perfect</p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-[#E9C46A]/20">
-                <p className="text-2xl font-bold text-[#E9C46A]">
+              <div className="text-center p-2 sm:p-3 rounded-xl bg-[#E9C46A]/20">
+                <p className="text-lg sm:text-2xl font-bold text-[#E9C46A]">
                   {stats.streak || 0}
                 </p>
-                <p className="text-xs text-muted-foreground">Day Streak</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Day Streak</p>
               </div>
             </CardContent>
           </Card>
