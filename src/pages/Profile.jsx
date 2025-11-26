@@ -232,6 +232,7 @@ export default function Profile() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="piano">Piano</SelectItem>
+                <SelectItem value="guitar">Guitar</SelectItem>
                 <SelectItem value="synth">Synth</SelectItem>
                 <SelectItem value="sine">Pure Tone</SelectItem>
               </SelectContent>

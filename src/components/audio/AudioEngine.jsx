@@ -51,13 +51,31 @@ export const playTone = (frequency, duration = 0.8, type = 'sine') => {
   oscillator.connect(gainNode);
   gainNode.connect(ctx.destination);
   
-  oscillator.type = type === 'piano' ? 'triangle' : type === 'synth' ? 'sawtooth' : 'sine';
+  // Set oscillator type based on instrument
+  if (type === 'piano') {
+    oscillator.type = 'triangle';
+  } else if (type === 'synth') {
+    oscillator.type = 'sawtooth';
+  } else if (type === 'guitar') {
+    oscillator.type = 'sawtooth';
+  } else {
+    oscillator.type = 'sine';
+  }
+  
   oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
   
-  // Envelope for more natural sound
+  // Envelope varies by instrument type
   gainNode.gain.setValueAtTime(0, ctx.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+  
+  if (type === 'guitar') {
+    // Guitar-like pluck: fast attack, medium decay
+    gainNode.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.1);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+  } else {
+    gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+  }
   
   oscillator.start(ctx.currentTime);
   oscillator.stop(ctx.currentTime + duration);
