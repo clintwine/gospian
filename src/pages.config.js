@@ -5,6 +5,10 @@ import Challenges from './pages/Challenges';
 import DailyChallenge from './pages/DailyChallenge';
 import Badges from './pages/Badges';
 import Profile from './pages/Profile';
+import Leaderboard from './pages/Leaderboard';
+import WeeklyChallenge from './pages/WeeklyChallenge';
+import SpeedChallenge from './pages/SpeedChallenge';
+import AccuracyChallenge from './pages/AccuracyChallenge';
 import __Layout from './Layout.jsx';
 
 
@@ -16,6 +20,10 @@ export const PAGES = {
     "DailyChallenge": DailyChallenge,
     "Badges": Badges,
     "Profile": Profile,
+    "Leaderboard": Leaderboard,
+    "WeeklyChallenge": WeeklyChallenge,
+    "SpeedChallenge": SpeedChallenge,
+    "AccuracyChallenge": AccuracyChallenge,
 }
 
 export const pagesConfig = {
