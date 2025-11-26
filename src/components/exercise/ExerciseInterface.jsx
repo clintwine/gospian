@@ -28,6 +28,7 @@ export default function ExerciseInterface({
   const [isPlaying, setIsPlaying] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
+  const [currentBaseNote, setCurrentBaseNote] = useState(null);
 
   const generateQuestion = useCallback(() => {
     if (exerciseType === 'intervals') {
@@ -49,10 +50,16 @@ export default function ExerciseInterface({
     setIsPlaying(true);
     setHasPlayed(true);
 
+    let baseNote;
     if (exerciseType === 'intervals') {
-      await playInterval(currentQuestion.semitones, audioType);
+      baseNote = await playInterval(currentQuestion.semitones, audioType, 'melodic', currentBaseNote);
     } else if (exerciseType === 'chords') {
-      await playChord(currentQuestion.chordType, audioType);
+      baseNote = await playChord(currentQuestion.chordType, audioType, currentBaseNote);
+    }
+    
+    // Store the base note for replay
+    if (!currentBaseNote) {
+      setCurrentBaseNote(baseNote);
     }
 
     setTimeout(() => setIsPlaying(false), 1500);
@@ -91,6 +98,7 @@ export default function ExerciseInterface({
     setIsCorrect(null);
     setShowFeedback(false);
     setHasPlayed(false);
+    setCurrentBaseNote(null);
   };
 
   if (!currentQuestion) return null;

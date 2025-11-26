@@ -94,11 +94,11 @@ export const getNoteFrequency = (baseNote, semitones) => {
   return NOTE_FREQUENCIES[baseNote] * Math.pow(2, semitones / 12);
 };
 
-export const playInterval = async (semitones, audioType = 'sine', playMode = 'melodic') => {
+export const playInterval = async (semitones, audioType = 'sine', playMode = 'melodic', baseNote = null) => {
   const baseNotes = ['C4', 'D4', 'E4', 'F4', 'G4'];
-  const baseNote = baseNotes[Math.floor(Math.random() * baseNotes.length)];
-  const baseFreq = NOTE_FREQUENCIES[baseNote];
-  const secondFreq = getNoteFrequency(baseNote, semitones);
+  const selectedBase = baseNote || baseNotes[Math.floor(Math.random() * baseNotes.length)];
+  const baseFreq = NOTE_FREQUENCIES[selectedBase];
+  const secondFreq = getNoteFrequency(selectedBase, semitones);
   
   if (playMode === 'harmonic') {
     playTone(baseFreq, 1.2, audioType);
@@ -108,6 +108,8 @@ export const playInterval = async (semitones, audioType = 'sine', playMode = 'me
     await new Promise(resolve => setTimeout(resolve, 800));
     playTone(secondFreq, 0.7, audioType);
   }
+  
+  return selectedBase;
 };
 
 export const getIntervalsByDifficulty = (difficulty) => {
@@ -154,18 +156,19 @@ export const CHORD_TYPES = [
   { name: 'Augmented', intervals: [0, 4, 8] },
 ];
 
-export const playChord = async (chordType, audioType = 'sine') => {
+export const playChord = async (chordType, audioType = 'sine', baseNote = null) => {
   const baseNotes = ['C4', 'D4', 'E4', 'F4', 'G4'];
-  const baseNote = baseNotes[Math.floor(Math.random() * baseNotes.length)];
-  const baseFreq = NOTE_FREQUENCIES[baseNote];
+  const selectedBase = baseNote || baseNotes[Math.floor(Math.random() * baseNotes.length)];
   
   const chord = CHORD_TYPES.find(c => c.name === chordType);
-  if (!chord) return;
+  if (!chord) return selectedBase;
   
   chord.intervals.forEach(semitones => {
-    const freq = getNoteFrequency(baseNote, semitones);
+    const freq = getNoteFrequency(selectedBase, semitones);
     playTone(freq, 1.5, audioType);
   });
+  
+  return selectedBase;
 };
 
 export const generateChordQuestion = () => {
