@@ -1,36 +1,44 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
 
-// White keys in order
+// One octave pattern: C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+// Black keys appear BETWEEN: C-D, D-E, F-G, G-A, A-B
+// NO black keys between: E-F, B-C
+
+// White keys in order (two octaves)
 const WHITE_KEYS = [
-  { note: 'C4', label: 'C' },
-  { note: 'D4', label: 'D' },
-  { note: 'E4', label: 'E' },
-  { note: 'F4', label: 'F' },
-  { note: 'G4', label: 'G' },
-  { note: 'A4', label: 'A' },
-  { note: 'B4', label: 'B' },
-  { note: 'C5', label: 'C' },
-  { note: 'D5', label: 'D' },
-  { note: 'E5', label: 'E' },
-  { note: 'F5', label: 'F' },
-  { note: 'G5', label: 'G' },
+  { note: 'C4', label: 'C', index: 0 },
+  { note: 'D4', label: 'D', index: 1 },
+  { note: 'E4', label: 'E', index: 2 },
+  { note: 'F4', label: 'F', index: 3 },
+  { note: 'G4', label: 'G', index: 4 },
+  { note: 'A4', label: 'A', index: 5 },
+  { note: 'B4', label: 'B', index: 6 },
+  { note: 'C5', label: 'C', index: 7 },
+  { note: 'D5', label: 'D', index: 8 },
+  { note: 'E5', label: 'E', index: 9 },
+  { note: 'F5', label: 'F', index: 10 },
+  { note: 'G5', label: 'G', index: 11 },
+  { note: 'A5', label: 'A', index: 12 },
+  { note: 'B5', label: 'B', index: 13 },
 ];
 
-// Black keys with their position (which white key they're after)
+// Black keys positioned between white keys
+// afterWhiteIndex means the black key sits between that white key and the next
 const BLACK_KEYS = [
-  { note: 'C#4', label: 'C#', afterWhiteIndex: 0 },
-  { note: 'D#4', label: 'D#', afterWhiteIndex: 1 },
-  // No black key after E (index 2)
-  { note: 'F#4', label: 'F#', afterWhiteIndex: 3 },
-  { note: 'G#4', label: 'G#', afterWhiteIndex: 4 },
-  { note: 'A#4', label: 'A#', afterWhiteIndex: 5 },
-  // No black key after B (index 6)
-  { note: 'C#5', label: 'C#', afterWhiteIndex: 7 },
-  { note: 'D#5', label: 'D#', afterWhiteIndex: 8 },
-  // No black key after E5 (index 9)
-  { note: 'F#5', label: 'F#', afterWhiteIndex: 10 },
-  { note: 'G#5', label: 'G#', afterWhiteIndex: 11 },
+  { note: 'C#4', label: 'C#', afterWhiteIndex: 0 }, // between C4 and D4
+  { note: 'D#4', label: 'D#', afterWhiteIndex: 1 }, // between D4 and E4
+  // NO black key between E4-F4 (index 2)
+  { note: 'F#4', label: 'F#', afterWhiteIndex: 3 }, // between F4 and G4
+  { note: 'G#4', label: 'G#', afterWhiteIndex: 4 }, // between G4 and A4
+  { note: 'A#4', label: 'A#', afterWhiteIndex: 5 }, // between A4 and B4
+  // NO black key between B4-C5 (index 6)
+  { note: 'C#5', label: 'C#', afterWhiteIndex: 7 }, // between C5 and D5
+  { note: 'D#5', label: 'D#', afterWhiteIndex: 8 }, // between D5 and E5
+  // NO black key between E5-F5 (index 9)
+  { note: 'F#5', label: 'F#', afterWhiteIndex: 10 }, // between F5 and G5
+  { note: 'G#5', label: 'G#', afterWhiteIndex: 11 }, // between G5 and A5
+  { note: 'A#5', label: 'A#', afterWhiteIndex: 12 }, // between A5 and B5
 ];
 
 // Map base note + semitones to actual note
@@ -44,15 +52,12 @@ const getNoteFromInterval = (baseNote, semitones) => {
 
 export default function PianoKeyboard({ baseNote, semitones, showSecondNote = false }) {
   const secondNote = baseNote && semitones !== undefined ? getNoteFromInterval(baseNote, semitones) : null;
-  
-  const whiteKeyWidth = 36; // px for mobile
-  const whiteKeyWidthSm = 44; // px for larger screens
 
   return (
     <div className="relative flex justify-center my-4">
       <div className="relative flex">
         {/* White keys */}
-        {WHITE_KEYS.map((key, index) => {
+        {WHITE_KEYS.map((key) => {
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
           
@@ -60,7 +65,7 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
             <div
               key={key.note}
               className={cn(
-                "relative w-9 sm:w-11 h-28 sm:h-36 border border-gray-300 rounded-b-md transition-all duration-300",
+                "relative w-7 sm:w-9 h-24 sm:h-32 border border-gray-300 rounded-b-md transition-all duration-300",
                 isFirstNote 
                   ? "bg-[#3E82FC] border-[#243B73] shadow-lg z-10" 
                   : isSecondNote 
@@ -82,25 +87,20 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
           
-          // Position: right edge of the white key it's after, minus half black key width
-          const leftPosition = (key.afterWhiteIndex + 1) * 36 - 10; // 36px = w-9, 10px = half of black key
-          
           return (
             <div
               key={key.note}
-              style={{ 
-                left: `${leftPosition}px`,
-              }}
               className={cn(
-                "absolute top-0 w-5 sm:w-6 h-16 sm:h-20 rounded-b-md z-20 transition-all duration-300",
-                "sm:left-[calc(var(--idx)*2.75rem+2.75rem-0.75rem)]",
+                "absolute top-0 w-4 sm:w-5 h-14 sm:h-18 rounded-b-md z-20 transition-all duration-300",
                 isFirstNote 
                   ? "bg-[#243B73] shadow-lg" 
                   : isSecondNote 
                     ? "bg-[#1a6b61] shadow-lg"
                     : "bg-gray-900"
               )}
-              style={{ left: `calc(${key.afterWhiteIndex + 1} * 2.25rem - 0.625rem)` }}
+              style={{ 
+                left: `calc(${key.afterWhiteIndex + 1} * 1.75rem - 0.5rem)` 
+              }}
             >
               {(isFirstNote || isSecondNote) && (
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-white animate-pulse">
