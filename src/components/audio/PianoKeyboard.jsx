@@ -1,25 +1,36 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
 
-const KEYS = [
-  { note: 'C4', type: 'white', label: 'C' },
-  { note: 'C#4', type: 'black', label: 'C#' },
-  { note: 'D4', type: 'white', label: 'D' },
-  { note: 'D#4', type: 'black', label: 'D#' },
-  { note: 'E4', type: 'white', label: 'E' },
-  { note: 'F4', type: 'white', label: 'F' },
-  { note: 'F#4', type: 'black', label: 'F#' },
-  { note: 'G4', type: 'white', label: 'G' },
-  { note: 'G#4', type: 'black', label: 'G#' },
-  { note: 'A4', type: 'white', label: 'A' },
-  { note: 'A#4', type: 'black', label: 'A#' },
-  { note: 'B4', type: 'white', label: 'B' },
-  { note: 'C5', type: 'white', label: 'C' },
-  { note: 'C#5', type: 'black', label: 'C#' },
-  { note: 'D5', type: 'white', label: 'D' },
-  { note: 'D#5', type: 'black', label: 'D#' },
-  { note: 'E5', type: 'white', label: 'E' },
-  { note: 'F5', type: 'white', label: 'F' },
+// White keys in order
+const WHITE_KEYS = [
+  { note: 'C4', label: 'C' },
+  { note: 'D4', label: 'D' },
+  { note: 'E4', label: 'E' },
+  { note: 'F4', label: 'F' },
+  { note: 'G4', label: 'G' },
+  { note: 'A4', label: 'A' },
+  { note: 'B4', label: 'B' },
+  { note: 'C5', label: 'C' },
+  { note: 'D5', label: 'D' },
+  { note: 'E5', label: 'E' },
+  { note: 'F5', label: 'F' },
+  { note: 'G5', label: 'G' },
+];
+
+// Black keys with their position (which white key they're after)
+const BLACK_KEYS = [
+  { note: 'C#4', label: 'C#', afterWhiteIndex: 0 },
+  { note: 'D#4', label: 'D#', afterWhiteIndex: 1 },
+  // No black key after E (index 2)
+  { note: 'F#4', label: 'F#', afterWhiteIndex: 3 },
+  { note: 'G#4', label: 'G#', afterWhiteIndex: 4 },
+  { note: 'A#4', label: 'A#', afterWhiteIndex: 5 },
+  // No black key after B (index 6)
+  { note: 'C#5', label: 'C#', afterWhiteIndex: 7 },
+  { note: 'D#5', label: 'D#', afterWhiteIndex: 8 },
+  // No black key after E5 (index 9)
+  { note: 'F#5', label: 'F#', afterWhiteIndex: 10 },
+  { note: 'G#5', label: 'G#', afterWhiteIndex: 11 },
 ];
 
 // Map base note + semitones to actual note
@@ -34,17 +45,14 @@ const getNoteFromInterval = (baseNote, semitones) => {
 export default function PianoKeyboard({ baseNote, semitones, showSecondNote = false }) {
   const secondNote = baseNote && semitones !== undefined ? getNoteFromInterval(baseNote, semitones) : null;
   
-  const whiteKeys = KEYS.filter(k => k.type === 'white');
-  const blackKeyPositions = {
-    'C#4': 0, 'D#4': 1, 'F#4': 3, 'G#4': 4, 'A#4': 5,
-    'C#5': 7, 'D#5': 8, 'F#5': 10, 'G#5': 11, 'A#5': 12
-  };
+  const whiteKeyWidth = 36; // px for mobile
+  const whiteKeyWidthSm = 44; // px for larger screens
 
   return (
     <div className="relative flex justify-center my-4">
       <div className="relative flex">
         {/* White keys */}
-        {whiteKeys.map((key, index) => {
+        {WHITE_KEYS.map((key, index) => {
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
           
@@ -52,19 +60,16 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
             <div
               key={key.note}
               className={cn(
-                "relative w-8 sm:w-10 h-28 sm:h-36 border border-gray-300 rounded-b-md transition-all duration-300",
+                "relative w-9 sm:w-11 h-28 sm:h-36 border border-gray-300 rounded-b-md transition-all duration-300",
                 isFirstNote 
-                  ? "bg-[#3E82FC] border-[#243B73] shadow-lg z-10 scale-[1.02]" 
+                  ? "bg-[#3E82FC] border-[#243B73] shadow-lg z-10" 
                   : isSecondNote 
-                    ? "bg-[#2A9D8F] border-[#1a6b61] shadow-lg z-10 scale-[1.02]"
-                    : "bg-white hover:bg-gray-50"
+                    ? "bg-[#2A9D8F] border-[#1a6b61] shadow-lg z-10"
+                    : "bg-white"
               )}
             >
               {(isFirstNote || isSecondNote) && (
-                <div className={cn(
-                  "absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold text-white",
-                  "animate-pulse"
-                )}>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold text-white animate-pulse">
                   {key.label}
                 </div>
               )}
@@ -73,33 +78,29 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
         })}
         
         {/* Black keys */}
-        {KEYS.filter(k => k.type === 'black').map((key) => {
-          const position = blackKeyPositions[key.note];
-          if (position === undefined) return null;
-          
+        {BLACK_KEYS.map((key) => {
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
           
-          // Calculate left position based on white key index
-          const leftOffset = (position * 32) + 22; // 32px = w-8, offset for centering
-          const leftOffsetSm = (position * 40) + 28; // 40px = w-10 for sm screens
+          // Position: right edge of the white key it's after, minus half black key width
+          const leftPosition = (key.afterWhiteIndex + 1) * 36 - 10; // 36px = w-9, 10px = half of black key
           
           return (
             <div
               key={key.note}
               style={{ 
-                left: `calc(${position} * 2rem + 1.375rem)`,
+                left: `${leftPosition}px`,
               }}
               className={cn(
                 "absolute top-0 w-5 sm:w-6 h-16 sm:h-20 rounded-b-md z-20 transition-all duration-300",
-                "sm:left-[calc(var(--pos)*2.5rem+1.75rem)]",
+                "sm:left-[calc(var(--idx)*2.75rem+2.75rem-0.75rem)]",
                 isFirstNote 
-                  ? "bg-[#243B73] shadow-lg scale-[1.05]" 
+                  ? "bg-[#243B73] shadow-lg" 
                   : isSecondNote 
-                    ? "bg-[#1a6b61] shadow-lg scale-[1.05]"
-                    : "bg-gray-900 hover:bg-gray-800"
+                    ? "bg-[#1a6b61] shadow-lg"
+                    : "bg-gray-900"
               )}
-              data-pos={position}
+              style={{ left: `calc(${key.afterWhiteIndex + 1} * 2.25rem - 0.625rem)` }}
             >
               {(isFirstNote || isSecondNote) && (
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-white animate-pulse">
