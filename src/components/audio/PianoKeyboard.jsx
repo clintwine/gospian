@@ -52,6 +52,10 @@ const getNoteFromInterval = (baseNote, semitones) => {
 
 export default function PianoKeyboard({ baseNote, semitones, showSecondNote = false }) {
   const secondNote = baseNote && semitones !== undefined ? getNoteFromInterval(baseNote, semitones) : null;
+  
+  // White key width: 28px (w-7), Black key width: 16px (w-4)
+  const whiteKeyWidth = 28;
+  const blackKeyWidth = 16;
 
   return (
     <div className="relative flex justify-center my-4">
@@ -65,7 +69,7 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
             <div
               key={key.note}
               className={cn(
-                "relative w-7 sm:w-9 h-24 sm:h-32 border border-gray-300 rounded-b-md transition-all duration-300",
+                "relative w-7 h-24 border border-gray-300 rounded-b-md transition-all duration-300",
                 isFirstNote 
                   ? "bg-[#3E82FC] border-[#243B73] shadow-lg z-10" 
                   : isSecondNote 
@@ -74,7 +78,7 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
               )}
             >
               {(isFirstNote || isSecondNote) && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold text-white animate-pulse">
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white animate-pulse">
                   {key.label}
                 </div>
               )}
@@ -87,20 +91,22 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
           
+          // Position black key at the boundary between two white keys
+          // Left position = (white key index + 1) * white key width - half black key width
+          const leftPos = (key.afterWhiteIndex + 1) * whiteKeyWidth - (blackKeyWidth / 2);
+          
           return (
             <div
               key={key.note}
               className={cn(
-                "absolute top-0 w-4 sm:w-5 h-14 sm:h-18 rounded-b-md z-20 transition-all duration-300",
+                "absolute top-0 w-4 h-14 rounded-b-md z-20 transition-all duration-300",
                 isFirstNote 
                   ? "bg-[#243B73] shadow-lg" 
                   : isSecondNote 
                     ? "bg-[#1a6b61] shadow-lg"
                     : "bg-gray-900"
               )}
-              style={{ 
-                left: `calc(${key.afterWhiteIndex + 1} * 1.75rem - 0.5rem)` 
-              }}
+              style={{ left: `${leftPos}px` }}
             >
               {(isFirstNote || isSecondNote) && (
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-white animate-pulse">
