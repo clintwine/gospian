@@ -11,6 +11,7 @@ import {
   generateChordQuestion,
   initAudioContext 
 } from '../audio/AudioEngine';
+import PianoKeyboard from '../audio/PianoKeyboard';
 
 export default function ExerciseInterface({ 
   exerciseType = 'intervals',
@@ -151,6 +152,17 @@ export default function ExerciseInterface({
           )}
         </CardContent>
       </Card>
+
+      {/* Piano Keyboard Visualization (only for intervals) */}
+      {exerciseType === 'intervals' && hasPlayed && currentBaseNote && (
+        <div className="mb-6 sm:mb-8 pb-6">
+          <PianoKeyboard 
+            baseNote={currentBaseNote} 
+            semitones={currentQuestion?.semitones}
+            showSecondNote={showFeedback}
+          />
+        </div>
+      )}
 
       {/* Answer Options */}
       <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
