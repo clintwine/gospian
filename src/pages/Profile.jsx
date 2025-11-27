@@ -30,22 +30,21 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 
 export default function Profile() {
   const queryClient = useQueryClient();
-  const [theme, setTheme] = useState(
-    typeof window !== 'undefined' ? localStorage.getItem('theme') || 'light' : 'light'
-  );
-
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ['userStats', user?.email],
     queryFn: async () => {
       const stats = await base44.entities.UserStats.filter({ created_by: user.email });
-      return stats[0] || { xp: 0, level: 1, streak: 0, exercises_completed: 0, perfect_scores: 0, audio_type: 'piano' };
+      return stats[0] || { xp: 0, level: 1, streak: 0, exercises_completed: 0, perfect_scores: 0, audio_type: 'piano', theme: 'light' };
     },
     enabled: !!user?.email,
+  });
+  
+  // Derive theme from userStats or localStorage
+  const theme = userStats?.theme || (typeof window !== 'undefined' ? localStorage.getItem('theme') : 'light') || 'light';
+
+  const { data: user, isLoading: userLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
   });
 
   const { data: exerciseResults } = useQuery({
