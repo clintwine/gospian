@@ -50,7 +50,14 @@ const getNoteFromInterval = (baseNote, semitones) => {
   return allNotes[baseIndex + semitones] || null;
 };
 
-export default function PianoKeyboard({ baseNote, semitones, showSecondNote = false }) {
+export default function PianoKeyboard({ 
+  baseNote, 
+  semitones, 
+  showSecondNote = false,
+  highlightFirst = false,
+  highlightSecond = false,
+  isAnimating = false
+}) {
   const secondNote = baseNote && semitones !== undefined ? getNoteFromInterval(baseNote, semitones) : null;
   
   // White key width: 28px (w-7), Black key width: 16px (w-4)
@@ -64,21 +71,30 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
         {WHITE_KEYS.map((key) => {
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
+          const isFirstHighlighted = isAnimating && highlightFirst && isFirstNote;
+          const isSecondHighlighted = isAnimating && highlightSecond && isSecondNote;
           
           return (
             <div
               key={key.note}
               className={cn(
-                "relative w-7 h-24 border border-gray-300 rounded-b-md transition-all duration-300",
-                isFirstNote 
-                  ? "bg-[#3E82FC] border-[#243B73] shadow-lg z-10" 
-                  : isSecondNote 
-                    ? "bg-[#2A9D8F] border-[#1a6b61] shadow-lg z-10"
-                    : "bg-white"
+                "relative w-7 h-24 border border-gray-300 rounded-b-md transition-all duration-200",
+                isFirstHighlighted
+                  ? "bg-[#3E82FC] border-[#243B73] shadow-xl z-10 scale-105"
+                  : isSecondHighlighted
+                    ? "bg-[#2A9D8F] border-[#1a6b61] shadow-xl z-10 scale-105"
+                    : isFirstNote 
+                      ? "bg-[#3E82FC] border-[#243B73] shadow-lg z-10" 
+                      : isSecondNote 
+                        ? "bg-[#2A9D8F] border-[#1a6b61] shadow-lg z-10"
+                        : "bg-white"
               )}
             >
               {(isFirstNote || isSecondNote) && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white animate-pulse">
+                <div className={cn(
+                  "absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white",
+                  (isFirstHighlighted || isSecondHighlighted) ? "animate-bounce" : "animate-pulse"
+                )}>
                   {key.label}
                 </div>
               )}
@@ -90,6 +106,8 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
         {BLACK_KEYS.map((key) => {
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
+          const isFirstHighlighted = isAnimating && highlightFirst && isFirstNote;
+          const isSecondHighlighted = isAnimating && highlightSecond && isSecondNote;
           
           // Position black key at the boundary between two white keys
           // Left position = (white key index + 1) * white key width - half black key width
@@ -99,17 +117,24 @@ export default function PianoKeyboard({ baseNote, semitones, showSecondNote = fa
             <div
               key={key.note}
               className={cn(
-                "absolute top-0 w-4 h-14 rounded-b-md z-20 transition-all duration-300",
-                isFirstNote 
-                  ? "bg-[#243B73] shadow-lg" 
-                  : isSecondNote 
-                    ? "bg-[#1a6b61] shadow-lg"
-                    : "bg-gray-900"
+                "absolute top-0 w-4 h-14 rounded-b-md z-20 transition-all duration-200",
+                isFirstHighlighted
+                  ? "bg-[#243B73] shadow-xl scale-105"
+                  : isSecondHighlighted
+                    ? "bg-[#1a6b61] shadow-xl scale-105"
+                    : isFirstNote 
+                      ? "bg-[#243B73] shadow-lg" 
+                      : isSecondNote 
+                        ? "bg-[#1a6b61] shadow-lg"
+                        : "bg-gray-900"
               )}
               style={{ left: `${leftPos}px` }}
             >
               {(isFirstNote || isSecondNote) && (
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-white animate-pulse">
+                <div className={cn(
+                  "absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-white",
+                  (isFirstHighlighted || isSecondHighlighted) ? "animate-bounce" : "animate-pulse"
+                )}>
                   {key.label}
                 </div>
               )}
