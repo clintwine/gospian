@@ -34,8 +34,6 @@ export default function Leaderboard() {
     },
   });
 
-  const isLoading = statsLoading || resultsLoading;
-
   // Calculate leaderboard data based on filters
   const leaderboardData = useMemo(() => {
     if (!allStats || !allResults) return [];
