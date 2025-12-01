@@ -1,29 +1,135 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Crown, User } from 'lucide-react';
+import { Trophy, Medal, Crown, User, Flame, Target, Zap } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Leaderboard() {
-  const [tab, setTab] = useState('global');
+  const [timePeriod, setTimePeriod] = useState('all-time');
+  const [sortBy, setSortBy] = useState('xp');
+  const [exerciseType, setExerciseType] = useState('all');
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: allStats, isLoading } = useQuery({
+  const { data: allStats, isLoading: statsLoading } = useQuery({
     queryKey: ['allUserStats'],
     queryFn: async () => {
-      // In a real app, this would be a server-side aggregation
-      // For demo, we'll show current user's position
-      const stats = await base44.entities.UserStats.list('-xp', 50);
+      const stats = await base44.entities.UserStats.list('-xp', 100);
       return stats;
     },
   });
+
+  const { data: allResults, isLoading: resultsLoading } = useQuery({
+    queryKey: ['allExerciseResults'],
+    queryFn: async () => {
+      const results = await base44.entities.ExerciseResult.list('-created_date', 500);
+      return results;
+    },
+  });
+
+  const isLoading = statsLoading || resultsLoading;
+
+  // Calculate leaderboard data based on filters
+  const leaderboardData = useMemo(() => {
+    if (!allStats || !allResults) return [];
+
+    // Filter results by time period
+    const now = new Date();
+    const filteredResults = allResults.filter(r => {
+      if (timePeriod === 'all-time') return true;
+      const resultDate = new Date(r.created_date);
+      if (timePeriod === 'daily') {
+        return resultDate.toDateString() === now.toDateString();
+      }
+      if (timePeriod === 'weekly') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return resultDate >= weekAgo;
+      }
+      return true;
+    }).filter(r => {
+      if (exerciseType === 'all') return true;
+      return r.exercise_type === exerciseType;
+    });
+
+    // Aggregate by user
+    const userAggregates = {};
+    
+    // Initialize with all users from stats
+    allStats.forEach(stat => {
+      userAggregates[stat.created_by] = {
+        email: stat.created_by,
+        xp: timePeriod === 'all-time' && exerciseType === 'all' ? (stat.xp || 0) : 0,
+        streak: stat.streak || 0,
+        level: stat.level || 1,
+        correctAnswers: 0,
+        totalQuestions: 0,
+        exercisesCompleted: 0,
+      };
+    });
+
+    // Aggregate exercise results
+    filteredResults.forEach(r => {
+      if (!userAggregates[r.created_by]) {
+        userAggregates[r.created_by] = {
+          email: r.created_by,
+          xp: 0,
+          streak: 0,
+          level: 1,
+          correctAnswers: 0,
+          totalQuestions: 0,
+          exercisesCompleted: 0,
+        };
+      }
+      const user = userAggregates[r.created_by];
+      if (timePeriod !== 'all-time' || exerciseType !== 'all') {
+        user.xp += r.xp_earned || 0;
+      }
+      user.correctAnswers += r.correct_answers || 0;
+      user.totalQuestions += r.total_questions || 0;
+      user.exercisesCompleted += 1;
+    });
+
+    // Convert to array and sort
+    let sorted = Object.values(userAggregates);
+    
+    if (sortBy === 'xp') {
+      sorted.sort((a, b) => b.xp - a.xp);
+    } else if (sortBy === 'streak') {
+      sorted.sort((a, b) => b.streak - a.streak);
+    } else if (sortBy === 'accuracy') {
+      sorted.sort((a, b) => {
+        const accA = a.totalQuestions > 0 ? (a.correctAnswers / a.totalQuestions) : 0;
+        const accB = b.totalQuestions > 0 ? (b.correctAnswers / b.totalQuestions) : 0;
+        return accB - accA;
+      });
+    }
+
+    return sorted.filter(u => u.xp > 0 || u.exercisesCompleted > 0 || (timePeriod === 'all-time' && exerciseType === 'all'));
+  }, [allStats, allResults, timePeriod, sortBy, exerciseType]);
+
+  const getDisplayValue = (user) => {
+    if (sortBy === 'xp') return { value: user.xp, label: 'XP' };
+    if (sortBy === 'streak') return { value: user.streak, label: 'days' };
+    if (sortBy === 'accuracy') {
+      const acc = user.totalQuestions > 0 ? Math.round((user.correctAnswers / user.totalQuestions) * 100) : 0;
+      return { value: `${acc}%`, label: 'accuracy' };
+    }
+    return { value: user.xp, label: 'XP' };
+  };
+
+  const getSortIcon = () => {
+    if (sortBy === 'xp') return <Zap className="w-4 h-4" />;
+    if (sortBy === 'streak') return <Flame className="w-4 h-4" />;
+    if (sortBy === 'accuracy') return <Target className="w-4 h-4" />;
+    return <Trophy className="w-4 h-4" />;
+  };
 
   const getRankIcon = (rank) => {
     if (rank === 1) return <Crown className="w-5 h-5 text-[#E9C46A]" />;
@@ -57,66 +163,108 @@ export default function Leaderboard() {
   return (
     <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-1 sm:mb-2">
-            Leaderboard
-          </h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
-            See how you rank against other musicians
-          </p>
+      <div className="mb-4 sm:mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-1 sm:mb-2">
+              Leaderboard
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              See how you rank against other musicians
+            </p>
+          </div>
         </div>
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="bg-[#D7E5FF]/50 dark:bg-slate-800">
-            <TabsTrigger value="global">Global</TabsTrigger>
-            <TabsTrigger value="weekly">This Week</TabsTrigger>
-          </TabsList>
-        </Tabs>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Tabs value={timePeriod} onValueChange={setTimePeriod}>
+            <TabsList className="bg-[#D7E5FF]/50 dark:bg-slate-800 h-9">
+              <TabsTrigger value="daily" className="text-xs sm:text-sm px-2 sm:px-3">Today</TabsTrigger>
+              <TabsTrigger value="weekly" className="text-xs sm:text-sm px-2 sm:px-3">This Week</TabsTrigger>
+              <TabsTrigger value="all-time" className="text-xs sm:text-sm px-2 sm:px-3">All Time</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[130px] h-9">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="xp">
+                <span className="flex items-center gap-2"><Zap className="w-3 h-3" /> XP</span>
+              </SelectItem>
+              <SelectItem value="streak">
+                <span className="flex items-center gap-2"><Flame className="w-3 h-3" /> Streak</span>
+              </SelectItem>
+              <SelectItem value="accuracy">
+                <span className="flex items-center gap-2"><Target className="w-3 h-3" /> Accuracy</span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={exerciseType} onValueChange={setExerciseType}>
+            <SelectTrigger className="w-[130px] h-9">
+              <SelectValue placeholder="Exercise" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Exercises</SelectItem>
+              <SelectItem value="intervals">Intervals</SelectItem>
+              <SelectItem value="chords">Chords</SelectItem>
+              <SelectItem value="scales">Scales</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Top 3 Podium */}
       {leaderboardData.length >= 3 && (
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
           {/* 2nd Place */}
-          <Card className="border-2 border-gray-300 dark:border-gray-600 mt-8">
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
-                <User className="w-6 h-6 text-gray-500" />
+          <Card className="border-2 border-gray-300 dark:border-gray-600 mt-6 sm:mt-8">
+            <CardContent className="p-2 sm:p-4 text-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
               </div>
-              <Medal className="w-6 h-6 mx-auto mb-1 text-gray-400" />
-              <p className="font-semibold text-sm truncate">
-                {leaderboardData[1]?.created_by?.split('@')[0] || 'User'}
+              <Medal className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 text-gray-400" />
+              <p className="font-semibold text-xs sm:text-sm truncate">
+                {leaderboardData[1]?.email?.split('@')[0] || 'User'}
               </p>
-              <p className="text-lg font-bold text-[#3E82FC]">{leaderboardData[1]?.xp || 0} XP</p>
+              <p className="text-base sm:text-lg font-bold text-[#3E82FC]">
+                {getDisplayValue(leaderboardData[1]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(leaderboardData[1]).label}</span>
+              </p>
             </CardContent>
           </Card>
 
           {/* 1st Place */}
           <Card className="border-2 border-[#E9C46A] bg-gradient-to-b from-[#E9C46A]/10 to-transparent">
-            <CardContent className="p-4 text-center">
-              <div className="w-14 h-14 mx-auto mb-2 rounded-full bg-[#E9C46A]/20 flex items-center justify-center">
-                <User className="w-7 h-7 text-[#E9C46A]" />
+            <CardContent className="p-2 sm:p-4 text-center">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-2 rounded-full bg-[#E9C46A]/20 flex items-center justify-center">
+                <User className="w-6 h-6 sm:w-7 sm:h-7 text-[#E9C46A]" />
               </div>
-              <Crown className="w-8 h-8 mx-auto mb-1 text-[#E9C46A]" />
-              <p className="font-semibold truncate">
-                {leaderboardData[0]?.created_by?.split('@')[0] || 'User'}
+              <Crown className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 text-[#E9C46A]" />
+              <p className="font-semibold text-xs sm:text-base truncate">
+                {leaderboardData[0]?.email?.split('@')[0] || 'User'}
               </p>
-              <p className="text-xl font-bold text-[#E9C46A]">{leaderboardData[0]?.xp || 0} XP</p>
-              <Badge className="bg-[#E9C46A] text-white mt-2">Champion</Badge>
+              <p className="text-lg sm:text-xl font-bold text-[#E9C46A]">
+                {getDisplayValue(leaderboardData[0]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(leaderboardData[0]).label}</span>
+              </p>
+              <Badge className="bg-[#E9C46A] text-white mt-2 text-[10px] sm:text-xs">Champion</Badge>
             </CardContent>
           </Card>
 
           {/* 3rd Place */}
-          <Card className="border-2 border-amber-500 dark:border-amber-600 mt-8">
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <User className="w-6 h-6 text-amber-600" />
+          <Card className="border-2 border-amber-500 dark:border-amber-600 mt-6 sm:mt-8">
+            <CardContent className="p-2 sm:p-4 text-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />
               </div>
-              <Medal className="w-6 h-6 mx-auto mb-1 text-amber-600" />
-              <p className="font-semibold text-sm truncate">
-                {leaderboardData[2]?.created_by?.split('@')[0] || 'User'}
+              <Medal className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 text-amber-600" />
+              <p className="font-semibold text-xs sm:text-sm truncate">
+                {leaderboardData[2]?.email?.split('@')[0] || 'User'}
               </p>
-              <p className="text-lg font-bold text-amber-600">{leaderboardData[2]?.xp || 0} XP</p>
+              <p className="text-base sm:text-lg font-bold text-amber-600">
+                {getDisplayValue(leaderboardData[2]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(leaderboardData[2]).label}</span>
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -126,45 +274,57 @@ export default function Leaderboard() {
       <Card className="border-0 shadow-lg">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-[#E9C46A]" />
-            Rankings
+            {getSortIcon()}
+            <span className="text-[#E9C46A]">Rankings</span>
+            <Badge variant="outline" className="ml-auto text-xs">
+              {timePeriod === 'daily' ? 'Today' : timePeriod === 'weekly' ? 'This Week' : 'All Time'}
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-2">
           {leaderboardData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Trophy className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>No rankings yet. Start training to get on the leaderboard!</p>
+              <p>No rankings yet for this period. Start training to get on the leaderboard!</p>
             </div>
           ) : (
             <div className="space-y-2">
-              {leaderboardData.map((stat, index) => {
+              {leaderboardData.map((user, index) => {
                 const rank = index + 1;
-                const isCurrentUser = stat.created_by === currentUser?.email;
+                const isCurrentUser = user.email === currentUser?.email;
+                const displayValue = getDisplayValue(user);
 
                 return (
                   <div
-                    key={stat.id}
-                    className={`flex items-center gap-4 p-3 rounded-xl transition-all ${
+                    key={user.email}
+                    className={`flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-xl transition-all ${
                       isCurrentUser ? 'bg-[#3E82FC]/10 border-2 border-[#3E82FC]' : getRankBackground(rank)
                     } ${rank <= 3 ? 'border-2' : 'hover:bg-muted/50'}`}
                   >
-                    <div className="w-8 flex items-center justify-center">
+                    <div className="w-6 sm:w-8 flex items-center justify-center">
                       {getRankIcon(rank)}
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-[#D7E5FF] dark:bg-slate-700 flex items-center justify-center">
-                      <User className="w-5 h-5 text-[#243B73] dark:text-[#3E82FC]" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#D7E5FF] dark:bg-slate-700 flex items-center justify-center shrink-0">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-[#243B73] dark:text-[#3E82FC]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-semibold truncate ${isCurrentUser ? 'text-[#3E82FC]' : ''}`}>
-                        {stat.created_by?.split('@')[0] || 'Anonymous'}
-                        {isCurrentUser && <span className="text-xs ml-2">(You)</span>}
+                      <p className={`font-semibold truncate text-sm sm:text-base ${isCurrentUser ? 'text-[#3E82FC]' : ''}`}>
+                        {user.email?.split('@')[0] || 'Anonymous'}
+                        {isCurrentUser && <span className="text-[10px] sm:text-xs ml-1 sm:ml-2">(You)</span>}
                       </p>
-                      <p className="text-xs text-muted-foreground">Level {stat.level || 1}</p>
+                      <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
+                        <span>Level {user.level || 1}</span>
+                        {user.streak > 0 && (
+                          <span className="flex items-center gap-0.5">
+                            <Flame className="w-3 h-3 text-orange-500" />
+                            {user.streak}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-[#243B73] dark:text-[#3E82FC]">{stat.xp || 0}</p>
-                      <p className="text-xs text-muted-foreground">XP</p>
+                    <div className="text-right shrink-0">
+                      <p className="font-bold text-[#243B73] dark:text-[#3E82FC] text-sm sm:text-base">{displayValue.value}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">{displayValue.label}</p>
                     </div>
                   </div>
                 );
