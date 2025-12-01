@@ -30,6 +30,8 @@ export default function ExerciseInterface({
   const [showFeedback, setShowFeedback] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [currentBaseNote, setCurrentBaseNote] = useState(null);
+  const [isReplayingCorrect, setIsReplayingCorrect] = useState(false);
+  const [replayHighlight, setReplayHighlight] = useState(null); // 'first', 'second', or null
 
   const generateQuestion = useCallback(() => {
     if (exerciseType === 'intervals') {
@@ -66,17 +68,46 @@ export default function ExerciseInterface({
     setTimeout(() => setIsPlaying(false), 1500);
   };
 
+  const replayIntervalAnimation = async () => {
+    setIsReplayingCorrect(true);
+    
+    // Highlight and play first note
+    setReplayHighlight('first');
+    await playInterval(0, audioType, 'melodic', currentBaseNote); // Play just the base note
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    // Highlight and play second note
+    setReplayHighlight('second');
+    await playInterval(currentQuestion.semitones, audioType, 'melodic', currentBaseNote);
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    // Show both notes highlighted
+    setReplayHighlight('both');
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    setIsReplayingCorrect(false);
+    setReplayHighlight(null);
+    setShowFeedback(true);
+  };
+
   const handleAnswer = (option) => {
-    if (showFeedback || !hasPlayed) return;
+    if (showFeedback || !hasPlayed || isReplayingCorrect) return;
 
     setSelectedAnswer(option);
     const correct = option.name === currentQuestion.correctAnswer.name;
     setIsCorrect(correct);
-    setShowFeedback(true);
 
     if (correct) {
       setCorrectCount(prev => prev + 1);
       onXPEarned?.(10);
+      // Replay the interval animation before showing feedback
+      if (exerciseType === 'intervals' && currentBaseNote) {
+        replayIntervalAnimation();
+      } else {
+        setShowFeedback(true);
+      }
+    } else {
+      setShowFeedback(true);
     }
   };
 
@@ -159,7 +190,10 @@ export default function ExerciseInterface({
           <PianoKeyboard 
             baseNote={currentBaseNote} 
             semitones={currentQuestion?.semitones}
-            showSecondNote={showFeedback}
+            showSecondNote={showFeedback || replayHighlight === 'second' || replayHighlight === 'both'}
+            highlightFirst={replayHighlight === 'first' || replayHighlight === 'both'}
+            highlightSecond={replayHighlight === 'second' || replayHighlight === 'both'}
+            isAnimating={isReplayingCorrect}
           />
         </div>
       )}
