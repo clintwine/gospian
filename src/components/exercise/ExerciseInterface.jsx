@@ -69,21 +69,22 @@ export default function ExerciseInterface({
   };
 
   const replayIntervalAnimation = async () => {
+    // Wait for any current playback to finish
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
     setIsReplayingCorrect(true);
     
-    // Highlight and play first note
+    // Highlight first note (no sound, just visual)
     setReplayHighlight('first');
-    await playInterval(0, audioType, 'melodic', currentBaseNote); // Play just the base note
-    await new Promise(resolve => setTimeout(resolve, 600));
+    await new Promise(resolve => setTimeout(resolve, 400));
     
-    // Highlight and play second note
+    // Highlight second note (no sound, just visual)
     setReplayHighlight('second');
-    await playInterval(currentQuestion.semitones, audioType, 'melodic', currentBaseNote);
-    await new Promise(resolve => setTimeout(resolve, 600));
+    await new Promise(resolve => setTimeout(resolve, 400));
     
     // Show both notes highlighted
     setReplayHighlight('both');
-    await new Promise(resolve => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     setIsReplayingCorrect(false);
     setReplayHighlight(null);
