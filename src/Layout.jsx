@@ -76,7 +76,7 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen w-full overflow-x-hidden bg-[#F8FAFC] dark:bg-[#0A1A2F] transition-colors duration-300">
       <style>{`
         :root {
-          --intonaro-navy: #0A1A2F;
+          --gospian-navy: #0A1A2F;
           --deep-indigo: #243B73;
           --azure-accent: #3E82FC;
           --soft-sky: #D7E5FF;
@@ -110,7 +110,7 @@ export default function Layout({ children, currentPageName }) {
                 <Music2 className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold tracking-tight text-[#0A1A2F] dark:text-white">
-                INTONARO
+                GOSPIAN
               </span>
             </Link>
 
@@ -174,7 +174,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#243B73] to-[#3E82FC] flex items-center justify-center">
               <Music2 className="w-4 h-4 text-white" />
             </div>
-            <span className="text-lg font-bold text-[#0A1A2F] dark:text-white">INTONARO</span>
+            <span className="text-lg font-bold text-[#0A1A2F] dark:text-white">GOSPIAN</span>
           </Link>
 
           <div className="flex items-center gap-2">
