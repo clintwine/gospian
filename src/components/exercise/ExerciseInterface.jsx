@@ -21,7 +21,9 @@ export default function ExerciseInterface({
   audioType = 'sine',
   onComplete,
   onXPEarned,
-  questionsCount = 10
+  questionsCount = 10,
+  isPracticeMode = false,
+  questionSupplier = null
 }) {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
@@ -39,6 +41,9 @@ export default function ExerciseInterface({
   const [isPlayingAnimation, setIsPlayingAnimation] = useState(false); // Block next during animation
 
   const generateQuestion = useCallback(() => {
+    if (isPracticeMode && questionSupplier) {
+      return questionSupplier();
+    }
     const exercise = getRandomExercise(exerciseType, difficulty);
     if (!exercise) return null;
     
@@ -53,7 +58,7 @@ export default function ExerciseInterface({
       playMode: exercise.playMode || 'melodic',
       baseNote: exercise.baseNote,
     };
-  }, [exerciseType, difficulty]);
+  }, [exerciseType, difficulty, isPracticeMode, questionSupplier]);
 
   useEffect(() => {
     setCurrentQuestion(generateQuestion());
@@ -168,8 +173,10 @@ export default function ExerciseInterface({
     setIsCorrect(correct);
 
     if (correct) {
-      setCorrectCount(prev => prev + 1);
-      onXPEarned?.(10);
+      if (!isPracticeMode) {
+        setCorrectCount(prev => prev + 1);
+        onXPEarned?.(10);
+      }
       // Replay animation before showing feedback
       if (exerciseType === 'intervals' && currentBaseNote) {
         replayIntervalAnimation(currentQuestion.semitones, currentBaseNote, true);
@@ -184,7 +191,7 @@ export default function ExerciseInterface({
   };
 
   const proceedToNext = () => {
-    if (questionNumber >= questionsCount) {
+    if (!isPracticeMode && questionNumber >= questionsCount) {
       const accuracy = Math.round((correctCount / questionsCount) * 100);
       const bonusXP = accuracy === 100 ? 10 : 0;
       onComplete?.({
@@ -197,7 +204,11 @@ export default function ExerciseInterface({
     }
 
     setQuestionNumber(prev => prev + 1);
-    setCurrentQuestion(generateQuestion());
+    if (isPracticeMode && questionSupplier) {
+      setCurrentQuestion(questionSupplier());
+    } else {
+      setCurrentQuestion(generateQuestion());
+    }
     setSelectedAnswer(null);
     setIsCorrect(null);
     setShowFeedback(false);
@@ -228,14 +239,16 @@ export default function ExerciseInterface({
 
   return (
     <div className="w-full max-w-2xl mx-auto px-1">
-      {/* Progress Header */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs sm:text-sm font-medium">Question {questionNumber} of {questionsCount}</span>
-          <span className="text-xs sm:text-sm text-muted-foreground">{correctCount} correct</span>
+      {/* Progress Header (hidden in practice mode) */}
+      {!isPracticeMode && (
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs sm:text-sm font-medium">Question {questionNumber} of {questionsCount}</span>
+            <span className="text-xs sm:text-sm text-muted-foreground">{correctCount} correct</span>
+          </div>
+          <Progress value={progress} className="h-2" />
         </div>
-        <Progress value={progress} className="h-2" />
-      </div>
+      )}
 
       {/* Audio Player */}
       <Card className="mb-3 sm:mb-4 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
@@ -364,7 +377,7 @@ export default function ExerciseInterface({
                     disabled={isPlayingAnimation}
                     className="bg-[#243B73] hover:bg-[#0A1A2F]"
                   >
-                    {isPlayingAnimation ? 'Playing...' : (questionNumber >= questionsCount ? 'See Results' : 'Next')}
+                    {isPlayingAnimation ? 'Playing...' : (isPracticeMode ? 'Next Question' : (questionNumber >= questionsCount ? 'See Results' : 'Next'))}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>

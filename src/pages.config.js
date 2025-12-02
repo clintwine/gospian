@@ -9,6 +9,8 @@ import Leaderboard from './pages/Leaderboard';
 import WeeklyChallenge from './pages/WeeklyChallenge';
 import SpeedChallenge from './pages/SpeedChallenge';
 import AccuracyChallenge from './pages/AccuracyChallenge';
+import PracticeSelection from './pages/PracticeSelection';
+import PracticeMode from './pages/PracticeMode';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +26,8 @@ export const PAGES = {
     "WeeklyChallenge": WeeklyChallenge,
     "SpeedChallenge": SpeedChallenge,
     "AccuracyChallenge": AccuracyChallenge,
+    "PracticeSelection": PracticeSelection,
+    "PracticeMode": PracticeMode,
 }
 
 export const pagesConfig = {
