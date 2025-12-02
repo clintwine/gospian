@@ -47,7 +47,7 @@ export const initAudioContext = () => {
 const playPianoTone = (ctx, frequency, duration) => {
   const masterGain = ctx.createGain();
   masterGain.connect(ctx.destination);
-  masterGain.gain.setValueAtTime(0.4, ctx.currentTime);
+  masterGain.gain.setValueAtTime(0.8, ctx.currentTime);
   
   // Piano-like harmonics (fundamental + overtones)
   const harmonics = [
@@ -125,11 +125,11 @@ export const playTone = (frequency, duration = 0.8, type = 'sine') => {
   
   if (type === 'guitar') {
     // Guitar-like pluck: fast attack, medium decay
-    gainNode.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.1);
+    gainNode.gain.linearRampToValueAtTime(0.7, ctx.currentTime + 0.01);
+    gainNode.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + 0.1);
     gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
   } else {
-    gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+    gainNode.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 0.05);
     gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
   }
   
