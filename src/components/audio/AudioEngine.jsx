@@ -101,12 +101,14 @@ export const playInterval = async (semitones, audioType = 'sine', playMode = 'me
   const secondFreq = getNoteFrequency(selectedBase, semitones);
   
   if (playMode === 'harmonic') {
+    // Play both notes at the same time
     playTone(baseFreq, 1.2, audioType);
     playTone(secondFreq, 1.2, audioType);
   } else {
-    playTone(baseFreq, 0.7, audioType);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    playTone(secondFreq, 0.7, audioType);
+    // Play notes sequentially (melodic) - first note, wait, then second note
+    playTone(baseFreq, 0.6, audioType);
+    await new Promise(resolve => setTimeout(resolve, 900));
+    playTone(secondFreq, 0.6, audioType);
   }
   
   return selectedBase;
