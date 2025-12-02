@@ -260,9 +260,9 @@ export default function ExerciseInterface({
 
       {/* Audio Player */}
       <Card className="mb-3 sm:mb-4 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
-        <CardContent className="p-3 sm:p-4 flex items-center justify-between gap-4">
-          <div className="w-10 sm:w-12" /> {/* Spacer for centering */}
-          <div className="flex items-center gap-4">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center justify-center gap-4 relative">
+            <div className="flex items-center gap-4">
             <motion.button
               onClick={handlePlaySound}
               disabled={isPlaying}
@@ -294,17 +294,16 @@ export default function ExerciseInterface({
               )}
             </div>
           </div>
-          {showNextButton ? (
+          </div>
+          {showNextButton && (
             <Button
               onClick={handleNext}
               disabled={isPlayingAnimation}
               size="icon"
-              className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3E82FC] hover:bg-[#243B73] text-white flex-shrink-0 rounded-full"
+              className="absolute right-0 w-10 h-10 sm:w-12 sm:h-12 bg-[#3E82FC] hover:bg-[#243B73] text-white rounded-full"
             >
               <ArrowRight className="w-5 h-5" />
             </Button>
-          ) : (
-            <div className="w-10 sm:w-12" />
           )}
         </CardContent>
       </Card>
