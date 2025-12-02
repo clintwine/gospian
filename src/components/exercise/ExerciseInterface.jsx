@@ -261,7 +261,7 @@ export default function ExerciseInterface({
       {/* Audio Player */}
       <Card className="mb-3 sm:mb-4 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
         <CardContent className="p-3 sm:p-4">
-          <div className="flex items-center justify-center gap-4 relative">
+          <div className="flex items-center justify-center relative">
             <div className="flex items-center gap-4">
               <motion.button
                 onClick={handlePlaySound}
