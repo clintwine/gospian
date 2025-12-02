@@ -304,7 +304,7 @@ export default function ExerciseInterface({
               <ArrowRight className="w-5 h-5" />
             </Button>
           ) : (
-            <div className="w-10 sm:w-12" /> {/* Spacer when no button */}
+            <div className="w-10 sm:w-12" />
           )}
         </CardContent>
       </Card>
