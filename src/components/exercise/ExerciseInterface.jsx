@@ -124,6 +124,7 @@ export default function ExerciseInterface({
     setIsPlayingAnimation(false);
     if (showFeedbackAfter) {
       setShowFeedback(true);
+      setShowNextButton(true);
     }
   };
 
@@ -163,6 +164,7 @@ export default function ExerciseInterface({
     setIsPlayingAnimation(false);
     if (showFeedbackAfter) {
       setShowFeedback(true);
+      setShowNextButton(true);
     }
   };
 
