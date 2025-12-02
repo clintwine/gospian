@@ -13,7 +13,7 @@ import {
   getNoteFrequency
 } from '../audio/AudioEngine';
 import PianoKeyboard from '../audio/PianoKeyboard';
-import { getRandomExercise } from '../../data/exerciseData';
+import { getRandomExercise } from '../data/exerciseData';
 
 export default function ExerciseInterface({ 
   exerciseType = 'intervals',
