@@ -6,16 +6,14 @@ import { Play, RotateCcw, Volume2, CheckCircle2, XCircle, ArrowRight } from 'luc
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   playInterval, 
-  generateIntervalQuestion, 
   playChord, 
-  generateChordQuestion,
   playScale,
-  generateScaleQuestion,
   initAudioContext,
   playTone,
   getNoteFrequency
 } from '../audio/AudioEngine';
 import PianoKeyboard from '../audio/PianoKeyboard';
+import { getRandomExercise } from '../../data/exerciseData';
 
 export default function ExerciseInterface({ 
   exerciseType = 'intervals',
@@ -41,14 +39,20 @@ export default function ExerciseInterface({
   const [isPlayingAnimation, setIsPlayingAnimation] = useState(false); // Block next during animation
 
   const generateQuestion = useCallback(() => {
-    if (exerciseType === 'intervals') {
-      return generateIntervalQuestion(difficulty);
-    } else if (exerciseType === 'chords') {
-      return generateChordQuestion();
-    } else if (exerciseType === 'scales') {
-      return generateScaleQuestion(difficulty);
-    }
-    return generateIntervalQuestion(difficulty);
+    const exercise = getRandomExercise(exerciseType, difficulty);
+    if (!exercise) return null;
+    
+    // Transform exercise data to match expected format
+    return {
+      ...exercise,
+      correctAnswer: { name: exercise.answer },
+      options: exercise.options.map(opt => ({ name: opt })),
+      semitones: exercise.semitones,
+      chordType: exercise.chordType,
+      scaleType: exercise.scaleType,
+      playMode: exercise.playMode || 'melodic',
+      baseNote: exercise.baseNote,
+    };
   }, [exerciseType, difficulty]);
 
   useEffect(() => {
@@ -62,13 +66,17 @@ export default function ExerciseInterface({
     setIsPlaying(true);
     setHasPlayed(true);
 
+    // Use the baseNote from the exercise data, or fall back to stored/random
+    const noteToUse = currentBaseNote || currentQuestion.baseNote;
     let baseNote;
+    
     if (exerciseType === 'intervals') {
-      baseNote = await playInterval(currentQuestion.semitones, audioType, 'melodic', currentBaseNote);
+      const playMode = currentQuestion.playMode || 'melodic';
+      baseNote = await playInterval(currentQuestion.semitones, audioType, playMode, noteToUse);
     } else if (exerciseType === 'chords') {
-      baseNote = await playChord(currentQuestion.chordType, audioType, currentBaseNote);
+      baseNote = await playChord(currentQuestion.chordType, audioType, noteToUse);
     } else if (exerciseType === 'scales') {
-      const { playedNotes, baseNote: scaleBaseNote } = await playScale(currentQuestion.scaleType, audioType, currentBaseNote);
+      const { playedNotes, baseNote: scaleBaseNote } = await playScale(currentQuestion.scaleType, audioType, noteToUse);
       baseNote = scaleBaseNote;
       setCurrentScaleNotes(playedNotes);
     }

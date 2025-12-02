@@ -154,6 +154,11 @@ export const CHORD_TYPES = [
   { name: 'Minor', intervals: [0, 3, 7] },
   { name: 'Diminished', intervals: [0, 3, 6] },
   { name: 'Augmented', intervals: [0, 4, 8] },
+  { name: 'Dominant7', intervals: [0, 4, 7, 10] },
+  { name: 'Major7', intervals: [0, 4, 7, 11] },
+  { name: 'Minor7', intervals: [0, 3, 7, 10] },
+  { name: 'HalfDiminished7', intervals: [0, 3, 6, 10] },
+  { name: 'Diminished7', intervals: [0, 3, 6, 9] },
 ];
 
 export const SCALES = [
