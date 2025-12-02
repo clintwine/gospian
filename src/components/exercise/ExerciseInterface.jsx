@@ -88,19 +88,22 @@ export default function ExerciseInterface({
     const baseFreq = getNoteFrequency(baseNote, 0);
     const secondFreq = getNoteFrequency(baseNote, semitones);
     
-    // Highlight and play first note
+    // Small delay before starting
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Highlight and play first note simultaneously
     setReplayHighlight('first');
-    playTone(baseFreq, 0.5, audioType);
-    await new Promise(resolve => setTimeout(resolve, 600));
+    playTone(baseFreq, 0.6, audioType);
+    await new Promise(resolve => setTimeout(resolve, 700));
     
-    // Highlight and play second note
+    // Highlight and play second note simultaneously
     setReplayHighlight('second');
-    playTone(secondFreq, 0.5, audioType);
-    await new Promise(resolve => setTimeout(resolve, 600));
+    playTone(secondFreq, 0.6, audioType);
+    await new Promise(resolve => setTimeout(resolve, 700));
     
-    // Show both notes highlighted
+    // Show both notes highlighted briefly
     setReplayHighlight('both');
-    await new Promise(resolve => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     setIsReplayingCorrect(false);
     setReplayHighlight(null);
@@ -115,14 +118,32 @@ export default function ExerciseInterface({
     setIsReplayingCorrect(true);
     setShowScaleNotes(true);
     
-    const { playedNotes } = await playScale(scaleType, audioType, baseNote);
-    setCurrentScaleNotes(playedNotes);
-
-    for (let i = 0; i < playedNotes.length; i++) {
+    // Get scale intervals for synchronized playback
+    const scale = await import('../audio/AudioEngine').then(m => m.SCALES.find(s => s.name === scaleType));
+    if (!scale) return;
+    
+    const playedNotes = [];
+    for (let i = 0; i < scale.intervals.length; i++) {
+      const semitones = scale.intervals[i];
+      const freq = getNoteFrequency(baseNote, semitones);
+      
+      // Get note name for display
+      const allNotes = ['C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3', 'A#3', 'B3',
+                        'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4',
+                        'C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5', 'A5'];
+      const baseIndex = allNotes.indexOf(baseNote);
+      const noteName = allNotes[baseIndex + semitones];
+      if (noteName) playedNotes.push(noteName);
+      
+      // Update notes and highlight simultaneously with sound
+      setCurrentScaleNotes([...playedNotes]);
       setReplayHighlight(i);
+      playTone(freq, 0.3, audioType);
+      
       await new Promise(resolve => setTimeout(resolve, 350));
     }
 
+    await new Promise(resolve => setTimeout(resolve, 200));
     setIsReplayingCorrect(false);
     setReplayHighlight(null);
     setIsPlayingAnimation(false);
