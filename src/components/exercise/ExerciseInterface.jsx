@@ -395,16 +395,7 @@ export default function ExerciseInterface({
                       )}
                     </div>
                   </div>
-                  {showNextButton && (
-                                    <Button 
-                                      onClick={handleNext} 
-                                      disabled={isPlayingAnimation}
-                                      className="bg-[#243B73] hover:bg-[#0A1A2F]"
-                                    >
-                                      {isPracticeMode ? 'Next Question' : (questionNumber >= questionsCount ? 'See Results' : 'Next')}
-                                      <ArrowRight className="w-4 h-4 ml-2" />
-                                    </Button>
-                                  )}
+
                 </div>
               </CardContent>
             </Card>
