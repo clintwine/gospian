@@ -5,46 +5,53 @@ import { cn } from "@/lib/utils";
 // Black keys appear BETWEEN: C-D, D-E, F-G, G-A, A-B
 // NO black keys between: E-F, B-C
 
-// White keys in order (two octaves)
+// White keys in order (three octaves: A3 to B5)
 const WHITE_KEYS = [
-  { note: 'C4', label: 'C', index: 0 },
-  { note: 'D4', label: 'D', index: 1 },
-  { note: 'E4', label: 'E', index: 2 },
-  { note: 'F4', label: 'F', index: 3 },
-  { note: 'G4', label: 'G', index: 4 },
-  { note: 'A4', label: 'A', index: 5 },
-  { note: 'B4', label: 'B', index: 6 },
-  { note: 'C5', label: 'C', index: 7 },
-  { note: 'D5', label: 'D', index: 8 },
-  { note: 'E5', label: 'E', index: 9 },
-  { note: 'F5', label: 'F', index: 10 },
-  { note: 'G5', label: 'G', index: 11 },
-  { note: 'A5', label: 'A', index: 12 },
-  { note: 'B5', label: 'B', index: 13 },
+  { note: 'A3', label: 'A', index: 0 },
+  { note: 'B3', label: 'B', index: 1 },
+  { note: 'C4', label: 'C', index: 2 },
+  { note: 'D4', label: 'D', index: 3 },
+  { note: 'E4', label: 'E', index: 4 },
+  { note: 'F4', label: 'F', index: 5 },
+  { note: 'G4', label: 'G', index: 6 },
+  { note: 'A4', label: 'A', index: 7 },
+  { note: 'B4', label: 'B', index: 8 },
+  { note: 'C5', label: 'C', index: 9 },
+  { note: 'D5', label: 'D', index: 10 },
+  { note: 'E5', label: 'E', index: 11 },
+  { note: 'F5', label: 'F', index: 12 },
+  { note: 'G5', label: 'G', index: 13 },
+  { note: 'A5', label: 'A', index: 14 },
+  { note: 'B5', label: 'B', index: 15 },
 ];
 
 // Black keys positioned between white keys
 // afterWhiteIndex means the black key sits between that white key and the next
 const BLACK_KEYS = [
-  { note: 'C#4', label: 'C#', afterWhiteIndex: 0 }, // between C4 and D4
-  { note: 'D#4', label: 'D#', afterWhiteIndex: 1 }, // between D4 and E4
-  // NO black key between E4-F4 (index 2)
-  { note: 'F#4', label: 'F#', afterWhiteIndex: 3 }, // between F4 and G4
-  { note: 'G#4', label: 'G#', afterWhiteIndex: 4 }, // between G4 and A4
-  { note: 'A#4', label: 'A#', afterWhiteIndex: 5 }, // between A4 and B4
-  // NO black key between B4-C5 (index 6)
-  { note: 'C#5', label: 'C#', afterWhiteIndex: 7 }, // between C5 and D5
-  { note: 'D#5', label: 'D#', afterWhiteIndex: 8 }, // between D5 and E5
-  // NO black key between E5-F5 (index 9)
-  { note: 'F#5', label: 'F#', afterWhiteIndex: 10 }, // between F5 and G5
-  { note: 'G#5', label: 'G#', afterWhiteIndex: 11 }, // between G5 and A5
-  { note: 'A#5', label: 'A#', afterWhiteIndex: 12 }, // between A5 and B5
+  { note: 'A#3', label: 'A#', afterWhiteIndex: 0 }, // between A3 and B3
+  // NO black key between B3-C4 (index 1)
+  { note: 'C#4', label: 'C#', afterWhiteIndex: 2 }, // between C4 and D4
+  { note: 'D#4', label: 'D#', afterWhiteIndex: 3 }, // between D4 and E4
+  // NO black key between E4-F4 (index 4)
+  { note: 'F#4', label: 'F#', afterWhiteIndex: 5 }, // between F4 and G4
+  { note: 'G#4', label: 'G#', afterWhiteIndex: 6 }, // between G4 and A4
+  { note: 'A#4', label: 'A#', afterWhiteIndex: 7 }, // between A4 and B4
+  // NO black key between B4-C5 (index 8)
+  { note: 'C#5', label: 'C#', afterWhiteIndex: 9 }, // between C5 and D5
+  { note: 'D#5', label: 'D#', afterWhiteIndex: 10 }, // between D5 and E5
+  // NO black key between E5-F5 (index 11)
+  { note: 'F#5', label: 'F#', afterWhiteIndex: 12 }, // between F5 and G5
+  { note: 'G#5', label: 'G#', afterWhiteIndex: 13 }, // between G5 and A5
+  { note: 'A#5', label: 'A#', afterWhiteIndex: 14 }, // between A5 and B5
 ];
 
 // Map base note + semitones to actual note
 const getNoteFromInterval = (baseNote, semitones) => {
-  const allNotes = ['C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 
-                    'C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5', 'A5', 'A#5', 'B5'];
+  const allNotes = [
+    'A3', 'A#3', 'B3',
+    'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 
+    'C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5', 'A5', 'A#5', 'B5'
+  ];
   const baseIndex = allNotes.indexOf(baseNote);
   if (baseIndex === -1) return null;
   return allNotes[baseIndex + semitones] || null;
