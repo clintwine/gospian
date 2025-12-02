@@ -39,6 +39,7 @@ export default function ExerciseInterface({
   const [replayHighlight, setReplayHighlight] = useState(null); // 'first', 'second', 'both', or scale index
   const [showScaleNotes, setShowScaleNotes] = useState(false); // Only show full scale after correct answer
   const [isPlayingAnimation, setIsPlayingAnimation] = useState(false); // Block next during animation
+  const [showNextButton, setShowNextButton] = useState(false); // Show next button after animation
 
   const generateQuestion = useCallback(() => {
     if (isPracticeMode && questionSupplier) {
@@ -177,6 +178,8 @@ export default function ExerciseInterface({
         setCorrectCount(prev => prev + 1);
         onXPEarned?.(10);
       }
+      // Immediately show the second note highlight
+      setReplayHighlight('both');
       // Replay animation before showing feedback
       if (exerciseType === 'intervals' && currentBaseNote) {
         replayIntervalAnimation(currentQuestion.semitones, currentBaseNote, true);
@@ -184,9 +187,11 @@ export default function ExerciseInterface({
         replayScaleAnimation(currentQuestion.scaleType, currentBaseNote, true);
       } else {
         setShowFeedback(true);
+        setShowNextButton(true);
       }
     } else {
       setShowFeedback(true);
+      setShowNextButton(true);
     }
   };
 
@@ -216,6 +221,7 @@ export default function ExerciseInterface({
     setCurrentBaseNote(null);
     setCurrentScaleNotes([]);
     setShowScaleNotes(false);
+    setShowNextButton(false);
   };
 
   const handleNext = async () => {
@@ -293,7 +299,7 @@ export default function ExerciseInterface({
             baseNote={currentBaseNote} 
             semitones={exerciseType === 'intervals' ? currentQuestion?.semitones : undefined}
             scaleNotes={exerciseType === 'scales' && showScaleNotes ? currentScaleNotes : undefined}
-            showSecondNote={exerciseType === 'intervals' && (showFeedback || replayHighlight === 'second' || replayHighlight === 'both')}
+            showSecondNote={exerciseType === 'intervals' && (showFeedback || replayHighlight === 'second' || replayHighlight === 'both' || (isCorrect && selectedAnswer))}
             highlightFirst={replayHighlight === 'first' || replayHighlight === 'both'}
             highlightSecond={replayHighlight === 'second' || replayHighlight === 'both'}
             highlightScaleNoteIndex={exerciseType === 'scales' && typeof replayHighlight === 'number' ? replayHighlight : undefined}
@@ -372,14 +378,16 @@ export default function ExerciseInterface({
                       )}
                     </div>
                   </div>
-                  <Button 
-                    onClick={handleNext} 
-                    disabled={isPlayingAnimation}
-                    className="bg-[#243B73] hover:bg-[#0A1A2F]"
-                  >
-                    {isPlayingAnimation ? 'Playing...' : (isPracticeMode ? 'Next Question' : (questionNumber >= questionsCount ? 'See Results' : 'Next'))}
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  {showNextButton && (
+                                    <Button 
+                                      onClick={handleNext} 
+                                      disabled={isPlayingAnimation}
+                                      className="bg-[#243B73] hover:bg-[#0A1A2F]"
+                                    >
+                                      {isPracticeMode ? 'Next Question' : (questionNumber >= questionsCount ? 'See Results' : 'Next')}
+                                      <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Button>
+                                  )}
                 </div>
               </CardContent>
             </Card>
