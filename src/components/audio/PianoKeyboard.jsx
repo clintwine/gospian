@@ -53,9 +53,11 @@ const getNoteFromInterval = (baseNote, semitones) => {
 export default function PianoKeyboard({ 
   baseNote, 
   semitones, 
+  scaleNotes = [],
   showSecondNote = false,
   highlightFirst = false,
   highlightSecond = false,
+  highlightScaleNoteIndex,
   isAnimating = false
 }) {
   const secondNote = baseNote && semitones !== undefined ? getNoteFromInterval(baseNote, semitones) : null;
@@ -71,29 +73,36 @@ export default function PianoKeyboard({
         {WHITE_KEYS.map((key) => {
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
+          const isScaleNote = scaleNotes.includes(key.note);
+          const scaleNoteIdx = scaleNotes.indexOf(key.note);
+          const isCurrentScaleHighlight = isAnimating && highlightScaleNoteIndex !== undefined && scaleNoteIdx === highlightScaleNoteIndex;
           const isFirstHighlighted = isAnimating && highlightFirst && isFirstNote;
           const isSecondHighlighted = isAnimating && highlightSecond && isSecondNote;
+          
+          const isHighlighted = isFirstHighlighted || isSecondHighlighted || isCurrentScaleHighlight;
+          const isActive = isFirstNote || isSecondNote || isScaleNote;
           
           return (
             <div
               key={key.note}
               className={cn(
                 "relative w-7 h-24 border border-gray-300 rounded-b-md transition-all duration-200",
-                isFirstHighlighted
+                isHighlighted
                   ? "bg-[#3E82FC] border-[#243B73] shadow-xl z-10 scale-105"
-                  : isSecondHighlighted
-                    ? "bg-[#2A9D8F] border-[#1a6b61] shadow-xl z-10 scale-105"
-                    : isFirstNote 
-                      ? "bg-[#3E82FC] border-[#243B73] shadow-lg z-10" 
-                      : isSecondNote 
-                        ? "bg-[#2A9D8F] border-[#1a6b61] shadow-lg z-10"
+                  : isFirstNote 
+                    ? "bg-[#3E82FC] border-[#243B73] shadow-lg z-10" 
+                    : isSecondNote 
+                      ? "bg-[#2A9D8F] border-[#1a6b61] shadow-lg z-10"
+                      : isScaleNote
+                        ? "bg-[#E9C46A] border-[#d4a84a] shadow-lg z-10"
                         : "bg-white"
               )}
             >
-              {(isFirstNote || isSecondNote) && (
+              {isActive && (
                 <div className={cn(
-                  "absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white",
-                  (isFirstHighlighted || isSecondHighlighted) ? "animate-bounce" : "animate-pulse"
+                  "absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold",
+                  isScaleNote && !isFirstNote ? "text-[#0A1A2F]" : "text-white",
+                  isHighlighted ? "animate-bounce" : "animate-pulse"
                 )}>
                   {key.label}
                 </div>
@@ -106,11 +115,16 @@ export default function PianoKeyboard({
         {BLACK_KEYS.map((key) => {
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
+          const isScaleNote = scaleNotes.includes(key.note);
+          const scaleNoteIdx = scaleNotes.indexOf(key.note);
+          const isCurrentScaleHighlight = isAnimating && highlightScaleNoteIndex !== undefined && scaleNoteIdx === highlightScaleNoteIndex;
           const isFirstHighlighted = isAnimating && highlightFirst && isFirstNote;
           const isSecondHighlighted = isAnimating && highlightSecond && isSecondNote;
           
+          const isHighlighted = isFirstHighlighted || isSecondHighlighted || isCurrentScaleHighlight;
+          const isActive = isFirstNote || isSecondNote || isScaleNote;
+          
           // Position black key at the boundary between two white keys
-          // Left position = (white key index + 1) * white key width - half black key width
           const leftPos = (key.afterWhiteIndex + 1) * whiteKeyWidth - (blackKeyWidth / 2);
           
           return (
@@ -118,22 +132,22 @@ export default function PianoKeyboard({
               key={key.note}
               className={cn(
                 "absolute top-0 w-4 h-14 rounded-b-md z-20 transition-all duration-200",
-                isFirstHighlighted
+                isHighlighted
                   ? "bg-[#243B73] shadow-xl scale-105"
-                  : isSecondHighlighted
-                    ? "bg-[#1a6b61] shadow-xl scale-105"
-                    : isFirstNote 
-                      ? "bg-[#243B73] shadow-lg" 
-                      : isSecondNote 
-                        ? "bg-[#1a6b61] shadow-lg"
+                  : isFirstNote 
+                    ? "bg-[#243B73] shadow-lg" 
+                    : isSecondNote 
+                      ? "bg-[#1a6b61] shadow-lg"
+                      : isScaleNote
+                        ? "bg-[#E9C46A] shadow-lg"
                         : "bg-gray-900"
               )}
               style={{ left: `${leftPos}px` }}
             >
-              {(isFirstNote || isSecondNote) && (
+              {isActive && (
                 <div className={cn(
                   "absolute bottom-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-white",
-                  (isFirstHighlighted || isSecondHighlighted) ? "animate-bounce" : "animate-pulse"
+                  isHighlighted ? "animate-bounce" : "animate-pulse"
                 )}>
                   {key.label}
                 </div>
@@ -144,16 +158,24 @@ export default function PianoKeyboard({
       </div>
       
       {/* Legend */}
-      {baseNote && (
+      {(baseNote || scaleNotes.length > 0) && (
         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-4 text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-[#3E82FC]"></div>
-            <span className="text-muted-foreground">1st Note</span>
-          </div>
+          {baseNote && scaleNotes.length === 0 && (
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-[#3E82FC]"></div>
+              <span className="text-muted-foreground">1st Note</span>
+            </div>
+          )}
           {showSecondNote && secondNote && (
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded bg-[#2A9D8F]"></div>
               <span className="text-muted-foreground">2nd Note</span>
+            </div>
+          )}
+          {scaleNotes.length > 0 && (
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-[#E9C46A]"></div>
+              <span className="text-muted-foreground">Scale Notes</span>
             </div>
           )}
         </div>

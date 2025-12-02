@@ -9,6 +9,8 @@ import {
   generateIntervalQuestion, 
   playChord, 
   generateChordQuestion,
+  playScale,
+  generateScaleQuestion,
   initAudioContext 
 } from '../audio/AudioEngine';
 import PianoKeyboard from '../audio/PianoKeyboard';
@@ -30,14 +32,17 @@ export default function ExerciseInterface({
   const [showFeedback, setShowFeedback] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [currentBaseNote, setCurrentBaseNote] = useState(null);
+  const [currentScaleNotes, setCurrentScaleNotes] = useState([]);
   const [isReplayingCorrect, setIsReplayingCorrect] = useState(false);
-  const [replayHighlight, setReplayHighlight] = useState(null); // 'first', 'second', or null
+  const [replayHighlight, setReplayHighlight] = useState(null); // 'first', 'second', 'both', or scale index
 
   const generateQuestion = useCallback(() => {
     if (exerciseType === 'intervals') {
       return generateIntervalQuestion(difficulty);
     } else if (exerciseType === 'chords') {
       return generateChordQuestion();
+    } else if (exerciseType === 'scales') {
+      return generateScaleQuestion(difficulty);
     }
     return generateIntervalQuestion(difficulty);
   }, [exerciseType, difficulty]);
@@ -58,6 +63,10 @@ export default function ExerciseInterface({
       baseNote = await playInterval(currentQuestion.semitones, audioType, 'melodic', currentBaseNote);
     } else if (exerciseType === 'chords') {
       baseNote = await playChord(currentQuestion.chordType, audioType, currentBaseNote);
+    } else if (exerciseType === 'scales') {
+      const { playedNotes, baseNote: scaleBaseNote } = await playScale(currentQuestion.scaleType, audioType, currentBaseNote);
+      baseNote = scaleBaseNote;
+      setCurrentScaleNotes(playedNotes);
     }
     
     // Store the base note for replay
@@ -65,7 +74,7 @@ export default function ExerciseInterface({
       setCurrentBaseNote(baseNote);
     }
 
-    setTimeout(() => setIsPlaying(false), 1500);
+    setTimeout(() => setIsPlaying(false), exerciseType === 'scales' ? 3500 : 1500);
   };
 
   const replayIntervalAnimation = async () => {
@@ -91,6 +100,23 @@ export default function ExerciseInterface({
     setShowFeedback(true);
   };
 
+  const replayScaleAnimation = async () => {
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    setIsReplayingCorrect(true);
+    const { playedNotes } = await playScale(currentQuestion.scaleType, audioType, currentBaseNote);
+    setCurrentScaleNotes(playedNotes);
+
+    for (let i = 0; i < playedNotes.length; i++) {
+      setReplayHighlight(i);
+      await new Promise(resolve => setTimeout(resolve, 350));
+    }
+
+    setIsReplayingCorrect(false);
+    setReplayHighlight(null);
+    setShowFeedback(true);
+  };
+
   const handleAnswer = (option) => {
     if (showFeedback || !hasPlayed || isReplayingCorrect) return;
 
@@ -101,9 +127,11 @@ export default function ExerciseInterface({
     if (correct) {
       setCorrectCount(prev => prev + 1);
       onXPEarned?.(10);
-      // Replay the interval animation before showing feedback
+      // Replay animation before showing feedback
       if (exerciseType === 'intervals' && currentBaseNote) {
         replayIntervalAnimation();
+      } else if (exerciseType === 'scales' && currentBaseNote) {
+        replayScaleAnimation();
       } else {
         setShowFeedback(true);
       }
@@ -132,6 +160,7 @@ export default function ExerciseInterface({
     setShowFeedback(false);
     setHasPlayed(false);
     setCurrentBaseNote(null);
+    setCurrentScaleNotes([]);
   };
 
   if (!currentQuestion) return null;
@@ -185,15 +214,17 @@ export default function ExerciseInterface({
         </CardContent>
       </Card>
 
-      {/* Piano Keyboard Visualization (only for intervals) */}
-      {exerciseType === 'intervals' && hasPlayed && currentBaseNote && (
+      {/* Piano Keyboard Visualization */}
+      {(exerciseType === 'intervals' || exerciseType === 'scales') && hasPlayed && currentBaseNote && (
         <div className="mb-6 sm:mb-8 pb-6">
           <PianoKeyboard 
             baseNote={currentBaseNote} 
-            semitones={currentQuestion?.semitones}
-            showSecondNote={showFeedback || replayHighlight === 'second' || replayHighlight === 'both'}
+            semitones={exerciseType === 'intervals' ? currentQuestion?.semitones : undefined}
+            scaleNotes={exerciseType === 'scales' ? currentScaleNotes : undefined}
+            showSecondNote={exerciseType === 'intervals' && (showFeedback || replayHighlight === 'second' || replayHighlight === 'both')}
             highlightFirst={replayHighlight === 'first' || replayHighlight === 'both'}
             highlightSecond={replayHighlight === 'second' || replayHighlight === 'both'}
+            highlightScaleNoteIndex={exerciseType === 'scales' && typeof replayHighlight === 'number' ? replayHighlight : undefined}
             isAnimating={isReplayingCorrect}
           />
         </div>

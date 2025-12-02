@@ -156,6 +156,24 @@ export const CHORD_TYPES = [
   { name: 'Augmented', intervals: [0, 4, 8] },
 ];
 
+export const SCALES = [
+  { name: 'Major', intervals: [0, 2, 4, 5, 7, 9, 11, 12] },
+  { name: 'Natural Minor', intervals: [0, 2, 3, 5, 7, 8, 10, 12] },
+  { name: 'Harmonic Minor', intervals: [0, 2, 3, 5, 7, 8, 11, 12] },
+  { name: 'Melodic Minor', intervals: [0, 2, 3, 5, 7, 9, 11, 12] },
+  { name: 'Dorian', intervals: [0, 2, 3, 5, 7, 9, 10, 12] },
+  { name: 'Mixolydian', intervals: [0, 2, 4, 5, 7, 9, 10, 12] },
+  { name: 'Pentatonic Major', intervals: [0, 2, 4, 7, 9, 12] },
+  { name: 'Pentatonic Minor', intervals: [0, 3, 5, 7, 10, 12] },
+];
+
+const getNoteNameFromInterval = (baseNote, semitones) => {
+  const allNotes = Object.keys(NOTE_FREQUENCIES);
+  const baseIndex = allNotes.indexOf(baseNote);
+  if (baseIndex === -1) return null;
+  return allNotes[baseIndex + semitones] || null;
+};
+
 export const playChord = async (chordType, audioType = 'sine', baseNote = null) => {
   const baseNotes = ['C4', 'D4', 'E4', 'F4', 'G4'];
   const selectedBase = baseNote || baseNotes[Math.floor(Math.random() * baseNotes.length)];
@@ -178,6 +196,55 @@ export const generateChordQuestion = () => {
     correctAnswer: correctChord,
     options: [...CHORD_TYPES].sort(() => Math.random() - 0.5),
     chordType: correctChord.name,
+  };
+};
+
+export const playScale = async (scaleType, audioType = 'sine', baseNote = null) => {
+  const baseNotes = ['C4', 'D4', 'E4', 'F4', 'G4'];
+  const selectedBase = baseNote || baseNotes[Math.floor(Math.random() * baseNotes.length)];
+  
+  const scale = SCALES.find(s => s.name === scaleType);
+  if (!scale) return { playedNotes: [], baseNote: selectedBase };
+  
+  const playedNotes = [];
+  for (const semitones of scale.intervals) {
+    const freq = getNoteFrequency(selectedBase, semitones);
+    playTone(freq, 0.3, audioType);
+    const noteName = getNoteNameFromInterval(selectedBase, semitones);
+    if (noteName) playedNotes.push(noteName);
+    await new Promise(resolve => setTimeout(resolve, 350));
+  }
+  
+  return { playedNotes, baseNote: selectedBase };
+};
+
+export const generateScaleQuestion = (difficulty) => {
+  let scalesForDifficulty = SCALES;
+  if (difficulty === 'beginner') {
+    scalesForDifficulty = SCALES.filter(s => ['Major', 'Natural Minor'].includes(s.name));
+  } else if (difficulty === 'intermediate') {
+    scalesForDifficulty = SCALES.filter(s => ['Major', 'Natural Minor', 'Harmonic Minor', 'Pentatonic Major', 'Pentatonic Minor'].includes(s.name));
+  }
+  
+  const correctScale = scalesForDifficulty[Math.floor(Math.random() * scalesForDifficulty.length)];
+  
+  const options = [correctScale];
+  const otherScales = scalesForDifficulty.filter(s => s.name !== correctScale.name);
+  
+  while (options.length < Math.min(4, scalesForDifficulty.length)) {
+    const randomScale = otherScales[Math.floor(Math.random() * otherScales.length)];
+    if (!options.find(o => o.name === randomScale.name)) {
+      options.push(randomScale);
+    }
+  }
+  
+  options.sort(() => Math.random() - 0.5);
+  
+  return {
+    correctAnswer: correctScale,
+    options,
+    scaleType: correctScale.name,
+    scaleIntervals: correctScale.intervals,
   };
 };
 
