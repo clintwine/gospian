@@ -50,17 +50,42 @@ const getNoteFromInterval = (baseNote, semitones) => {
   return allNotes[baseIndex + semitones] || null;
 };
 
+// Get chord intervals
+const CHORD_INTERVALS = {
+  'Major': [0, 4, 7],
+  'Minor': [0, 3, 7],
+  'Diminished': [0, 3, 6],
+  'Augmented': [0, 4, 8],
+  'Dominant7': [0, 4, 7, 10],
+  'Major7': [0, 4, 7, 11],
+  'Minor7': [0, 3, 7, 10],
+  'HalfDiminished7': [0, 3, 6, 10],
+  'Diminished7': [0, 3, 6, 9],
+};
+
 export default function PianoKeyboard({ 
   baseNote, 
   semitones, 
   scaleNotes = [],
+  chordType,
   showSecondNote = false,
+  showChordNotes = false,
   highlightFirst = false,
   highlightSecond = false,
   highlightScaleNoteIndex,
   isAnimating = false
 }) {
   const secondNote = baseNote && semitones !== undefined ? getNoteFromInterval(baseNote, semitones) : null;
+  
+  // Calculate chord notes
+  const chordNotes = [];
+  if (chordType && baseNote && showChordNotes) {
+    const intervals = CHORD_INTERVALS[chordType] || [];
+    intervals.forEach(interval => {
+      const note = getNoteFromInterval(baseNote, interval);
+      if (note) chordNotes.push(note);
+    });
+  }
   
   return (
     <div className="relative flex justify-center my-4">
@@ -70,13 +95,14 @@ export default function PianoKeyboard({
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
           const isScaleNote = scaleNotes.includes(key.note);
+          const isChordNote = chordNotes.includes(key.note);
           const scaleNoteIdx = scaleNotes.indexOf(key.note);
           const isCurrentScaleHighlight = isAnimating && highlightScaleNoteIndex !== undefined && scaleNoteIdx === highlightScaleNoteIndex;
           const isFirstHighlighted = isAnimating && highlightFirst && isFirstNote;
           const isSecondHighlighted = isAnimating && highlightSecond && isSecondNote;
           
           const isHighlighted = isFirstHighlighted || isSecondHighlighted || isCurrentScaleHighlight;
-          const isActive = isFirstNote || isSecondNote || isScaleNote;
+          const isActive = isFirstNote || isSecondNote || isScaleNote || isChordNote;
           
           // Calculate black key position based on responsive width
           const keyWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 24;
@@ -95,13 +121,15 @@ export default function PianoKeyboard({
                       ? "bg-[#2A9D8F] border-[#1a6b61] shadow-lg z-10"
                       : isScaleNote
                         ? "bg-[#E9C46A] border-[#d4a84a] shadow-lg z-10"
-                        : "bg-white"
+                        : isChordNote
+                          ? "bg-[#9B59B6] border-[#7D3C98] shadow-lg z-10"
+                          : "bg-white"
               )}
             >
               {isActive && (
                 <div className={cn(
                   "absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold",
-                  isScaleNote && !isFirstNote ? "text-[#0A1A2F]" : "text-white",
+                  (isScaleNote && !isFirstNote) || isChordNote ? "text-white" : "text-white",
                   isHighlighted ? "animate-bounce" : "animate-pulse"
                 )}>
                   {key.label}
@@ -116,13 +144,14 @@ export default function PianoKeyboard({
           const isFirstNote = key.note === baseNote;
           const isSecondNote = showSecondNote && key.note === secondNote;
           const isScaleNote = scaleNotes.includes(key.note);
+          const isChordNote = chordNotes.includes(key.note);
           const scaleNoteIdx = scaleNotes.indexOf(key.note);
           const isCurrentScaleHighlight = isAnimating && highlightScaleNoteIndex !== undefined && scaleNoteIdx === highlightScaleNoteIndex;
           const isFirstHighlighted = isAnimating && highlightFirst && isFirstNote;
           const isSecondHighlighted = isAnimating && highlightSecond && isSecondNote;
           
           const isHighlighted = isFirstHighlighted || isSecondHighlighted || isCurrentScaleHighlight;
-          const isActive = isFirstNote || isSecondNote || isScaleNote;
+          const isActive = isFirstNote || isSecondNote || isScaleNote || isChordNote;
           
           // Position black key at the boundary between two white keys - responsive
           const whiteKeyWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 24;
@@ -143,7 +172,9 @@ export default function PianoKeyboard({
                       ? "bg-[#1a6b61] shadow-lg"
                       : isScaleNote
                         ? "bg-[#E9C46A] shadow-lg"
-                        : "bg-gray-900"
+                        : isChordNote
+                          ? "bg-[#7D3C98] shadow-lg"
+                          : "bg-gray-900"
               )}
 
             >
@@ -161,9 +192,9 @@ export default function PianoKeyboard({
       </div>
       
       {/* Legend */}
-      {(baseNote || scaleNotes.length > 0) && (
+      {(baseNote || scaleNotes.length > 0 || chordNotes.length > 0) && (
         <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-4 text-xs">
-          {baseNote && scaleNotes.length === 0 && (
+          {baseNote && scaleNotes.length === 0 && chordNotes.length === 0 && (
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded bg-[#3E82FC]"></div>
               <span className="text-muted-foreground">1st Note</span>
@@ -179,6 +210,12 @@ export default function PianoKeyboard({
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded bg-[#E9C46A]"></div>
               <span className="text-muted-foreground">Scale Notes</span>
+            </div>
+          )}
+          {chordNotes.length > 0 && (
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-[#9B59B6]"></div>
+              <span className="text-muted-foreground">Chord Notes</span>
             </div>
           )}
         </div>
