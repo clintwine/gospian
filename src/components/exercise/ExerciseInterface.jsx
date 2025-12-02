@@ -179,12 +179,12 @@ export default function ExerciseInterface({
       </div>
 
       {/* Audio Player */}
-      <Card className="mb-4 sm:mb-6 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
-        <CardContent className="p-6 sm:p-8 flex flex-col items-center">
+      <Card className="mb-3 sm:mb-4 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
+        <CardContent className="p-3 sm:p-4 flex items-center justify-center gap-4">
           <motion.button
             onClick={handlePlaySound}
             disabled={isPlaying}
-            className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all shrink-0 ${
               isPlaying 
                 ? 'bg-[#3E82FC] scale-110' 
                 : 'bg-white/10 hover:bg-white/20'
@@ -192,25 +192,25 @@ export default function ExerciseInterface({
             whileTap={{ scale: 0.95 }}
           >
             {isPlaying ? (
-              <Volume2 className="w-10 h-10 text-white animate-pulse" />
+              <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-pulse" />
             ) : (
-              <Play className="w-10 h-10 text-white ml-1" />
+              <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" />
             )}
           </motion.button>
-          <p className="text-white/70 mt-4 text-sm">
-            {hasPlayed ? 'Click to replay' : 'Click to play'}
-          </p>
-          {hasPlayed && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handlePlaySound}
-              className="text-white/60 hover:text-white mt-2"
-            >
-              <RotateCcw className="w-4 h-4 mr-1" />
-              Replay
-            </Button>
-          )}
+          <div className="flex flex-col">
+            <p className="text-white/90 text-sm font-medium">
+              {hasPlayed ? 'Tap to replay' : 'Tap to play'}
+            </p>
+            {hasPlayed && (
+              <button 
+                onClick={handlePlaySound}
+                className="text-white/60 hover:text-white text-xs flex items-center gap-1 mt-0.5"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Replay sound
+              </button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
