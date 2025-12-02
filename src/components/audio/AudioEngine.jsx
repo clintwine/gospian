@@ -1,45 +1,4 @@
-// Audio Engine for generating musical tones using Web Audio API and Tone.js Sampler
-import * as Tone from 'tone';
-
-// Piano sampler for high-quality piano sounds
-let pianoSampler = null;
-let samplerLoaded = false;
-
-// Piano sample URLs (using free Salamander Grand Piano samples)
-const PIANO_SAMPLES = {
-  'C2': 'https://tonejs.github.io/audio/salamander/C2.mp3',
-  'F2': 'https://tonejs.github.io/audio/salamander/Fs2.mp3',
-  'C3': 'https://tonejs.github.io/audio/salamander/C3.mp3',
-  'F3': 'https://tonejs.github.io/audio/salamander/Fs3.mp3',
-  'C4': 'https://tonejs.github.io/audio/salamander/C4.mp3',
-  'F4': 'https://tonejs.github.io/audio/salamander/Fs4.mp3',
-  'C5': 'https://tonejs.github.io/audio/salamander/C5.mp3',
-  'F5': 'https://tonejs.github.io/audio/salamander/Fs5.mp3',
-};
-
-export const initPianoSampler = () => {
-  return new Promise((resolve) => {
-    if (pianoSampler && samplerLoaded) {
-      resolve(true);
-      return;
-    }
-    
-    pianoSampler = new Tone.Sampler({
-      urls: PIANO_SAMPLES,
-      release: 1,
-      onload: () => {
-        samplerLoaded = true;
-        resolve(true);
-      },
-      onerror: (err) => {
-        console.error('Failed to load piano samples:', err);
-        resolve(false);
-      }
-    }).toDestination();
-  });
-};
-
-export const isSamplerReady = () => samplerLoaded;
+// Audio Engine for generating musical tones using Web Audio API
 
 const NOTE_FREQUENCIES = {
   'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81,
@@ -74,48 +33,75 @@ const ADVANCED_INTERVALS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // All
 
 let audioContext = null;
 
-export const initAudioContext = async () => {
+export const initAudioContext = () => {
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
   if (audioContext.state === 'suspended') {
     audioContext.resume();
   }
-  
-  // Start Tone.js context
-  if (Tone.context.state !== 'running') {
-    await Tone.start();
-  }
-  
-  // Initialize piano sampler if not already done
-  if (!samplerLoaded) {
-    await initPianoSampler();
-  }
-  
   return audioContext;
 };
 
-// Convert frequency to note name for sampler
-const frequencyToNoteName = (frequency) => {
-  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const a4 = 440;
-  const semitones = Math.round(12 * Math.log2(frequency / a4));
-  const noteIndex = ((semitones % 12) + 12 + 9) % 12; // A4 is index 9
-  const octave = Math.floor((semitones + 9) / 12) + 4;
-  return noteNames[noteIndex] + octave;
+// Play a more realistic piano tone using multiple oscillators (additive synthesis)
+const playPianoTone = (ctx, frequency, duration) => {
+  const masterGain = ctx.createGain();
+  masterGain.connect(ctx.destination);
+  masterGain.gain.setValueAtTime(0.4, ctx.currentTime);
+  
+  // Piano-like harmonics (fundamental + overtones)
+  const harmonics = [
+    { ratio: 1, gain: 1.0 },      // Fundamental
+    { ratio: 2, gain: 0.5 },      // 2nd harmonic
+    { ratio: 3, gain: 0.25 },     // 3rd harmonic
+    { ratio: 4, gain: 0.125 },    // 4th harmonic
+    { ratio: 5, gain: 0.0625 },   // 5th harmonic
+  ];
+  
+  harmonics.forEach(({ ratio, gain }) => {
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(frequency * ratio, ctx.currentTime);
+    
+    oscGain.gain.setValueAtTime(0, ctx.currentTime);
+    // Fast attack
+    oscGain.gain.linearRampToValueAtTime(gain * 0.8, ctx.currentTime + 0.005);
+    // Quick initial decay (piano hammer)
+    oscGain.gain.exponentialRampToValueAtTime(gain * 0.4, ctx.currentTime + 0.1);
+    // Slow sustain decay
+    oscGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    
+    osc.connect(oscGain);
+    oscGain.connect(masterGain);
+    
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  });
+  
+  // Add a subtle "ping" for attack brightness
+  const pingOsc = ctx.createOscillator();
+  const pingGain = ctx.createGain();
+  pingOsc.type = 'sine';
+  pingOsc.frequency.setValueAtTime(frequency * 6, ctx.currentTime);
+  pingGain.gain.setValueAtTime(0, ctx.currentTime);
+  pingGain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.001);
+  pingGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+  pingOsc.connect(pingGain);
+  pingGain.connect(masterGain);
+  pingOsc.start(ctx.currentTime);
+  pingOsc.stop(ctx.currentTime + 0.1);
 };
 
 export const playTone = (frequency, duration = 0.8, type = 'sine') => {
-  // Use Tone.js Sampler for piano
-  if (type === 'piano' && pianoSampler && samplerLoaded) {
-    const noteName = frequencyToNoteName(frequency);
-    pianoSampler.triggerAttackRelease(noteName, duration);
+  const ctx = initAudioContext();
+  
+  // Use enhanced piano synthesis
+  if (type === 'piano') {
+    playPianoTone(ctx, frequency, duration);
     return;
   }
-  
-  // Fallback to oscillator for other types
-  const ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
-  if (ctx.state === 'suspended') ctx.resume();
   
   const oscillator = ctx.createOscillator();
   const gainNode = ctx.createGain();
