@@ -294,28 +294,21 @@ export default function ExerciseInterface({
                 )}
               </div>
             </div>
-            {showNextButton && (
-              <Button
-                onClick={handleNext}
-                disabled={isPlayingAnimation}
-                size="icon"
-                className="absolute right-3 sm:right-4 w-10 h-10 sm:w-12 sm:h-12 bg-[#3E82FC] hover:bg-[#243B73] text-white rounded-full"
-              >
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            )}
+
           </div>
         </CardContent>
       </Card>
 
       {/* Piano Keyboard Visualization */}
-      {(exerciseType === 'intervals' || exerciseType === 'scales') && hasPlayed && currentBaseNote && (
+      {(exerciseType === 'intervals' || exerciseType === 'scales' || exerciseType === 'chords') && hasPlayed && currentBaseNote && (
         <div className="mb-6 sm:mb-8 pb-6">
           <PianoKeyboard 
             baseNote={currentBaseNote} 
             semitones={exerciseType === 'intervals' ? currentQuestion?.semitones : undefined}
             scaleNotes={exerciseType === 'scales' && showScaleNotes ? currentScaleNotes : undefined}
+            chordType={exerciseType === 'chords' ? currentQuestion?.chordType : undefined}
             showSecondNote={exerciseType === 'intervals' && (showFeedback || replayHighlight === 'second' || replayHighlight === 'both' || (isCorrect && selectedAnswer))}
+            showChordNotes={exerciseType === 'chords' && (showFeedback || isCorrect)}
             highlightFirst={replayHighlight === 'first' || replayHighlight === 'both'}
             highlightSecond={replayHighlight === 'second' || replayHighlight === 'both'}
             highlightScaleNoteIndex={exerciseType === 'scales' && typeof replayHighlight === 'number' ? replayHighlight : undefined}
@@ -394,7 +387,14 @@ export default function ExerciseInterface({
                       )}
                     </div>
                   </div>
-
+                  <Button
+                    onClick={handleNext}
+                    disabled={isPlayingAnimation}
+                    className="bg-[#3E82FC] hover:bg-[#243B73] text-white"
+                  >
+                    Next
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </div>
               </CardContent>
             </Card>
