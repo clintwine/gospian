@@ -11,7 +11,9 @@ import {
   generateChordQuestion,
   playScale,
   generateScaleQuestion,
-  initAudioContext 
+  initAudioContext,
+  playTone,
+  getNoteFrequency
 } from '../audio/AudioEngine';
 import PianoKeyboard from '../audio/PianoKeyboard';
 
@@ -35,6 +37,8 @@ export default function ExerciseInterface({
   const [currentScaleNotes, setCurrentScaleNotes] = useState([]);
   const [isReplayingCorrect, setIsReplayingCorrect] = useState(false);
   const [replayHighlight, setReplayHighlight] = useState(null); // 'first', 'second', 'both', or scale index
+  const [showScaleNotes, setShowScaleNotes] = useState(false); // Only show full scale after correct answer
+  const [isPlayingAnimation, setIsPlayingAnimation] = useState(false); // Block next during animation
 
   const generateQuestion = useCallback(() => {
     if (exerciseType === 'intervals') {
@@ -77,34 +81,41 @@ export default function ExerciseInterface({
     setTimeout(() => setIsPlaying(false), exerciseType === 'scales' ? 3500 : 1500);
   };
 
-  const replayIntervalAnimation = async () => {
-    // Wait for any current playback to finish
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
+  const replayIntervalAnimation = async (semitones, baseNote, showFeedbackAfter = true) => {
+    setIsPlayingAnimation(true);
     setIsReplayingCorrect(true);
     
-    // Highlight first note (no sound, just visual)
-    setReplayHighlight('first');
-    await new Promise(resolve => setTimeout(resolve, 400));
+    const baseFreq = getNoteFrequency(baseNote, 0);
+    const secondFreq = getNoteFrequency(baseNote, semitones);
     
-    // Highlight second note (no sound, just visual)
+    // Highlight and play first note
+    setReplayHighlight('first');
+    playTone(baseFreq, 0.5, audioType);
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    // Highlight and play second note
     setReplayHighlight('second');
-    await new Promise(resolve => setTimeout(resolve, 400));
+    playTone(secondFreq, 0.5, audioType);
+    await new Promise(resolve => setTimeout(resolve, 600));
     
     // Show both notes highlighted
     setReplayHighlight('both');
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 400));
     
     setIsReplayingCorrect(false);
     setReplayHighlight(null);
-    setShowFeedback(true);
+    setIsPlayingAnimation(false);
+    if (showFeedbackAfter) {
+      setShowFeedback(true);
+    }
   };
 
-  const replayScaleAnimation = async () => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-
+  const replayScaleAnimation = async (scaleType, baseNote, showFeedbackAfter = true) => {
+    setIsPlayingAnimation(true);
     setIsReplayingCorrect(true);
-    const { playedNotes } = await playScale(currentQuestion.scaleType, audioType, currentBaseNote);
+    setShowScaleNotes(true);
+    
+    const { playedNotes } = await playScale(scaleType, audioType, baseNote);
     setCurrentScaleNotes(playedNotes);
 
     for (let i = 0; i < playedNotes.length; i++) {
@@ -114,7 +125,10 @@ export default function ExerciseInterface({
 
     setIsReplayingCorrect(false);
     setReplayHighlight(null);
-    setShowFeedback(true);
+    setIsPlayingAnimation(false);
+    if (showFeedbackAfter) {
+      setShowFeedback(true);
+    }
   };
 
   const handleAnswer = (option) => {
@@ -129,9 +143,9 @@ export default function ExerciseInterface({
       onXPEarned?.(10);
       // Replay animation before showing feedback
       if (exerciseType === 'intervals' && currentBaseNote) {
-        replayIntervalAnimation();
+        replayIntervalAnimation(currentQuestion.semitones, currentBaseNote, true);
       } else if (exerciseType === 'scales' && currentBaseNote) {
-        replayScaleAnimation();
+        replayScaleAnimation(currentQuestion.scaleType, currentBaseNote, true);
       } else {
         setShowFeedback(true);
       }
@@ -140,7 +154,7 @@ export default function ExerciseInterface({
     }
   };
 
-  const handleNext = () => {
+  const proceedToNext = () => {
     if (questionNumber >= questionsCount) {
       const accuracy = Math.round((correctCount / questionsCount) * 100);
       const bonusXP = accuracy === 100 ? 10 : 0;
@@ -161,6 +175,22 @@ export default function ExerciseInterface({
     setHasPlayed(false);
     setCurrentBaseNote(null);
     setCurrentScaleNotes([]);
+    setShowScaleNotes(false);
+  };
+
+  const handleNext = async () => {
+    if (isPlayingAnimation) return;
+    
+    // If incorrect, play the correct answer animation first
+    if (!isCorrect && currentBaseNote) {
+      if (exerciseType === 'intervals') {
+        await replayIntervalAnimation(currentQuestion.semitones, currentBaseNote, false);
+      } else if (exerciseType === 'scales') {
+        await replayScaleAnimation(currentQuestion.scaleType, currentBaseNote, false);
+      }
+    }
+    
+    proceedToNext();
   };
 
   if (!currentQuestion) return null;
@@ -220,7 +250,7 @@ export default function ExerciseInterface({
           <PianoKeyboard 
             baseNote={currentBaseNote} 
             semitones={exerciseType === 'intervals' ? currentQuestion?.semitones : undefined}
-            scaleNotes={exerciseType === 'scales' ? currentScaleNotes : undefined}
+            scaleNotes={exerciseType === 'scales' && showScaleNotes ? currentScaleNotes : undefined}
             showSecondNote={exerciseType === 'intervals' && (showFeedback || replayHighlight === 'second' || replayHighlight === 'both')}
             highlightFirst={replayHighlight === 'first' || replayHighlight === 'both'}
             highlightSecond={replayHighlight === 'second' || replayHighlight === 'both'}
@@ -237,6 +267,7 @@ export default function ExerciseInterface({
             const isSelected = selectedAnswer?.name === option.name;
             const isCorrectAnswer = showFeedback && option.name === currentQuestion.correctAnswer.name;
             const isWrongSelection = showFeedback && isSelected && !isCorrect;
+            const isSelectedBeforeFeedback = isSelected && !showFeedback && !isReplayingCorrect;
 
             return (
               <motion.div
@@ -248,7 +279,7 @@ export default function ExerciseInterface({
                 <Button
                   variant="outline"
                   onClick={() => handleAnswer(option)}
-                  disabled={showFeedback || !hasPlayed}
+                  disabled={showFeedback || !hasPlayed || isReplayingCorrect}
                   className={`w-full h-12 sm:h-14 text-sm sm:text-base font-medium transition-all ${
                     !hasPlayed 
                       ? 'opacity-50 cursor-not-allowed'
@@ -256,7 +287,9 @@ export default function ExerciseInterface({
                         ? 'bg-[#2A9D8F] border-[#2A9D8F] text-white hover:bg-[#2A9D8F]'
                         : isWrongSelection
                           ? 'bg-[#E76F51] border-[#E76F51] text-white hover:bg-[#E76F51]'
-                          : 'hover:border-[#3E82FC] hover:bg-[#3E82FC]/10'
+                          : isSelectedBeforeFeedback
+                            ? 'bg-[#3E82FC] border-[#3E82FC] text-white'
+                            : 'hover:border-[#3E82FC] hover:bg-[#3E82FC]/10'
                   }`}
                 >
                   {option.name}
@@ -297,8 +330,12 @@ export default function ExerciseInterface({
                       )}
                     </div>
                   </div>
-                  <Button onClick={handleNext} className="bg-[#243B73] hover:bg-[#0A1A2F]">
-                    {questionNumber >= questionsCount ? 'See Results' : 'Next'}
+                  <Button 
+                    onClick={handleNext} 
+                    disabled={isPlayingAnimation}
+                    className="bg-[#243B73] hover:bg-[#0A1A2F]"
+                  >
+                    {isPlayingAnimation ? 'Playing...' : (questionNumber >= questionsCount ? 'See Results' : 'Next')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
