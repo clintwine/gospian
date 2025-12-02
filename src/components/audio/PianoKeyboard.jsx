@@ -62,12 +62,8 @@ export default function PianoKeyboard({
 }) {
   const secondNote = baseNote && semitones !== undefined ? getNoteFromInterval(baseNote, semitones) : null;
   
-  // Responsive key widths - smaller on mobile
-  const whiteKeyWidth = 20; // smaller for mobile
-  const blackKeyWidth = 12;
-
   return (
-    <div className="relative flex justify-center my-4 overflow-x-auto">
+    <div className="relative flex justify-center my-4">
       <div className="relative flex">
         {/* White keys */}
         {WHITE_KEYS.map((key) => {
@@ -82,11 +78,15 @@ export default function PianoKeyboard({
           const isHighlighted = isFirstHighlighted || isSecondHighlighted || isCurrentScaleHighlight;
           const isActive = isFirstNote || isSecondNote || isScaleNote;
           
+          // Calculate black key position based on responsive width
+          const keyWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 24;
+          
           return (
             <div
               key={key.note}
+              style={{ width: `${keyWidth}px` }}
               className={cn(
-                "relative w-5 h-16 sm:w-6 sm:h-20 border border-gray-300 rounded-b-md transition-all duration-200",
+                "relative h-16 sm:h-20 border border-gray-300 rounded-b-md transition-all duration-200 shrink-0",
                 isHighlighted
                   ? "bg-[#3E82FC] border-[#243B73] shadow-xl z-10 scale-105"
                   : isFirstNote 
@@ -124,14 +124,17 @@ export default function PianoKeyboard({
           const isHighlighted = isFirstHighlighted || isSecondHighlighted || isCurrentScaleHighlight;
           const isActive = isFirstNote || isSecondNote || isScaleNote;
           
-          // Position black key at the boundary between two white keys
+          // Position black key at the boundary between two white keys - responsive
+          const whiteKeyWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 20 : 24;
+          const blackKeyWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 12 : 14;
           const leftPos = (key.afterWhiteIndex + 1) * whiteKeyWidth - (blackKeyWidth / 2);
           
           return (
             <div
               key={key.note}
+              style={{ width: `${blackKeyWidth}px`, left: `${leftPos}px` }}
               className={cn(
-                "absolute top-0 w-3 h-9 sm:w-4 sm:h-12 rounded-b-md z-20 transition-all duration-200",
+                "absolute top-0 h-9 sm:h-12 rounded-b-md z-20 transition-all duration-200",
                 isHighlighted
                   ? "bg-[#243B73] shadow-xl scale-105"
                   : isFirstNote 
@@ -142,7 +145,7 @@ export default function PianoKeyboard({
                         ? "bg-[#E9C46A] shadow-lg"
                         : "bg-gray-900"
               )}
-              style={{ left: `${leftPos}px` }}
+
             >
               {isActive && (
                 <div className={cn(
