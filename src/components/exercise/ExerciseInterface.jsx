@@ -81,7 +81,7 @@ export default function ExerciseInterface({
       setCurrentScaleNotes(playedNotes);
     }
     
-    // Store the base note for replay
+    // Always store the base note (only set once per question via noteToUse logic)
     if (!currentBaseNote) {
       setCurrentBaseNote(baseNote);
     }

@@ -13,8 +13,11 @@ import {
   generateIntervalQuestion, 
   playChord, 
   generateChordQuestion,
-  initAudioContext 
+  initAudioContext,
+  playTone,
+  getNoteFrequency
 } from '@/components/audio/AudioEngine';
+import PianoKeyboard from '@/components/audio/PianoKeyboard';
 
 export default function DailyChallenge() {
   const [gameState, setGameState] = useState('ready'); // ready, playing, finished
@@ -25,6 +28,9 @@ export default function DailyChallenge() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [currentBaseNote, setCurrentBaseNote] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [replayHighlight, setReplayHighlight] = useState(null);
 
   const queryClient = useQueryClient();
 
@@ -86,6 +92,9 @@ export default function DailyChallenge() {
     setCurrentQuestion(generateQuestion());
     setHasPlayed(false);
     setFeedback(null);
+    setCurrentBaseNote(null);
+    setIsAnimating(false);
+    setReplayHighlight(null);
   };
 
   const handlePlaySound = async () => {
@@ -94,23 +103,59 @@ export default function DailyChallenge() {
     setIsPlaying(true);
     setHasPlayed(true);
 
+    // Use stored base note for replays, or let the function pick one
+    const noteToUse = currentBaseNote;
+    let baseNote;
+
     if (currentQuestion.type === 'chords') {
-      await playChord(currentQuestion.chordType, 'piano');
+      baseNote = await playChord(currentQuestion.chordType, 'piano', noteToUse);
     } else {
-      await playInterval(currentQuestion.semitones, 'piano');
+      baseNote = await playInterval(currentQuestion.semitones, 'piano', 'melodic', noteToUse);
+    }
+
+    // Store the base note for consistent replays
+    if (!currentBaseNote) {
+      setCurrentBaseNote(baseNote);
     }
 
     setTimeout(() => setIsPlaying(false), 1500);
   };
 
+  const replayIntervalAnimation = async (semitones, baseNote) => {
+    setIsAnimating(true);
+    
+    const baseFreq = getNoteFrequency(baseNote, 0);
+    const secondFreq = getNoteFrequency(baseNote, semitones);
+    
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    setReplayHighlight('first');
+    playTone(baseFreq, 0.5, 'piano');
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    setReplayHighlight('second');
+    playTone(secondFreq, 0.5, 'piano');
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    setReplayHighlight('both');
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    setIsAnimating(false);
+    setReplayHighlight(null);
+  };
+
   const handleAnswer = async (option) => {
-    if (feedback || !hasPlayed) return;
+    if (feedback || !hasPlayed || isAnimating) return;
 
     const isCorrect = option.name === currentQuestion.correctAnswer.name;
     setFeedback({ isCorrect, correctAnswer: currentQuestion.correctAnswer.name });
     
     if (isCorrect) {
       setScore(prev => prev + 1);
+      // Play animation for correct interval answers
+      if (currentQuestion.type === 'intervals' && currentBaseNote) {
+        await replayIntervalAnimation(currentQuestion.semitones, currentBaseNote);
+      }
     }
     setQuestionsAnswered(prev => prev + 1);
 
@@ -119,7 +164,9 @@ export default function DailyChallenge() {
       setFeedback(null);
       setCurrentQuestion(generateQuestion());
       setHasPlayed(false);
-    }, 800);
+      setCurrentBaseNote(null);
+      setReplayHighlight(null);
+    }, isCorrect && currentQuestion.type === 'intervals' ? 200 : 800);
   };
 
   const finishChallenge = async () => {
@@ -290,7 +337,7 @@ export default function DailyChallenge() {
       <Progress value={(timeLeft / 90) * 100} className="h-2 mb-6" />
 
       {/* Audio Player */}
-      <Card className="mb-6 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
+      <Card className="mb-4 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
         <CardContent className="p-6 flex flex-col items-center">
           <motion.button
             onClick={handlePlaySound}
@@ -307,6 +354,20 @@ export default function DailyChallenge() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Piano Keyboard for Intervals */}
+      {currentQuestion?.type === 'intervals' && hasPlayed && currentBaseNote && (
+        <div className="mb-6 pb-4">
+          <PianoKeyboard 
+            baseNote={currentBaseNote} 
+            semitones={currentQuestion?.semitones}
+            showSecondNote={feedback?.isCorrect || replayHighlight === 'second' || replayHighlight === 'both'}
+            highlightFirst={replayHighlight === 'first' || replayHighlight === 'both'}
+            highlightSecond={replayHighlight === 'second' || replayHighlight === 'both'}
+            isAnimating={isAnimating}
+          />
+        </div>
+      )}
 
       {/* Answer Options */}
       <div className="grid grid-cols-2 gap-3">
