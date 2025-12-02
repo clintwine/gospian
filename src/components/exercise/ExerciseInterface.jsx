@@ -260,37 +260,52 @@ export default function ExerciseInterface({
 
       {/* Audio Player */}
       <Card className="mb-3 sm:mb-4 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
-        <CardContent className="p-3 sm:p-4 flex items-center justify-center gap-4">
-          <motion.button
-            onClick={handlePlaySound}
-            disabled={isPlaying}
-            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all shrink-0 ${
-              isPlaying 
-                ? 'bg-[#3E82FC] scale-110' 
-                : 'bg-white/10 hover:bg-white/20'
-            }`}
-            whileTap={{ scale: 0.95 }}
-          >
-            {isPlaying ? (
-              <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-pulse" />
-            ) : (
-              <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" />
-            )}
-          </motion.button>
-          <div className="flex flex-col">
-            <p className="text-white/90 text-sm font-medium">
-              {hasPlayed ? 'Tap to replay' : 'Tap to play'}
-            </p>
-            {hasPlayed && (
-              <button 
-                onClick={handlePlaySound}
-                className="text-white/60 hover:text-white text-xs flex items-center gap-1 mt-0.5"
-              >
-                <RotateCcw className="w-3 h-3" />
-                Replay sound
-              </button>
-            )}
+        <CardContent className="p-3 sm:p-4 flex items-center justify-between gap-4">
+          <div className="w-10 sm:w-12" /> {/* Spacer for centering */}
+          <div className="flex items-center gap-4">
+            <motion.button
+              onClick={handlePlaySound}
+              disabled={isPlaying}
+              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                isPlaying 
+                  ? 'bg-[#3E82FC] scale-110' 
+                  : 'bg-white/10 hover:bg-white/20'
+              }`}
+              whileTap={{ scale: 0.95 }}
+            >
+              {isPlaying ? (
+                <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-pulse" />
+              ) : (
+                <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" />
+              )}
+            </motion.button>
+            <div className="flex flex-col">
+              <p className="text-white/90 text-sm font-medium">
+                {hasPlayed ? 'Tap to replay' : 'Tap to play'}
+              </p>
+              {hasPlayed && (
+                <button 
+                  onClick={handlePlaySound}
+                  className="text-white/60 hover:text-white text-xs flex items-center gap-1 mt-0.5"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Replay sound
+                </button>
+              )}
+            </div>
           </div>
+          {showNextButton ? (
+            <Button
+              onClick={handleNext}
+              disabled={isPlayingAnimation}
+              size="icon"
+              className="w-10 h-10 sm:w-12 sm:h-12 bg-[#3E82FC] hover:bg-[#243B73] text-white flex-shrink-0 rounded-full"
+            >
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+          ) : (
+            <div className="w-10 sm:w-12" /> {/* Spacer when no button */}
+          )}
         </CardContent>
       </Card>
 
