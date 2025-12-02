@@ -1,4 +1,45 @@
-// Audio Engine for generating musical tones using Web Audio API
+// Audio Engine for generating musical tones using Web Audio API and Tone.js Sampler
+import * as Tone from 'tone';
+
+// Piano sampler for high-quality piano sounds
+let pianoSampler = null;
+let samplerLoaded = false;
+
+// Piano sample URLs (using free Salamander Grand Piano samples)
+const PIANO_SAMPLES = {
+  'C2': 'https://tonejs.github.io/audio/salamander/C2.mp3',
+  'F2': 'https://tonejs.github.io/audio/salamander/Fs2.mp3',
+  'C3': 'https://tonejs.github.io/audio/salamander/C3.mp3',
+  'F3': 'https://tonejs.github.io/audio/salamander/Fs3.mp3',
+  'C4': 'https://tonejs.github.io/audio/salamander/C4.mp3',
+  'F4': 'https://tonejs.github.io/audio/salamander/Fs4.mp3',
+  'C5': 'https://tonejs.github.io/audio/salamander/C5.mp3',
+  'F5': 'https://tonejs.github.io/audio/salamander/Fs5.mp3',
+};
+
+export const initPianoSampler = () => {
+  return new Promise((resolve) => {
+    if (pianoSampler && samplerLoaded) {
+      resolve(true);
+      return;
+    }
+    
+    pianoSampler = new Tone.Sampler({
+      urls: PIANO_SAMPLES,
+      release: 1,
+      onload: () => {
+        samplerLoaded = true;
+        resolve(true);
+      },
+      onerror: (err) => {
+        console.error('Failed to load piano samples:', err);
+        resolve(false);
+      }
+    }).toDestination();
+  });
+};
+
+export const isSamplerReady = () => samplerLoaded;
 
 const NOTE_FREQUENCIES = {
   'C3': 130.81, 'C#3': 138.59, 'D3': 146.83, 'D#3': 155.56, 'E3': 164.81,
@@ -33,18 +74,49 @@ const ADVANCED_INTERVALS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // All
 
 let audioContext = null;
 
-export const initAudioContext = () => {
+export const initAudioContext = async () => {
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
   if (audioContext.state === 'suspended') {
     audioContext.resume();
   }
+  
+  // Start Tone.js context
+  if (Tone.context.state !== 'running') {
+    await Tone.start();
+  }
+  
+  // Initialize piano sampler if not already done
+  if (!samplerLoaded) {
+    await initPianoSampler();
+  }
+  
   return audioContext;
 };
 
+// Convert frequency to note name for sampler
+const frequencyToNoteName = (frequency) => {
+  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const a4 = 440;
+  const semitones = Math.round(12 * Math.log2(frequency / a4));
+  const noteIndex = ((semitones % 12) + 12 + 9) % 12; // A4 is index 9
+  const octave = Math.floor((semitones + 9) / 12) + 4;
+  return noteNames[noteIndex] + octave;
+};
+
 export const playTone = (frequency, duration = 0.8, type = 'sine') => {
-  const ctx = initAudioContext();
+  // Use Tone.js Sampler for piano
+  if (type === 'piano' && pianoSampler && samplerLoaded) {
+    const noteName = frequencyToNoteName(frequency);
+    pianoSampler.triggerAttackRelease(noteName, duration);
+    return;
+  }
+  
+  // Fallback to oscillator for other types
+  const ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+  if (ctx.state === 'suspended') ctx.resume();
+  
   const oscillator = ctx.createOscillator();
   const gainNode = ctx.createGain();
   
@@ -52,9 +124,7 @@ export const playTone = (frequency, duration = 0.8, type = 'sine') => {
   gainNode.connect(ctx.destination);
   
   // Set oscillator type based on instrument
-  if (type === 'piano') {
-    oscillator.type = 'triangle';
-  } else if (type === 'synth') {
+  if (type === 'synth') {
     oscillator.type = 'sawtooth';
   } else if (type === 'guitar') {
     oscillator.type = 'sawtooth';
