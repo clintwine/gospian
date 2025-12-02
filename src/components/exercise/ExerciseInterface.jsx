@@ -10,7 +10,8 @@ import {
   playScale,
   initAudioContext,
   playTone,
-  getNoteFrequency
+  getNoteFrequency,
+  CHORD_TYPES
 } from '../audio/AudioEngine';
 import PianoKeyboard from '../audio/PianoKeyboard';
 import { getRandomExercise } from '@/components/data/exerciseData';
@@ -40,6 +41,8 @@ export default function ExerciseInterface({
   const [showScaleNotes, setShowScaleNotes] = useState(false); // Only show full scale after correct answer
   const [isPlayingAnimation, setIsPlayingAnimation] = useState(false); // Block next during animation
   const [showNextButton, setShowNextButton] = useState(false); // Show next button after animation
+  const [highlightChordIndex, setHighlightChordIndex] = useState(null); // Current chord note being highlighted
+  const [highlightAllChord, setHighlightAllChord] = useState(false); // Highlight all chord notes together
 
   const generateQuestion = useCallback(() => {
     if (isPracticeMode && questionSupplier) {
@@ -128,6 +131,58 @@ export default function ExerciseInterface({
     }
   };
 
+  const replayChordAnimation = async (chordType, baseNote, showFeedbackAfter = true) => {
+    setIsPlayingAnimation(true);
+    setIsReplayingCorrect(true);
+
+    const chord = CHORD_TYPES.find(c => c.name === chordType);
+    if (!chord) {
+      setIsPlayingAnimation(false);
+      setIsReplayingCorrect(false);
+      if (showFeedbackAfter) {
+        setShowFeedback(true);
+        setShowNextButton(true);
+      }
+      return;
+    }
+
+    // Small delay before starting
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Play each note melodically with highlight
+    for (let i = 0; i < chord.intervals.length; i++) {
+      const semitones = chord.intervals[i];
+      const freq = getNoteFrequency(baseNote, semitones);
+
+      setHighlightChordIndex(i);
+      playTone(freq, 0.5, audioType);
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    // Brief pause before harmonic
+    setHighlightChordIndex(null);
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Play all notes together (harmonic)
+    setHighlightAllChord(true);
+    chord.intervals.forEach(semitones => {
+      const freq = getNoteFrequency(baseNote, semitones);
+      playTone(freq, 1.2, audioType);
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    setHighlightAllChord(false);
+    setHighlightChordIndex(null);
+    setIsReplayingCorrect(false);
+    setIsPlayingAnimation(false);
+
+    if (showFeedbackAfter) {
+      setShowFeedback(true);
+      setShowNextButton(true);
+    }
+  };
+
   const replayScaleAnimation = async (scaleType, baseNote, showFeedbackAfter = true) => {
     setIsPlayingAnimation(true);
     setIsReplayingCorrect(true);
@@ -187,6 +242,8 @@ export default function ExerciseInterface({
         replayIntervalAnimation(currentQuestion.semitones, currentBaseNote, true);
       } else if (exerciseType === 'scales' && currentBaseNote) {
         replayScaleAnimation(currentQuestion.scaleType, currentBaseNote, true);
+      } else if (exerciseType === 'chords' && currentBaseNote) {
+        replayChordAnimation(currentQuestion.chordType, currentBaseNote, true);
       } else {
         setShowFeedback(true);
         setShowNextButton(true);
@@ -224,6 +281,8 @@ export default function ExerciseInterface({
     setCurrentScaleNotes([]);
     setShowScaleNotes(false);
     setShowNextButton(false);
+    setHighlightChordIndex(null);
+    setHighlightAllChord(false);
   };
 
   const handleNext = async () => {
@@ -235,6 +294,8 @@ export default function ExerciseInterface({
         await replayIntervalAnimation(currentQuestion.semitones, currentBaseNote, false);
       } else if (exerciseType === 'scales') {
         await replayScaleAnimation(currentQuestion.scaleType, currentBaseNote, false);
+      } else if (exerciseType === 'chords') {
+        await replayChordAnimation(currentQuestion.chordType, currentBaseNote, false);
       }
     }
     
@@ -308,10 +369,12 @@ export default function ExerciseInterface({
             scaleNotes={exerciseType === 'scales' && showScaleNotes ? currentScaleNotes : undefined}
             chordType={exerciseType === 'chords' ? currentQuestion?.chordType : undefined}
             showSecondNote={exerciseType === 'intervals' && (showFeedback || replayHighlight === 'second' || replayHighlight === 'both' || (isCorrect && selectedAnswer))}
-            showChordNotes={exerciseType === 'chords' && (showFeedback || isCorrect)}
+            showChordNotes={exerciseType === 'chords' && (showFeedback || isCorrect || highlightChordIndex !== null || highlightAllChord)}
             highlightFirst={replayHighlight === 'first' || replayHighlight === 'both'}
             highlightSecond={replayHighlight === 'second' || replayHighlight === 'both'}
             highlightScaleNoteIndex={exerciseType === 'scales' && typeof replayHighlight === 'number' ? replayHighlight : undefined}
+            highlightChordNoteIndex={highlightChordIndex}
+            highlightAllChordNotes={highlightAllChord}
             isAnimating={isReplayingCorrect}
           />
         </div>

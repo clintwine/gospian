@@ -73,6 +73,8 @@ export default function PianoKeyboard({
   highlightFirst = false,
   highlightSecond = false,
   highlightScaleNoteIndex,
+  highlightChordNoteIndex,
+  highlightAllChordNotes = false,
   isAnimating = false
 }) {
   const secondNote = baseNote && semitones !== undefined ? getNoteFromInterval(baseNote, semitones) : null;
