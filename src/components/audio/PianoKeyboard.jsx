@@ -148,11 +148,14 @@ export default function PianoKeyboard({
           const isScaleNote = scaleNotes.includes(key.note);
           const isChordNote = chordNotes.includes(key.note);
           const scaleNoteIdx = scaleNotes.indexOf(key.note);
+          const chordNoteIdx = chordNotes.indexOf(key.note);
           const isCurrentScaleHighlight = isAnimating && highlightScaleNoteIndex !== undefined && scaleNoteIdx === highlightScaleNoteIndex;
+          const isCurrentChordHighlight = isAnimating && highlightChordNoteIndex !== null && chordNoteIdx === highlightChordNoteIndex;
+          const isAllChordHighlight = isAnimating && highlightAllChordNotes && isChordNote;
           const isFirstHighlighted = isAnimating && highlightFirst && isFirstNote;
           const isSecondHighlighted = isAnimating && highlightSecond && isSecondNote;
           
-          const isHighlighted = isFirstHighlighted || isSecondHighlighted || isCurrentScaleHighlight;
+          const isHighlighted = isFirstHighlighted || isSecondHighlighted || isCurrentScaleHighlight || isCurrentChordHighlight || isAllChordHighlight;
           const isActive = isFirstNote || isSecondNote || isScaleNote || isChordNote;
           
           // Position black key at the boundary between two white keys - responsive
