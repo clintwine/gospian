@@ -62,12 +62,12 @@ export default function PianoKeyboard({
 }) {
   const secondNote = baseNote && semitones !== undefined ? getNoteFromInterval(baseNote, semitones) : null;
   
-  // White key width: 28px (w-7), Black key width: 16px (w-4)
-  const whiteKeyWidth = 28;
-  const blackKeyWidth = 16;
+  // Responsive key widths - smaller on mobile
+  const whiteKeyWidth = 20; // smaller for mobile
+  const blackKeyWidth = 12;
 
   return (
-    <div className="relative flex justify-center my-4">
+    <div className="relative flex justify-center my-4 overflow-x-auto">
       <div className="relative flex">
         {/* White keys */}
         {WHITE_KEYS.map((key) => {
@@ -86,7 +86,7 @@ export default function PianoKeyboard({
             <div
               key={key.note}
               className={cn(
-                "relative w-7 h-24 border border-gray-300 rounded-b-md transition-all duration-200",
+                "relative w-5 h-16 sm:w-6 sm:h-20 border border-gray-300 rounded-b-md transition-all duration-200",
                 isHighlighted
                   ? "bg-[#3E82FC] border-[#243B73] shadow-xl z-10 scale-105"
                   : isFirstNote 
@@ -131,7 +131,7 @@ export default function PianoKeyboard({
             <div
               key={key.note}
               className={cn(
-                "absolute top-0 w-4 h-14 rounded-b-md z-20 transition-all duration-200",
+                "absolute top-0 w-3 h-9 sm:w-4 sm:h-12 rounded-b-md z-20 transition-all duration-200",
                 isHighlighted
                   ? "bg-[#243B73] shadow-xl scale-105"
                   : isFirstNote 
