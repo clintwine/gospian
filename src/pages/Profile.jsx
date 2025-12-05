@@ -30,10 +30,18 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 
 export default function Profile() {
   const queryClient = useQueryClient();
+  
+  const { data: user, isLoading: userLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ['userStats', user?.email],
-    queryFn: async () => {
-      const stats = await base44.entities.UserStats.filter({ created_by: user.email });
+    queryFn: async ({ queryKey }) => {
+      const userEmail = queryKey[1];
+      if (!userEmail) return null;
+      const stats = await base44.entities.UserStats.filter({ created_by: userEmail });
       return stats[0] || { xp: 0, level: 1, streak: 0, exercises_completed: 0, perfect_scores: 0, audio_type: 'piano', theme: 'light' };
     },
     enabled: !!user?.email,
@@ -42,15 +50,12 @@ export default function Profile() {
   // Derive theme from userStats or localStorage
   const theme = userStats?.theme || (typeof window !== 'undefined' ? localStorage.getItem('theme') : 'light') || 'light';
 
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
   const { data: exerciseResults } = useQuery({
     queryKey: ['exerciseResults', user?.email],
-    queryFn: async () => {
-      return await base44.entities.ExerciseResult.filter({ created_by: user.email }, '-created_date', 30);
+    queryFn: async ({ queryKey }) => {
+      const userEmail = queryKey[1];
+      if (!userEmail) return null;
+      return await base44.entities.ExerciseResult.filter({ created_by: userEmail }, '-created_date', 30);
     },
     enabled: !!user?.email,
   });
