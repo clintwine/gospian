@@ -133,8 +133,9 @@ export default function Friends() {
 
   const filteredUsers = allUsers?.filter(user => {
     if (user.email === currentUser?.email) return false;
-    const query = searchQuery.toLowerCase();
-    return user.email.toLowerCase().includes(query) || 
+    if (!searchQuery.trim()) return true; // Show all users when search is empty
+    const query = searchQuery.toLowerCase().trim();
+    return user.email?.toLowerCase().includes(query) || 
            user.full_name?.toLowerCase().includes(query);
   }) || [];
 
