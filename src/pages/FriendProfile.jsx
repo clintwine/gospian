@@ -14,35 +14,18 @@ export default function FriendProfile() {
   const urlParams = new URLSearchParams(window.location.search);
   const friendEmail = urlParams.get('email');
 
-  const { data: friendUser } = useQuery({
-    queryKey: ['friendUser', friendEmail],
+  const { data: friendData } = useQuery({
+    queryKey: ['friendProfileData', friendEmail],
     queryFn: async () => {
-      const users = await base44.asServiceRole.entities.User.list();
-      return users.find(u => u.email === friendEmail);
+      const { data } = await base44.functions.invoke('friendProfileData', { friendEmail });
+      return data;
     },
     enabled: !!friendEmail,
   });
 
-  const { data: friendStats } = useQuery({
-    queryKey: ['friendStats', friendEmail],
-    queryFn: async () => {
-      const stats = await base44.asServiceRole.entities.UserStats.filter({ created_by: friendEmail });
-      return stats[0] || { xp: 0, level: 1, streak: 0 };
-    },
-    enabled: !!friendEmail,
-  });
-
-  const { data: friendResults } = useQuery({
-    queryKey: ['friendResults', friendEmail],
-    queryFn: async () => {
-      return await base44.asServiceRole.entities.ExerciseResult.filter(
-        { created_by: friendEmail },
-        '-created_date',
-        20
-      );
-    },
-    enabled: !!friendEmail,
-  });
+  const friendUser = friendData?.friendUser;
+  const friendStats = friendData?.friendStats || { xp: 0, level: 1, streak: 0 };
+  const friendResults = friendData?.friendResults || [];
 
   if (!friendEmail || !friendUser) {
     return (

@@ -51,7 +51,7 @@ export default function Leaderboard() {
   };
 
   // Calculate leaderboard data based on filters
-  const leaderboardData = useMemo(() => {
+  const filteredLeaderboardData = useMemo(() => {
     if (!allStats || !allResults || allStats.length === 0) return [];
 
     // Filter results by time period
@@ -272,7 +272,7 @@ export default function Leaderboard() {
       </div>
 
       {/* Top 3 Podium */}
-      {leaderboardData.length >= 3 && leaderboardData[0] && leaderboardData[1] && leaderboardData[2] && (
+      {filteredLeaderboardData.length >= 3 && filteredLeaderboardData[0] && filteredLeaderboardData[1] && filteredLeaderboardData[2] && (
         <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
           {/* 2nd Place */}
           <Card className="border-2 border-gray-300 dark:border-gray-600 mt-6 sm:mt-8">
@@ -282,10 +282,10 @@ export default function Leaderboard() {
               </div>
               <Medal className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 text-gray-400" />
               <p className="font-semibold text-xs sm:text-sm truncate">
-                {leaderboardData[1].email?.split('@')[0] || 'User'}
+                {filteredLeaderboardData[1].email?.split('@')[0] || 'User'}
               </p>
               <p className="text-base sm:text-lg font-bold text-[#3E82FC]">
-                {getDisplayValue(leaderboardData[1]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(leaderboardData[1]).label}</span>
+                {getDisplayValue(filteredLeaderboardData[1]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(filteredLeaderboardData[1]).label}</span>
               </p>
             </CardContent>
           </Card>
@@ -298,10 +298,10 @@ export default function Leaderboard() {
               </div>
               <Crown className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 text-[#E9C46A]" />
               <p className="font-semibold text-xs sm:text-base truncate">
-                {leaderboardData[0].email?.split('@')[0] || 'User'}
+                {filteredLeaderboardData[0].email?.split('@')[0] || 'User'}
               </p>
               <p className="text-lg sm:text-xl font-bold text-[#E9C46A]">
-                {getDisplayValue(leaderboardData[0]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(leaderboardData[0]).label}</span>
+                {getDisplayValue(filteredLeaderboardData[0]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(filteredLeaderboardData[0]).label}</span>
               </p>
               <Badge className="bg-[#E9C46A] text-white mt-2 text-[10px] sm:text-xs">Champion</Badge>
             </CardContent>
@@ -315,10 +315,10 @@ export default function Leaderboard() {
               </div>
               <Medal className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 text-amber-600" />
               <p className="font-semibold text-xs sm:text-sm truncate">
-                {leaderboardData[2].email?.split('@')[0] || 'User'}
+                {filteredLeaderboardData[2].email?.split('@')[0] || 'User'}
               </p>
               <p className="text-base sm:text-lg font-bold text-amber-600">
-                {getDisplayValue(leaderboardData[2]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(leaderboardData[2]).label}</span>
+                {getDisplayValue(filteredLeaderboardData[2]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(filteredLeaderboardData[2]).label}</span>
               </p>
             </CardContent>
           </Card>
@@ -337,7 +337,7 @@ export default function Leaderboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-2">
-          {leaderboardData.length === 0 ? (
+          {filteredLeaderboardData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Trophy className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>No rankings yet for this period. Start training to get on the leaderboard!</p>
@@ -345,14 +345,14 @@ export default function Leaderboard() {
           ) : (
             <div className="space-y-2">
               {(() => {
-                if (!leaderboardData || leaderboardData.length === 0) return null;
+                if (!filteredLeaderboardData || filteredLeaderboardData.length === 0) return null;
                 
-                const currentUserIndex = leaderboardData.findIndex(u => u.email === currentUser?.email);
+                const currentUserIndex = filteredLeaderboardData.findIndex(u => u.email === currentUser?.email);
                 const showFromIndex = currentUserIndex > 3 ? Math.max(0, currentUserIndex - 3) : 0;
-                const visibleData = currentUserIndex > 3 ? leaderboardData.slice(showFromIndex, currentUserIndex + 5) : leaderboardData;
+                const visibleData = currentUserIndex > 3 ? filteredLeaderboardData.slice(showFromIndex, currentUserIndex + 5) : filteredLeaderboardData;
                 
                 return visibleData.map((user) => {
-                  const index = leaderboardData.indexOf(user);
+                  const index = filteredLeaderboardData.indexOf(user);
                   const rank = index + 1;
                   const isCurrentUser = user.email === currentUser?.email;
                   const displayValue = getDisplayValue(user);
