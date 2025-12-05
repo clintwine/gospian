@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Play, Trash2, Clock, CheckCircle2 } from 'lucide-react';
+import { Plus, Play, Trash2, Clock, CheckCircle2, Music, Headphones, Waves } from 'lucide-react';
 import RoutineCreator from '@/components/practice/RoutineCreator';
 import Metronome from '@/components/practice/Metronome';
 import { Link } from 'react-router-dom';
@@ -43,6 +43,30 @@ export default function PracticeStudio() {
     },
   });
 
+  const practiceModes = [
+    {
+      type: 'intervals',
+      title: 'Intervals',
+      description: 'Train your ear to recognize melodic and harmonic intervals.',
+      icon: Music,
+      path: createPageUrl('PracticeMode') + '?exerciseType=intervals&difficulty=beginner',
+    },
+    {
+      type: 'chords',
+      title: 'Chords',
+      description: 'Learn to identify different chord qualities and voicings.',
+      icon: Headphones,
+      path: createPageUrl('PracticeMode') + '?exerciseType=chords&difficulty=beginner',
+    },
+    {
+      type: 'scales',
+      title: 'Scales',
+      description: 'Master various scale types and their unique sounds.',
+      icon: Waves,
+      path: createPageUrl('PracticeMode') + '?exerciseType=scales&difficulty=beginner',
+    },
+  ];
+
   return (
     <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       <div className="mb-6">
@@ -52,7 +76,7 @@ export default function PracticeStudio() {
               Practice Studio
             </h1>
             <p className="text-sm text-muted-foreground">
-              Create custom routines and use practice tools
+              Practice modes, custom routines, and tools
             </p>
           </div>
           <Dialog open={showCreator} onOpenChange={setShowCreator}>
@@ -66,6 +90,29 @@ export default function PracticeStudio() {
               <RoutineCreator onClose={() => setShowCreator(false)} />
             </DialogContent>
           </Dialog>
+        </div>
+      </div>
+
+      {/* Practice Modes */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold mb-4">Practice Modes</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {practiceModes.map((mode) => (
+            <Card key={mode.type} className="hover:shadow-lg transition-shadow border-0 shadow-lg">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-[#D7E5FF] dark:bg-slate-800 flex items-center justify-center mb-4">
+                  <mode.icon className="w-6 h-6 text-[#243B73] dark:text-[#3E82FC]" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{mode.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{mode.description}</p>
+                <Link to={mode.path} className="w-full">
+                  <Button className="w-full bg-[#243B73] hover:bg-[#0A1A2F]">
+                    Start Practice
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
