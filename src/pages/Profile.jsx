@@ -27,6 +27,7 @@ import {
 import XPBar from '@/components/ui/XPBar';
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import ProfilePictureSelector from '@/components/profile/ProfilePictureSelector';
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -67,6 +68,11 @@ export default function Profile() {
   const updateStatsMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.UserStats.update(id, data),
     onSuccess: () => queryClient.invalidateQueries(['userStats']),
+  });
+
+  const updateProfilePictureMutation = useMutation({
+    mutationFn: (pictureUrl) => base44.auth.updateMe({ profile_picture: pictureUrl }),
+    onSuccess: () => queryClient.invalidateQueries(['currentUser']),
   });
 
   const handleThemeChange = async (checked) => {
@@ -121,8 +127,16 @@ export default function Profile() {
         <div className="h-24 bg-gradient-to-r from-[#0A1A2F] to-[#243B73]" />
         <CardContent className="relative pt-0 pb-6 px-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-12">
-            <div className="w-24 h-24 rounded-2xl bg-white dark:bg-slate-800 border-4 border-white dark:border-slate-800 shadow-xl flex items-center justify-center">
-              <User className="w-12 h-12 text-[#243B73] dark:text-[#3E82FC]" />
+            <div className="relative w-24 h-24 rounded-2xl bg-white dark:bg-slate-800 border-4 border-white dark:border-slate-800 shadow-xl flex items-center justify-center overflow-hidden">
+              {user?.profile_picture ? (
+                <img src={user.profile_picture} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-12 h-12 text-[#243B73] dark:text-[#3E82FC]" />
+              )}
+              <ProfilePictureSelector 
+                currentPicture={user?.profile_picture} 
+                onUpdate={(url) => updateProfilePictureMutation.mutate(url)} 
+              />
             </div>
             <div className="text-center sm:text-left flex-1">
               <h1 className="text-2xl font-bold">{user?.full_name || 'Musician'}</h1>

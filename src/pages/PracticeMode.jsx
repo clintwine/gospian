@@ -262,6 +262,18 @@ export default function PracticeMode() {
                     }
                     updateSettingsMutation.mutate({ enabled_intervals: defaultIntervals });
                   }
+                  // Auto-set chords based on difficulty
+                  if (exerciseType === 'chords') {
+                    let defaultChords = [];
+                    if (value === 'beginner') {
+                      defaultChords = ['Major', 'Minor', 'Diminished', 'Augmented'];
+                    } else if (value === 'intermediate') {
+                      defaultChords = ['Major', 'Minor', 'Diminished', 'Augmented', 'Dominant7', 'Major7', 'Minor7'];
+                    } else {
+                      defaultChords = CHORD_TYPES.map(c => c.name);
+                    }
+                    updateSettingsMutation.mutate({ enabled_chords: defaultChords });
+                  }
                 }}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
