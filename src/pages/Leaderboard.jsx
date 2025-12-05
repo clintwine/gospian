@@ -277,7 +277,7 @@ export default function Leaderboard() {
       </div>
 
       {/* Top 3 Podium */}
-      {leaderboardData.length >= 3 && (
+      {leaderboardData.length >= 3 && leaderboardData[0] && leaderboardData[1] && leaderboardData[2] && (
         <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
           {/* 2nd Place */}
           <Card className="border-2 border-gray-300 dark:border-gray-600 mt-6 sm:mt-8">
@@ -287,7 +287,7 @@ export default function Leaderboard() {
               </div>
               <Medal className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 text-gray-400" />
               <p className="font-semibold text-xs sm:text-sm truncate">
-                {leaderboardData[1]?.email?.split('@')[0] || 'User'}
+                {leaderboardData[1].email?.split('@')[0] || 'User'}
               </p>
               <p className="text-base sm:text-lg font-bold text-[#3E82FC]">
                 {getDisplayValue(leaderboardData[1]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(leaderboardData[1]).label}</span>
@@ -303,7 +303,7 @@ export default function Leaderboard() {
               </div>
               <Crown className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 text-[#E9C46A]" />
               <p className="font-semibold text-xs sm:text-base truncate">
-                {leaderboardData[0]?.email?.split('@')[0] || 'User'}
+                {leaderboardData[0].email?.split('@')[0] || 'User'}
               </p>
               <p className="text-lg sm:text-xl font-bold text-[#E9C46A]">
                 {getDisplayValue(leaderboardData[0]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(leaderboardData[0]).label}</span>
@@ -320,7 +320,7 @@ export default function Leaderboard() {
               </div>
               <Medal className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 text-amber-600" />
               <p className="font-semibold text-xs sm:text-sm truncate">
-                {leaderboardData[2]?.email?.split('@')[0] || 'User'}
+                {leaderboardData[2].email?.split('@')[0] || 'User'}
               </p>
               <p className="text-base sm:text-lg font-bold text-amber-600">
                 {getDisplayValue(leaderboardData[2]).value} <span className="text-xs font-normal text-muted-foreground">{getDisplayValue(leaderboardData[2]).label}</span>
