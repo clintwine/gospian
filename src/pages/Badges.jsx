@@ -14,6 +14,8 @@ import {
   Lock,
   CheckCircle2
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 const ALL_BADGES = [
   {
@@ -166,6 +168,17 @@ export default function Badges() {
           {earnedBadges.length} of {ALL_BADGES.length} badges earned
         </p>
       </div>
+
+      {/* Leaderboard Link */}
+      <Link to={createPageUrl('Leaderboard')}>
+        <Card className="border-2 border-[#3E82FC] hover:shadow-xl transition-all cursor-pointer mb-6">
+          <CardContent className="p-6 text-center">
+            <Trophy className="w-12 h-12 mx-auto mb-3 text-[#E9C46A]" />
+            <h3 className="text-lg font-bold mb-2">View Leaderboard</h3>
+            <p className="text-sm text-muted-foreground">Compete with other musicians</p>
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Earned Badges */}
       {earnedBadges.length > 0 && (

@@ -132,13 +132,22 @@ export default function Friends() {
     return allStats?.find(s => s.created_by === email) || { xp: 0, level: 1, streak: 0 };
   };
 
-  const filteredUsers = allUsers?.filter(user => {
-    if (user.email === currentUser?.email) return false;
-    if (!searchQuery.trim()) return true; // Show all users when search is empty
+  const filteredUsers = React.useMemo(() => {
+    if (!allUsers || !currentUser) return [];
+    
+    // Remove duplicates by email and exclude current user
+    const uniqueUsers = Array.from(
+      new Map(allUsers.map(u => [u.email, u])).values()
+    ).filter(user => user.email !== currentUser.email);
+    
+    if (!searchQuery.trim()) return uniqueUsers;
+    
     const query = searchQuery.toLowerCase().trim();
-    return user.email?.toLowerCase().includes(query) || 
-           user.full_name?.toLowerCase().includes(query);
-  }) || [];
+    return uniqueUsers.filter(user => 
+      user.email?.toLowerCase().includes(query) || 
+      user.full_name?.toLowerCase().includes(query)
+    );
+  }, [allUsers, currentUser, searchQuery]);
 
   const friendEmails = getFriendEmails();
   const pendingReceiverEmails = sentRequests?.map(r => r.receiver_email) || [];
