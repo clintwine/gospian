@@ -23,7 +23,7 @@ export default function Friends() {
   const { data: allUsers = [], isLoading: usersLoading } = useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => {
-      return await base44.asServiceRole.entities.User.list();
+      return await base44.asServiceRole.entities.User.list('full_name', 1000);
     },
   });
 
