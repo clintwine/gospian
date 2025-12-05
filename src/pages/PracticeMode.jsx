@@ -30,7 +30,7 @@ export default function PracticeMode() {
 
   const queryClient = useQueryClient();
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
@@ -39,9 +39,11 @@ export default function PracticeMode() {
   const { data: practiceSettings } = useQuery({
     queryKey: ['practiceSettings', user?.email],
     queryFn: async () => {
-      if (!user?.email) return null;
-      const settings = await base44.entities.PracticeSettings.filter({ created_by: user.email });
-      if (settings[0]) return settings[0];
+      const currentUser = user;
+      if (!currentUser?.email) return null;
+      
+      const settings = await base44.entities.PracticeSettings.filter({ created_by: currentUser.email });
+      if (settings && settings[0]) return settings[0];
       
       // Create default settings if none exist
       const defaultSettings = {
@@ -52,7 +54,7 @@ export default function PracticeMode() {
       const created = await base44.entities.PracticeSettings.create(defaultSettings);
       return created;
     },
-    enabled: !!user?.email,
+    enabled: !userLoading && !!user?.email,
   });
 
   const updateSettingsMutation = useMutation({
@@ -70,13 +72,14 @@ export default function PracticeMode() {
 
   // Initialize adaptive chord selector
   useEffect(() => {
-    if (exerciseType === 'chords' && user?.email) {
+    const currentUser = user;
+    if (exerciseType === 'chords' && currentUser?.email) {
       if (!adaptiveChordSelector.current) {
         adaptiveChordSelector.current = new AdaptiveChordSelector();
       }
-      adaptiveChordSelector.current.initialize(user.email);
+      adaptiveChordSelector.current.initialize(currentUser.email);
     }
-  }, [exerciseType, user?.email]);
+  }, [exerciseType, user]);
 
   const questionSupplier = () => {
     const enabledIntervals = practiceSettings?.enabled_intervals || INTERVALS.map(i => i.name);
@@ -184,8 +187,9 @@ export default function PracticeMode() {
   };
 
   const handleChordAttempt = (chordType, isCorrect) => {
-    if (exerciseType === 'chords' && adaptiveChordSelector.current && user?.email) {
-      adaptiveChordSelector.current.recordAttempt(user.email, chordType, isCorrect);
+    const currentUser = user;
+    if (exerciseType === 'chords' && adaptiveChordSelector.current && currentUser?.email) {
+      adaptiveChordSelector.current.recordAttempt(currentUser.email, chordType, isCorrect);
     }
   };
 
