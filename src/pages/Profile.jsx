@@ -22,8 +22,11 @@ import {
   Award,
   Flame,
   Target,
-  Zap
+  Zap,
+  Trophy
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import XPBar from '@/components/ui/XPBar';
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -148,6 +151,17 @@ export default function Profile() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Leaderboard Link */}
+      <Link to={createPageUrl('Leaderboard')}>
+        <Card className="border-2 border-[#3E82FC] hover:shadow-xl transition-all cursor-pointer mb-6">
+          <CardContent className="p-6 text-center">
+            <Trophy className="w-12 h-12 mx-auto mb-3 text-[#E9C46A]" />
+            <h3 className="text-lg font-bold mb-2">View Leaderboard</h3>
+            <p className="text-sm text-muted-foreground">See how you rank against others</p>
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
