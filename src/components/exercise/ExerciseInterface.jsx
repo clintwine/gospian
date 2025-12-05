@@ -24,7 +24,8 @@ export default function ExerciseInterface({
   onXPEarned,
   questionsCount = 10,
   isPracticeMode = false,
-  questionSupplier = null
+  questionSupplier = null,
+  onChordAttempt = null
 }) {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
@@ -229,6 +230,11 @@ export default function ExerciseInterface({
     setSelectedAnswer(option);
     const correct = option.name === currentQuestion.correctAnswer.name;
     setIsCorrect(correct);
+
+    // Record chord attempt for adaptive learning
+    if (exerciseType === 'chords' && onChordAttempt && currentQuestion.chordType) {
+      onChordAttempt(currentQuestion.chordType, correct);
+    }
 
     if (correct) {
       if (!isPracticeMode) {
