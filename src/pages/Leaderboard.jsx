@@ -57,7 +57,7 @@ export default function Leaderboard() {
 
   // Calculate leaderboard data based on filters
   const leaderboardData = useMemo(() => {
-    if (!allStats || !allResults) return [];
+    if (!allStats || !allResults || allStats.length === 0) return [];
 
     // Filter results by time period
     const now = new Date();
@@ -350,6 +350,8 @@ export default function Leaderboard() {
           ) : (
             <div className="space-y-2">
               {(() => {
+                if (!leaderboardData || leaderboardData.length === 0) return null;
+                
                 const currentUserIndex = leaderboardData.findIndex(u => u.email === currentUser?.email);
                 const showFromIndex = currentUserIndex > 3 ? Math.max(0, currentUserIndex - 3) : 0;
                 const visibleData = currentUserIndex > 3 ? leaderboardData.slice(showFromIndex, currentUserIndex + 5) : leaderboardData;
