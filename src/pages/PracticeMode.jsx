@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import ExerciseInterface from '@/components/exercise/ExerciseInterface';
 import { getRandomExercise } from '@/components/data/exerciseData';
@@ -8,6 +8,10 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
+import { AdaptiveChordSelector } from '@/components/audio/AdaptiveChordSelector';
+import { CHORD_TYPES } from '@/components/audio/AudioEngine';
 
 export default function PracticeMode() {
   const location = useLocation();
@@ -17,8 +21,40 @@ export default function PracticeMode() {
 
   const [exerciseType, setExerciseType] = useState(initialExerciseType);
   const [difficulty, setDifficulty] = useState(initialDifficulty);
+  const adaptiveChordSelector = useRef(null);
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    retry: false,
+  });
+
+  // Initialize adaptive chord selector
+  useEffect(() => {
+    if (exerciseType === 'chords' && user?.email) {
+      if (!adaptiveChordSelector.current) {
+        adaptiveChordSelector.current = new AdaptiveChordSelector();
+      }
+      adaptiveChordSelector.current.initialize(user.email);
+    }
+  }, [exerciseType, user?.email]);
 
   const questionSupplier = () => {
+    // Use adaptive logic for chords
+    if (exerciseType === 'chords' && adaptiveChordSelector.current) {
+      const chordType = adaptiveChordSelector.current.selectNextChord();
+      const chord = CHORD_TYPES.find(c => c.name === chordType);
+      
+      if (chord) {
+        return {
+          correctAnswer: { name: chord.name },
+          options: CHORD_TYPES.map(c => ({ name: c.name })).sort(() => Math.random() - 0.5),
+          chordType: chord.name,
+        };
+      }
+    }
+    
+    // Fallback to random for other types
     const exercise = getRandomExercise(exerciseType, difficulty);
     if (!exercise) return null;
     
@@ -32,6 +68,12 @@ export default function PracticeMode() {
       playMode: exercise.playMode || 'melodic',
       baseNote: exercise.baseNote,
     };
+  };
+
+  const handleChordAttempt = (chordType, isCorrect) => {
+    if (exerciseType === 'chords' && adaptiveChordSelector.current && user?.email) {
+      adaptiveChordSelector.current.recordAttempt(user.email, chordType, isCorrect);
+    }
   };
 
   const getTitle = () => {
@@ -118,6 +160,7 @@ export default function PracticeMode() {
         difficulty={difficulty}
         isPracticeMode={true}
         questionSupplier={questionSupplier}
+        onChordAttempt={handleChordAttempt}
       />
     </div>
   );
