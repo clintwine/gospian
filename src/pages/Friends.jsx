@@ -20,14 +20,14 @@ export default function Friends() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: allUsers } = useQuery({
+  const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => {
       return await base44.asServiceRole.entities.User.list();
     },
   });
 
-  const { data: friends, isLoading: friendsLoading } = useQuery({
+  const { data: friends = [], isLoading: friendsLoading } = useQuery({
     queryKey: ['friends', currentUser?.email],
     queryFn: async () => {
       const sent = await base44.entities.Friend.filter({ user_email: currentUser.email });
@@ -37,7 +37,7 @@ export default function Friends() {
     enabled: !!currentUser?.email,
   });
 
-  const { data: friendRequests } = useQuery({
+  const { data: friendRequests = [] } = useQuery({
     queryKey: ['friendRequests', currentUser?.email],
     queryFn: async () => {
       return await base44.entities.FriendRequest.filter({ 
@@ -48,7 +48,7 @@ export default function Friends() {
     enabled: !!currentUser?.email,
   });
 
-  const { data: sentRequests } = useQuery({
+  const { data: sentRequests = [] } = useQuery({
     queryKey: ['sentRequests', currentUser?.email],
     queryFn: async () => {
       return await base44.entities.FriendRequest.filter({ 
@@ -59,7 +59,7 @@ export default function Friends() {
     enabled: !!currentUser?.email,
   });
 
-  const { data: allStats } = useQuery({
+  const { data: allStats = [] } = useQuery({
     queryKey: ['allUserStats'],
     queryFn: async () => {
       return await base44.asServiceRole.entities.UserStats.list();
@@ -264,7 +264,7 @@ export default function Friends() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {friendRequests.map(request => {
+              {friendRequests?.map(request => {
                 const user = allUsers?.find(u => u.email === request.sender_email);
                 const stats = getUserStats(request.sender_email);
                 
