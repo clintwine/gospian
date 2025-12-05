@@ -38,11 +38,11 @@ export default function PracticeMode() {
 
   const { data: practiceSettings } = useQuery({
     queryKey: ['practiceSettings', user?.email],
-    queryFn: async () => {
-      const currentUser = user;
-      if (!currentUser?.email) return null;
+    queryFn: async ({ queryKey }) => {
+      const userEmail = queryKey[1];
+      if (!userEmail) return null;
       
-      const settings = await base44.entities.PracticeSettings.filter({ created_by: currentUser.email });
+      const settings = await base44.entities.PracticeSettings.filter({ created_by: userEmail });
       if (settings && settings[0]) return settings[0];
       
       // Create default settings if none exist
