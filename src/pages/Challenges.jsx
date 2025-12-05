@@ -53,6 +53,17 @@ const CHALLENGES = [
     path: 'AccuracyChallenge',
     requiresLevel: 4,
   },
+  {
+    id: 'perfect-pitch',
+    title: 'Perfect Pitch Challenge',
+    description: 'Identify notes by ear with perfect accuracy',
+    xpReward: 75,
+    timeLimit: '10 questions',
+    icon: Target,
+    color: 'from-[#E9C46A] to-[#E76F51]',
+    path: 'PerfectPitchChallenge',
+    requiresLevel: 1,
+  },
 ];
 
 export default function Challenges() {

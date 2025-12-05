@@ -21,7 +21,7 @@ export default function Leaderboard() {
   const { data: allStats, isLoading: statsLoading } = useQuery({
     queryKey: ['allUserStats'],
     queryFn: async () => {
-      const stats = await base44.entities.UserStats.list('-xp', 100);
+      const stats = await base44.asServiceRole.entities.UserStats.list('-xp', 100);
       return stats;
     },
   });
@@ -29,7 +29,7 @@ export default function Leaderboard() {
   const { data: allResults, isLoading: resultsLoading } = useQuery({
     queryKey: ['allExerciseResults'],
     queryFn: async () => {
-      const results = await base44.entities.ExerciseResult.list('-created_date', 500);
+      const results = await base44.asServiceRole.entities.ExerciseResult.list('-created_date', 500);
       return results;
     },
   });
@@ -97,15 +97,34 @@ export default function Leaderboard() {
     // Convert to array and sort
     let sorted = Object.values(userAggregates);
     
+    // Calculate average response time for tie-breaking
+    sorted.forEach(user => {
+      const userResults = filteredResults.filter(r => r.created_by === user.email);
+      const totalTime = userResults.reduce((sum, r) => sum + (r.time_taken_seconds || 0), 0);
+      user.avgTime = userResults.length > 0 ? totalTime / userResults.length : 999999;
+      user.lastActivity = userResults.length > 0 ? new Date(Math.max(...userResults.map(r => new Date(r.created_date)))) : new Date(0);
+    });
+
+    // Sort: highest score, then fastest time, then recent activity
     if (sortBy === 'xp') {
-      sorted.sort((a, b) => b.xp - a.xp);
+      sorted.sort((a, b) => {
+        if (b.xp !== a.xp) return b.xp - a.xp;
+        if (a.avgTime !== b.avgTime) return a.avgTime - b.avgTime;
+        return b.lastActivity - a.lastActivity;
+      });
     } else if (sortBy === 'streak') {
-      sorted.sort((a, b) => b.streak - a.streak);
+      sorted.sort((a, b) => {
+        if (b.streak !== a.streak) return b.streak - a.streak;
+        if (a.avgTime !== b.avgTime) return a.avgTime - b.avgTime;
+        return b.lastActivity - a.lastActivity;
+      });
     } else if (sortBy === 'accuracy') {
       sorted.sort((a, b) => {
         const accA = a.totalQuestions > 0 ? (a.correctAnswers / a.totalQuestions) : 0;
         const accB = b.totalQuestions > 0 ? (b.correctAnswers / b.totalQuestions) : 0;
-        return accB - accA;
+        if (accB !== accA) return accB - accA;
+        if (a.avgTime !== b.avgTime) return a.avgTime - b.avgTime;
+        return b.lastActivity - a.lastActivity;
       });
     }
 
