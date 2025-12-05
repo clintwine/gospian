@@ -313,44 +313,45 @@ export default function Leaderboard() {
                 
                 return visibleData.map((user) => {
                   const index = leaderboardData.indexOf(user);
-                const rank = index + 1;
-                const isCurrentUser = user.email === currentUser?.email;
-                const displayValue = getDisplayValue(user);
+                  const rank = index + 1;
+                  const isCurrentUser = user.email === currentUser?.email;
+                  const displayValue = getDisplayValue(user);
 
-                return (
-                  <div
-                    key={user.email}
-                    className={`flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-xl transition-all ${
-                      isCurrentUser ? 'bg-[#3E82FC]/10 border-2 border-[#3E82FC]' : getRankBackground(rank)
-                    } ${rank <= 3 ? 'border-2' : 'hover:bg-muted/50'}`}
-                  >
-                    <div className="w-6 sm:w-8 flex items-center justify-center">
-                      {getRankIcon(rank)}
-                    </div>
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#D7E5FF] dark:bg-slate-700 flex items-center justify-center shrink-0">
-                      <User className="w-4 h-4 sm:w-5 sm:h-5 text-[#243B73] dark:text-[#3E82FC]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-semibold truncate text-sm sm:text-base ${isCurrentUser ? 'text-[#3E82FC]' : ''}`}>
-                        {user.email?.split('@')[0] || 'Anonymous'}
-                        {isCurrentUser && <span className="text-[10px] sm:text-xs ml-1 sm:ml-2">(You)</span>}
-                      </p>
-                      <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
-                        <span>Level {user.level || 1}</span>
-                        {user.streak > 0 && (
-                          <span className="flex items-center gap-0.5">
-                            <Flame className="w-3 h-3 text-orange-500" />
-                            {user.streak}
-                          </span>
-                        )}
+                  return (
+                    <div
+                      key={user.email}
+                      className={`flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-xl transition-all ${
+                        isCurrentUser ? 'bg-[#3E82FC]/10 border-2 border-[#3E82FC]' : getRankBackground(rank)
+                      } ${rank <= 3 ? 'border-2' : 'hover:bg-muted/50'}`}
+                    >
+                      <div className="w-6 sm:w-8 flex items-center justify-center">
+                        {getRankIcon(rank)}
+                      </div>
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#D7E5FF] dark:bg-slate-700 flex items-center justify-center shrink-0">
+                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-[#243B73] dark:text-[#3E82FC]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-semibold truncate text-sm sm:text-base ${isCurrentUser ? 'text-[#3E82FC]' : ''}`}>
+                          {user.email?.split('@')[0] || 'Anonymous'}
+                          {isCurrentUser && <span className="text-[10px] sm:text-xs ml-1 sm:ml-2">(You)</span>}
+                        </p>
+                        <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground">
+                          <span>Level {user.level || 1}</span>
+                          {user.streak > 0 && (
+                            <span className="flex items-center gap-0.5">
+                              <Flame className="w-3 h-3 text-orange-500" />
+                              {user.streak}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-bold text-[#243B73] dark:text-[#3E82FC] text-sm sm:text-base">{displayValue.value}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">{displayValue.label}</p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-bold text-[#243B73] dark:text-[#3E82FC] text-sm sm:text-base">{displayValue.value}</p>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground">{displayValue.label}</p>
-                    </div>
-                  </div>
-                );
+                  );
+                });
               })()}
             </div>
           )}
