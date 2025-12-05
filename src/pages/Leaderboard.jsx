@@ -128,7 +128,11 @@ export default function Leaderboard() {
       });
     }
 
-    return sorted.filter(u => u.xp > 0 || u.exercisesCompleted > 0 || (timePeriod === 'all-time' && exerciseType === 'all'));
+    // Show all users for all-time view, or users with activity for filtered views
+    if (timePeriod === 'all-time' && exerciseType === 'all') {
+      return sorted;
+    }
+    return sorted.filter(u => u.xp > 0 || u.exercisesCompleted > 0);
   }, [allStats, allResults, timePeriod, sortBy, exerciseType]);
 
   const getDisplayValue = (user) => {
