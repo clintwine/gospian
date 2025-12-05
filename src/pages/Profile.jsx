@@ -23,7 +23,8 @@ import {
   Flame,
   Target,
   Zap,
-  Trophy
+  Trophy,
+  Badge
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -31,8 +32,12 @@ import XPBar from '@/components/ui/XPBar';
 import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import ProfilePictureSelector from '@/components/profile/ProfilePictureSelector';
+import ProfileEditor from '@/components/profile/ProfileEditor';
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Edit, Music2, Heart, Badge as BadgeIcon } from 'lucide-react';
 
 export default function Profile() {
+  const [showEditor, setShowEditor] = useState(false);
   const queryClient = useQueryClient();
   const [theme, setTheme] = useState('light');
   
@@ -142,8 +147,37 @@ export default function Profile() {
               />
             </div>
             <div className="text-center sm:text-left flex-1">
-              <h1 className="text-2xl font-bold">{user?.full_name || 'Musician'}</h1>
-              <p className="text-muted-foreground">{user?.email}</p>
+              <div className="flex items-center gap-2 justify-center sm:justify-start">
+                <h1 className="text-2xl font-bold">{user?.full_name || 'Musician'}</h1>
+                <Dialog open={showEditor} onOpenChange={setShowEditor}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <ProfileEditor user={user} onClose={() => setShowEditor(false)} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+              <p className="text-muted-foreground mb-2">{user?.email}</p>
+              {user?.bio && (
+                <p className="text-sm text-muted-foreground italic max-w-md">{user.bio}</p>
+              )}
+              <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+                {user?.favorite_instruments?.map(inst => (
+                  <Badge key={inst} className="bg-[#3E82FC]/20 text-[#3E82FC] border-0">
+                    <Music2 className="w-3 h-3 mr-1" />
+                    {inst}
+                  </Badge>
+                ))}
+                {user?.favorite_genres?.map(genre => (
+                  <Badge key={genre} className="bg-[#2A9D8F]/20 text-[#2A9D8F] border-0">
+                    <Heart className="w-3 h-3 mr-1" />
+                    {genre}
+                  </Badge>
+                ))}
+              </div>
             </div>
             <div className="w-full sm:w-64">
               <XPBar xp={stats.xp} level={stats.level} />

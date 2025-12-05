@@ -22,6 +22,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import XPBar from '@/components/ui/XPBar';
 import StreakBadge from '@/components/ui/StreakBadge';
 import SuggestionButton from '@/components/feedback/SuggestionButton';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 export default function Layout({ children, currentPageName }) {
   const [theme, setTheme] = useState('light');
@@ -69,9 +70,9 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Dashboard', icon: Home, path: 'Dashboard' },
     { name: 'Exercises', icon: Music2, path: 'Exercises' },
     { name: 'Challenges', icon: Trophy, path: 'Challenges' },
-    { name: 'Practice', icon: GraduationCap, path: 'PracticeSelection' },
-    { name: 'Friends', icon: Users, path: 'Friends' },
-    { name: 'Badges', icon: Award, path: 'Badges' },
+    { name: 'Practice', icon: GraduationCap, path: 'PracticeStudio' },
+    { name: 'Training', icon: Trophy, path: 'Training' },
+    { name: 'Social', icon: Users, path: 'Social' },
     { name: 'Profile', icon: User, path: 'Profile' },
   ];
 
@@ -183,16 +184,17 @@ export default function Layout({ children, currentPageName }) {
           </Link>
 
           <div className="flex items-center gap-2">
-            {userStats && (
-              <StreakBadge streak={userStats.streak || 0} freezeTokens={userStats.freeze_tokens || 0} />
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-            >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            </Button>
+              {userStats && (
+                <StreakBadge streak={userStats.streak || 0} freezeTokens={userStats.freeze_tokens || 0} />
+              )}
+              {user && <NotificationBell userEmail={user.email} />}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+              >
+                {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              </Button>
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
