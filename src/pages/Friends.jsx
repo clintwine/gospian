@@ -68,11 +68,22 @@ export default function Friends() {
   });
 
   const sendRequestMutation = useMutation({
-    mutationFn: (receiverEmail) => base44.entities.FriendRequest.create({
-      sender_email: currentUser.email,
-      receiver_email: receiverEmail,
-      status: 'pending'
-    }),
+    mutationFn: async (receiverEmail) => {
+      await base44.entities.FriendRequest.create({
+        sender_email: currentUser.email,
+        receiver_email: receiverEmail,
+        status: 'pending'
+      });
+      
+      // Send notification
+      await base44.functions.invoke('createNotification', {
+        recipientEmail: receiverEmail,
+        type: 'friend_request',
+        title: 'New Friend Request',
+        message: `${currentUser.full_name || currentUser.email} sent you a friend request`,
+        actionUrl: createPageUrl('Friends')
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sentRequests'] });
     },
@@ -90,6 +101,15 @@ export default function Friends() {
         user_email: request.receiver_email,
         friend_email: request.sender_email,
         status: 'active'
+      });
+      
+      // Send notification
+      await base44.functions.invoke('createNotification', {
+        recipientEmail: request.sender_email,
+        type: 'friend_accepted',
+        title: 'Friend Request Accepted',
+        message: `${currentUser.full_name || currentUser.email} accepted your friend request`,
+        actionUrl: createPageUrl('Friends')
       });
     },
     onSuccess: () => {

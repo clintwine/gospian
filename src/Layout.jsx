@@ -148,6 +148,8 @@ export default function Layout({ children, currentPageName }) {
                   <StreakBadge streak={userStats.streak || 0} freezeTokens={userStats.freeze_tokens || 0} />
                 </>
               )}
+
+              {user && <NotificationBell userEmail={user.email} />}
               
               <Button
                 variant="ghost"
