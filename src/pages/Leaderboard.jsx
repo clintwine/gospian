@@ -128,7 +128,7 @@ export default function Leaderboard() {
       });
     }
 
-    return sorted;
+    return sorted.filter(u => u.xp > 0 || u.exercisesCompleted > 0 || (timePeriod === 'all-time' && exerciseType === 'all'));
   }, [allStats, allResults, timePeriod, sortBy, exerciseType]);
 
   const getDisplayValue = (user) => {
