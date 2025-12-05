@@ -5,6 +5,7 @@ import { Trophy, Target, Zap, RotateCcw, Home, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import ShareButton from '../social/ShareButton';
 
 export default function ResultsScreen({ 
   correct, 
@@ -80,6 +81,12 @@ export default function ResultsScreen({
             )}
 
             {/* Actions */}
+            <div className="mb-3">
+              <ShareButton 
+                title="🎵 Check out my GOSPIAN achievement!"
+                text={`I just scored ${accuracy}% on ${exerciseType} (${difficulty} level) with ${correct}/${total} correct answers! 🎯`}
+              />
+            </div>
             <div className="flex gap-3">
               <Button 
                 variant="outline" 
