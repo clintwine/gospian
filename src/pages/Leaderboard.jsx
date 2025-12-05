@@ -20,7 +20,7 @@ export default function Leaderboard() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: leaderboardData, isLoading: dataLoading } = useQuery({
+  const { data: apiData, isLoading: dataLoading } = useQuery({
     queryKey: ['leaderboardData'],
     queryFn: async () => {
       const { data } = await base44.functions.invoke('leaderboardData');
@@ -28,8 +28,8 @@ export default function Leaderboard() {
     },
   });
 
-  const allStats = leaderboardData?.allStats || [];
-  const allResults = leaderboardData?.allResults || [];
+  const allStats = apiData?.allStats || [];
+  const allResults = apiData?.allResults || [];
 
   const { data: friends = [] } = useQuery({
     queryKey: ['friends', currentUser?.email],
