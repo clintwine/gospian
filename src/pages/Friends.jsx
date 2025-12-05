@@ -20,7 +20,7 @@ export default function Friends() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: allUsers = [] } = useQuery({
+  const { data: allUsers = [], isLoading: usersLoading } = useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => {
       return await base44.asServiceRole.entities.User.list();
@@ -330,7 +330,11 @@ export default function Friends() {
           </Card>
 
           <div className="grid gap-4">
-            {filteredUsers.length === 0 ? (
+            {usersLoading ? (
+              [...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))
+            ) : filteredUsers.length === 0 ? (
               <Card className="border-0 shadow-lg">
                 <CardContent className="p-12 text-center">
                   <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
