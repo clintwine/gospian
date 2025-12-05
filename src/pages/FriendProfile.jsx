@@ -35,14 +35,16 @@ export default function FriendProfile() {
     );
   }
 
-  const recentActivity = friendResults?.slice(0, 7).reverse().map(r => ({
+  const results = friendResults || [];
+  
+  const recentActivity = results.slice(0, 7).reverse().map(r => ({
     date: new Date(r.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     xp: r.xp_earned || 0,
-  })) || [];
+  }));
 
-  const totalExercises = friendResults?.length || 0;
-  const totalCorrect = friendResults?.reduce((sum, r) => sum + (r.correct_answers || 0), 0) || 0;
-  const totalQuestions = friendResults?.reduce((sum, r) => sum + (r.total_questions || 0), 0) || 0;
+  const totalExercises = results.length;
+  const totalCorrect = results.reduce((sum, r) => sum + (r.correct_answers || 0), 0);
+  const totalQuestions = results.reduce((sum, r) => sum + (r.total_questions || 0), 0);
   const avgAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
 
   return (
@@ -105,7 +107,7 @@ export default function FriendProfile() {
         <Card className="border-0 shadow-lg">
           <CardContent className="p-6 text-center">
             <Award className="w-8 h-8 mx-auto mb-2 text-[#2A9D8F]" />
-            <p className="text-3xl font-bold mb-1">{friendResults?.filter(r => r.accuracy === 100).length || 0}</p>
+            <p className="text-3xl font-bold mb-1">{results.filter(r => r.accuracy === 100).length}</p>
             <p className="text-sm text-muted-foreground">Perfect Scores</p>
           </CardContent>
         </Card>
@@ -142,9 +144,9 @@ export default function FriendProfile() {
           <CardTitle>Recent Exercises</CardTitle>
         </CardHeader>
         <CardContent>
-          {friendResults?.length > 0 ? (
+          {results.length > 0 ? (
             <div className="space-y-3">
-              {friendResults.slice(0, 5).map((result) => (
+              {results.slice(0, 5).map((result) => (
                 <div key={result.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div>
                     <p className="font-medium capitalize">{result.exercise_type}</p>

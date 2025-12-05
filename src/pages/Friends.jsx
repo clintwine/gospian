@@ -123,9 +123,11 @@ export default function Friends() {
 
   const getFriendEmails = () => {
     if (!friends || !currentUser) return [];
-    return friends.map(f => 
+    const friendEmails = friends.map(f => 
       f.user_email === currentUser.email ? f.friend_email : f.user_email
     );
+    // Remove duplicates by converting to Set and back to array
+    return [...new Set(friendEmails)];
   };
 
   const getUserStats = (email) => {
