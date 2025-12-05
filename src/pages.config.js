@@ -12,6 +12,8 @@ import AccuracyChallenge from './pages/AccuracyChallenge';
 import PracticeSelection from './pages/PracticeSelection';
 import PracticeMode from './pages/PracticeMode';
 import PerfectPitchChallenge from './pages/PerfectPitchChallenge';
+import Friends from './pages/Friends';
+import FriendProfile from './pages/FriendProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -30,6 +32,8 @@ export const PAGES = {
     "PracticeSelection": PracticeSelection,
     "PracticeMode": PracticeMode,
     "PerfectPitchChallenge": PerfectPitchChallenge,
+    "Friends": Friends,
+    "FriendProfile": FriendProfile,
 }
 
 export const pagesConfig = {

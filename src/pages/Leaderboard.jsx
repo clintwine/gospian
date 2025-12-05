@@ -5,13 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Crown, User, Flame, Target, Zap } from 'lucide-react';
+import { Trophy, Medal, Crown, User, Flame, Target, Zap, Users } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Leaderboard() {
   const [timePeriod, setTimePeriod] = useState('all-time');
   const [sortBy, setSortBy] = useState('xp');
   const [exerciseType, setExerciseType] = useState('all');
+  const [showFriendsOnly, setShowFriendsOnly] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -33,6 +34,25 @@ export default function Leaderboard() {
       return results;
     },
   });
+
+  const { data: friends } = useQuery({
+    queryKey: ['friends', currentUser?.email],
+    queryFn: async () => {
+      if (!currentUser?.email) return [];
+      const sent = await base44.entities.Friend.filter({ user_email: currentUser.email });
+      const received = await base44.entities.Friend.filter({ friend_email: currentUser.email });
+      return [...sent, ...received];
+    },
+    enabled: !!currentUser?.email,
+  });
+
+  const getFriendEmails = () => {
+    if (!friends || !currentUser) return [];
+    const friendEmails = friends.map(f => 
+      f.user_email === currentUser.email ? f.friend_email : f.user_email
+    );
+    return [...friendEmails, currentUser.email]; // Include current user
+  };
 
   // Calculate leaderboard data based on filters
   const leaderboardData = useMemo(() => {
@@ -129,11 +149,19 @@ export default function Leaderboard() {
     }
 
     // Show all users for all-time view, or users with activity for filtered views
-    if (timePeriod === 'all-time' && exerciseType === 'all') {
-      return sorted;
+    let filtered = sorted;
+    if (timePeriod !== 'all-time' || exerciseType !== 'all') {
+      filtered = sorted.filter(u => u.xp > 0 || u.exercisesCompleted > 0);
     }
-    return sorted.filter(u => u.xp > 0 || u.exercisesCompleted > 0);
-  }, [allStats, allResults, timePeriod, sortBy, exerciseType]);
+    
+    // Filter by friends only if enabled
+    if (showFriendsOnly) {
+      const friendEmails = getFriendEmails();
+      filtered = filtered.filter(u => friendEmails.includes(u.email));
+    }
+    
+    return filtered;
+  }, [allStats, allResults, timePeriod, sortBy, exerciseType, showFriendsOnly, friends, currentUser]);
 
   const getDisplayValue = (user) => {
     if (sortBy === 'xp') return { value: user.xp, label: 'XP' };
@@ -205,6 +233,16 @@ export default function Leaderboard() {
               <TabsTrigger value="all-time" className="text-xs sm:text-sm px-2 sm:px-3">All Time</TabsTrigger>
             </TabsList>
           </Tabs>
+
+          <Button
+            variant={showFriendsOnly ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowFriendsOnly(!showFriendsOnly)}
+            className={`h-9 ${showFriendsOnly ? 'bg-[#3E82FC]' : ''}`}
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Friends Only
+          </Button>
 
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-[130px] h-9">

@@ -14,7 +14,8 @@ import {
   Menu,
   X,
   LogOut,
-  GraduationCap
+  GraduationCap,
+  Users
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -69,6 +70,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Exercises', icon: Music2, path: 'Exercises' },
     { name: 'Challenges', icon: Trophy, path: 'Challenges' },
     { name: 'Practice', icon: GraduationCap, path: 'PracticeSelection' },
+    { name: 'Friends', icon: Users, path: 'Friends' },
     { name: 'Badges', icon: Award, path: 'Badges' },
     { name: 'Profile', icon: User, path: 'Profile' },
   ];
