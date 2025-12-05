@@ -30,6 +30,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 
 export default function Profile() {
   const queryClient = useQueryClient();
+  const [theme, setTheme] = useState('light');
   
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -47,8 +48,11 @@ export default function Profile() {
     enabled: !!user?.email,
   });
   
-  // Derive theme from userStats or localStorage
-  const theme = userStats?.theme || (typeof window !== 'undefined' ? localStorage.getItem('theme') : 'light') || 'light';
+  // Update theme from userStats or localStorage
+  React.useEffect(() => {
+    const savedTheme = userStats?.theme || (typeof window !== 'undefined' ? localStorage.getItem('theme') : 'light') || 'light';
+    setTheme(savedTheme);
+  }, [userStats?.theme]);
 
   const { data: exerciseResults } = useQuery({
     queryKey: ['exerciseResults', user?.email],
