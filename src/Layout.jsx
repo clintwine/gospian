@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import XPBar from '@/components/ui/XPBar';
 import StreakBadge from '@/components/ui/StreakBadge';
+import SuggestionButton from '@/components/feedback/SuggestionButton';
 
 export default function Layout({ children, currentPageName }) {
   const [theme, setTheme] = useState('light');
@@ -256,6 +257,9 @@ export default function Layout({ children, currentPageName }) {
           {children}
         </div>
       </main>
+
+      {/* Suggestion Button */}
+      <SuggestionButton />
     </div>
   );
 }

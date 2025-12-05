@@ -109,19 +109,37 @@ export default function ExerciseInterface({
     // Small delay before starting
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Highlight and play first note simultaneously
+    // 1. Melodic Forward: First note → Second note
     setReplayHighlight('first');
     playTone(baseFreq, 0.6, audioType);
     await new Promise(resolve => setTimeout(resolve, 700));
     
-    // Highlight and play second note simultaneously
     setReplayHighlight('second');
     playTone(secondFreq, 0.6, audioType);
     await new Promise(resolve => setTimeout(resolve, 700));
     
-    // Show both notes highlighted briefly
+    // Brief pause
+    setReplayHighlight(null);
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    // 2. Melodic Backward: Second note → First note
+    setReplayHighlight('second');
+    playTone(secondFreq, 0.6, audioType);
+    await new Promise(resolve => setTimeout(resolve, 700));
+    
+    setReplayHighlight('first');
+    playTone(baseFreq, 0.6, audioType);
+    await new Promise(resolve => setTimeout(resolve, 700));
+    
+    // Brief pause
+    setReplayHighlight(null);
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    // 3. Harmonic: Both notes together
     setReplayHighlight('both');
-    await new Promise(resolve => setTimeout(resolve, 500));
+    playTone(baseFreq, 1.2, audioType);
+    playTone(secondFreq, 1.2, audioType);
+    await new Promise(resolve => setTimeout(resolve, 1200));
     
     setIsReplayingCorrect(false);
     setReplayHighlight(null);

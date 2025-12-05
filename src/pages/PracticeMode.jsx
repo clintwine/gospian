@@ -9,9 +9,11 @@ import { createPageUrl } from '@/utils';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdaptiveChordSelector } from '@/components/audio/AdaptiveChordSelector';
-import { CHORD_TYPES } from '@/components/audio/AudioEngine';
+import { CHORD_TYPES, INTERVALS, SCALES } from '@/components/audio/AudioEngine';
+import GranularSettingsPanel from '@/components/practice/GranularSettingsPanel';
+import { Separator } from "@/components/ui/separator";
 
 export default function PracticeMode() {
   const location = useLocation();
@@ -25,10 +27,35 @@ export default function PracticeMode() {
   const adaptiveChordSelector = useRef(null);
   const fixedChordRoot = useRef(null);
 
+  const queryClient = useQueryClient();
+
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
+  });
+
+  const { data: practiceSettings } = useQuery({
+    queryKey: ['practiceSettings', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return null;
+      const settings = await base44.entities.PracticeSettings.filter({ created_by: user.email });
+      return settings[0] || null;
+    },
+    enabled: !!user?.email,
+  });
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (data) => {
+      if (practiceSettings?.id) {
+        return base44.entities.PracticeSettings.update(practiceSettings.id, data);
+      } else {
+        return base44.entities.PracticeSettings.create(data);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['practiceSettings'] });
+    },
   });
 
   // Initialize adaptive chord selector
@@ -42,8 +69,16 @@ export default function PracticeMode() {
   }, [exerciseType, user?.email]);
 
   const questionSupplier = () => {
+    const enabledIntervals = practiceSettings?.enabled_intervals || INTERVALS.map(i => i.name);
+    const enabledScales = practiceSettings?.enabled_scales || SCALES.map(s => s.name);
+    const enabledChords = practiceSettings?.enabled_chords || CHORD_TYPES.map(c => c.name);
+
     // Use adaptive logic for chords
     if (exerciseType === 'chords' && adaptiveChordSelector.current) {
+      // Filter available chords by enabled list
+      const availableChordTypes = CHORD_TYPES.filter(c => enabledChords.includes(c.name));
+      if (availableChordTypes.length === 0) return null;
+
       // Set fixed root on first chord if forceSameRoot is enabled
       if (forceSameRoot && !fixedChordRoot.current) {
         const roots = ['C4', 'D4', 'E4', 'F4', 'G4'];
@@ -56,19 +91,54 @@ export default function PracticeMode() {
         forceSameRoot, 
         fixedChordRoot.current
       );
-      const chord = CHORD_TYPES.find(c => c.name === chordType);
       
-      if (chord) {
+      // Make sure selected chord is in enabled list
+      if (!enabledChords.includes(chordType)) {
+        const fallbackChord = availableChordTypes[Math.floor(Math.random() * availableChordTypes.length)];
         return {
-          correctAnswer: { name: chord.name },
-          options: CHORD_TYPES.map(c => ({ name: c.name })).sort(() => Math.random() - 0.5),
-          chordType: chord.name,
+          correctAnswer: { name: fallbackChord.name },
+          options: availableChordTypes.map(c => ({ name: c.name })).sort(() => Math.random() - 0.5),
+          chordType: fallbackChord.name,
           baseNote: root,
         };
       }
+      
+      return {
+        correctAnswer: { name: chordType },
+        options: availableChordTypes.map(c => ({ name: c.name })).sort(() => Math.random() - 0.5),
+        chordType: chordType,
+        baseNote: root,
+      };
+    }
+
+    // For intervals - filter by enabled
+    if (exerciseType === 'intervals') {
+      const availableIntervals = INTERVALS.filter(i => enabledIntervals.includes(i.name));
+      if (availableIntervals.length === 0) return null;
+      
+      const interval = availableIntervals[Math.floor(Math.random() * availableIntervals.length)];
+      return {
+        correctAnswer: { name: interval.name },
+        options: availableIntervals.map(i => ({ name: i.name })).sort(() => Math.random() - 0.5).slice(0, 4),
+        semitones: interval.semitones,
+        playMode: Math.random() > 0.5 ? 'melodic' : 'harmonic',
+      };
+    }
+
+    // For scales - filter by enabled
+    if (exerciseType === 'scales') {
+      const availableScales = SCALES.filter(s => enabledScales.includes(s.name));
+      if (availableScales.length === 0) return null;
+      
+      const scale = availableScales[Math.floor(Math.random() * availableScales.length)];
+      return {
+        correctAnswer: { name: scale.name },
+        options: availableScales.map(s => ({ name: s.name })).sort(() => Math.random() - 0.5).slice(0, 4),
+        scaleType: scale.name,
+      };
     }
     
-    // Fallback to random for other types
+    // Fallback to random
     const exercise = getRandomExercise(exerciseType, difficulty);
     if (!exercise) return null;
     
@@ -181,6 +251,37 @@ export default function PracticeMode() {
                   </button>
                 </div>
               )}
+              
+              <Separator />
+
+              <GranularSettingsPanel
+                exerciseType={exerciseType}
+                enabledIntervals={practiceSettings?.enabled_intervals || INTERVALS.map(i => i.name)}
+                enabledScales={practiceSettings?.enabled_scales || SCALES.map(s => s.name)}
+                enabledChords={practiceSettings?.enabled_chords || CHORD_TYPES.map(c => c.name)}
+                onToggleInterval={(interval, enabled) => {
+                  const current = practiceSettings?.enabled_intervals || INTERVALS.map(i => i.name);
+                  const updated = enabled 
+                    ? [...current, interval]
+                    : current.filter(i => i !== interval);
+                  updateSettingsMutation.mutate({ enabled_intervals: updated });
+                }}
+                onToggleScale={(scale, enabled) => {
+                  const current = practiceSettings?.enabled_scales || SCALES.map(s => s.name);
+                  const updated = enabled 
+                    ? [...current, scale]
+                    : current.filter(s => s !== scale);
+                  updateSettingsMutation.mutate({ enabled_scales: updated });
+                }}
+                onToggleChord={(chord, enabled) => {
+                  const current = practiceSettings?.enabled_chords || CHORD_TYPES.map(c => c.name);
+                  const updated = enabled 
+                    ? [...current, chord]
+                    : current.filter(c => c !== chord);
+                  updateSettingsMutation.mutate({ enabled_chords: updated });
+                }}
+              />
+
               <p className="text-xs text-muted-foreground mt-4">
                 Changes will apply to the next question.
               </p>
