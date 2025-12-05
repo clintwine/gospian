@@ -48,7 +48,7 @@ export default function PracticeMode() {
       // Create default settings if none exist
       const defaultSettings = {
         enabled_intervals: ['Unison', 'Major 3rd', 'Perfect 5th', 'Octave'],
-        enabled_scales: ['Major', 'Natural Minor'],
+        enabled_scales: ['Major', 'Natural Minor', 'Harmonic Minor'],
         enabled_chords: ['Major', 'Minor']
       };
       const created = await base44.entities.PracticeSettings.create(defaultSettings);
@@ -273,6 +273,18 @@ export default function PracticeMode() {
                       defaultChords = CHORD_TYPES.map(c => c.name);
                     }
                     updateSettingsMutation.mutate({ enabled_chords: defaultChords });
+                  }
+                  // Auto-set scales based on difficulty
+                  if (exerciseType === 'scales') {
+                    let defaultScales = [];
+                    if (value === 'beginner') {
+                      defaultScales = ['Major', 'Natural Minor', 'Harmonic Minor'];
+                    } else if (value === 'intermediate') {
+                      defaultScales = ['Major', 'Natural Minor', 'Harmonic Minor', 'Pentatonic Major', 'Pentatonic Minor'];
+                    } else {
+                      defaultScales = SCALES.map(s => s.name);
+                    }
+                    updateSettingsMutation.mutate({ enabled_scales: defaultScales });
                   }
                 }}>
                   <SelectTrigger className="w-full">

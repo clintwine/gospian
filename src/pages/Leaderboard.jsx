@@ -21,7 +21,7 @@ export default function Leaderboard() {
   const { data: allStats, isLoading: statsLoading } = useQuery({
     queryKey: ['allUserStats'],
     queryFn: async () => {
-      const stats = await base44.asServiceRole.entities.UserStats.list('-xp', 100);
+      const stats = await base44.entities.UserStats.list('-xp', 100);
       return stats;
     },
   });
@@ -29,7 +29,7 @@ export default function Leaderboard() {
   const { data: allResults, isLoading: resultsLoading } = useQuery({
     queryKey: ['allExerciseResults'],
     queryFn: async () => {
-      const results = await base44.asServiceRole.entities.ExerciseResult.list('-created_date', 500);
+      const results = await base44.entities.ExerciseResult.list('-created_date', 500);
       return results;
     },
   });
@@ -306,7 +306,13 @@ export default function Leaderboard() {
             </div>
           ) : (
             <div className="space-y-2">
-              {leaderboardData.map((user, index) => {
+              {(() => {
+                const currentUserIndex = leaderboardData.findIndex(u => u.email === currentUser?.email);
+                const showFromIndex = currentUserIndex > 3 ? Math.max(0, currentUserIndex - 3) : 0;
+                const visibleData = currentUserIndex > 3 ? leaderboardData.slice(showFromIndex, currentUserIndex + 5) : leaderboardData;
+                
+                return visibleData.map((user) => {
+                  const index = leaderboardData.indexOf(user);
                 const rank = index + 1;
                 const isCurrentUser = user.email === currentUser?.email;
                 const displayValue = getDisplayValue(user);
@@ -345,7 +351,7 @@ export default function Leaderboard() {
                     </div>
                   </div>
                 );
-              })}
+              })()}
             </div>
           )}
         </CardContent>

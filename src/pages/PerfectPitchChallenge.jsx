@@ -167,24 +167,24 @@ export default function PerfectPitchChallenge() {
             </p>
 
             <div className="space-y-4 mb-8">
-              <div className="bg-white/10 rounded-lg p-4">
-                <p className="text-sm text-white/70 mb-2">Select Difficulty</p>
-                <div className="flex gap-2 justify-center">
+              <div className="bg-white/10 rounded-lg p-6">
+                <p className="text-sm text-white/70 mb-4 text-center">Select Difficulty</p>
+                <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
                   <Button
                     variant={difficulty === 'beginner' ? 'default' : 'outline'}
                     onClick={() => setDifficulty('beginner')}
-                    className={difficulty === 'beginner' ? 'bg-[#3E82FC]' : 'bg-white/10 text-white border-white/30'}
+                    className={`h-auto py-4 flex-col gap-2 ${difficulty === 'beginner' ? 'bg-[#3E82FC] text-white' : 'bg-white/10 text-white border-white/30 hover:bg-white/20'}`}
                   >
-                    Beginner
-                    <span className="ml-2 text-xs">(Natural Notes)</span>
+                    <span className="font-semibold text-base">Beginner</span>
+                    <span className="text-xs opacity-80">Natural Notes Only</span>
                   </Button>
                   <Button
                     variant={difficulty === 'intermediate' ? 'default' : 'outline'}
                     onClick={() => setDifficulty('intermediate')}
-                    className={difficulty === 'intermediate' ? 'bg-[#3E82FC]' : 'bg-white/10 text-white border-white/30'}
+                    className={`h-auto py-4 flex-col gap-2 ${difficulty === 'intermediate' ? 'bg-[#3E82FC] text-white' : 'bg-white/10 text-white border-white/30 hover:bg-white/20'}`}
                   >
-                    Advanced
-                    <span className="ml-2 text-xs">(Sharps/Flats)</span>
+                    <span className="font-semibold text-base">Advanced</span>
+                    <span className="text-xs opacity-80">Sharps & Flats</span>
                   </Button>
                 </div>
               </div>
