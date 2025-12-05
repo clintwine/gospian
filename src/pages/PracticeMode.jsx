@@ -26,6 +26,7 @@ export default function PracticeMode() {
   const [forceSameRoot, setForceSameRoot] = useState(true);
   const adaptiveChordSelector = useRef(null);
   const fixedChordRoot = useRef(null);
+  const fixedIntervalRoot = useRef(null);
 
   const queryClient = useQueryClient();
 
@@ -40,7 +41,16 @@ export default function PracticeMode() {
     queryFn: async () => {
       if (!user?.email) return null;
       const settings = await base44.entities.PracticeSettings.filter({ created_by: user.email });
-      return settings[0] || null;
+      if (settings[0]) return settings[0];
+      
+      // Create default settings if none exist
+      const defaultSettings = {
+        enabled_intervals: ['Unison', 'Major 3rd', 'Perfect 5th', 'Octave'],
+        enabled_scales: ['Major', 'Natural Minor'],
+        enabled_chords: ['Major', 'Minor']
+      };
+      const created = await base44.entities.PracticeSettings.create(defaultSettings);
+      return created;
     },
     enabled: !!user?.email,
   });
@@ -116,12 +126,31 @@ export default function PracticeMode() {
       const availableIntervals = INTERVALS.filter(i => enabledIntervals.includes(i.name));
       if (availableIntervals.length === 0) return null;
       
+      // Set fixed root on first interval if forceSameRoot is enabled
+      if (forceSameRoot && !fixedIntervalRoot.current) {
+        const roots = ['C4', 'D4', 'E4', 'F4', 'G4'];
+        fixedIntervalRoot.current = roots[Math.floor(Math.random() * roots.length)];
+      } else if (!forceSameRoot) {
+        fixedIntervalRoot.current = null;
+      }
+      
       const interval = availableIntervals[Math.floor(Math.random() * availableIntervals.length)];
+      
+      // Ensure correct answer is always in options
+      const otherOptions = availableIntervals
+        .filter(i => i.name !== interval.name)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+        .map(i => ({ name: i.name }));
+      
+      const options = [{ name: interval.name }, ...otherOptions].sort(() => Math.random() - 0.5);
+      
       return {
         correctAnswer: { name: interval.name },
-        options: availableIntervals.map(i => ({ name: i.name })).sort(() => Math.random() - 0.5).slice(0, 4),
+        options: options,
         semitones: interval.semitones,
         playMode: Math.random() > 0.5 ? 'melodic' : 'harmonic',
+        baseNote: fixedIntervalRoot.current,
       };
     }
 
@@ -215,7 +244,21 @@ export default function PracticeMode() {
               </div>
               <div>
                 <p className="text-sm font-medium mb-2">Difficulty</p>
-                <Select value={difficulty} onValueChange={setDifficulty}>
+                <Select value={difficulty} onValueChange={(value) => {
+                  setDifficulty(value);
+                  // Auto-set intervals based on difficulty
+                  if (exerciseType === 'intervals') {
+                    let defaultIntervals = [];
+                    if (value === 'beginner') {
+                      defaultIntervals = ['Unison', 'Major 3rd', 'Perfect 5th', 'Octave'];
+                    } else if (value === 'intermediate') {
+                      defaultIntervals = ['Unison', 'Major 2nd', 'Major 3rd', 'Perfect 4th', 'Perfect 5th', 'Major 6th', 'Major 7th', 'Octave'];
+                    } else {
+                      defaultIntervals = INTERVALS.map(i => i.name);
+                    }
+                    updateSettingsMutation.mutate({ enabled_intervals: defaultIntervals });
+                  }
+                }}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -226,18 +269,19 @@ export default function PracticeMode() {
                   </SelectContent>
                 </Select>
               </div>
-              {exerciseType === 'chords' && (
+              {(exerciseType === 'chords' || exerciseType === 'intervals') && (
                 <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/20">
                   <div>
                     <p className="text-sm font-medium">Force Same Root</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      All chords use the same root note
+                      {exerciseType === 'chords' ? 'All chords use the same root note' : 'All intervals start from the same root note'}
                     </p>
                   </div>
                   <button
                     onClick={() => {
                       setForceSameRoot(!forceSameRoot);
                       fixedChordRoot.current = null;
+                      fixedIntervalRoot.current = null;
                     }}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                       forceSameRoot ? 'bg-[#3E82FC]' : 'bg-gray-300'
@@ -261,23 +305,44 @@ export default function PracticeMode() {
                 enabledChords={practiceSettings?.enabled_chords || CHORD_TYPES.map(c => c.name)}
                 onToggleInterval={(interval, enabled) => {
                   const current = practiceSettings?.enabled_intervals || INTERVALS.map(i => i.name);
-                  const updated = enabled 
-                    ? [...current, interval]
-                    : current.filter(i => i !== interval);
+                  let updated;
+                  if (Array.isArray(interval)) {
+                    // Bulk update (All/None)
+                    updated = enabled ? interval : [];
+                  } else {
+                    // Single toggle
+                    updated = enabled 
+                      ? [...current, interval]
+                      : current.filter(i => i !== interval);
+                  }
                   updateSettingsMutation.mutate({ enabled_intervals: updated });
                 }}
                 onToggleScale={(scale, enabled) => {
                   const current = practiceSettings?.enabled_scales || SCALES.map(s => s.name);
-                  const updated = enabled 
-                    ? [...current, scale]
-                    : current.filter(s => s !== scale);
+                  let updated;
+                  if (Array.isArray(scale)) {
+                    // Bulk update (All/None)
+                    updated = enabled ? scale : [];
+                  } else {
+                    // Single toggle
+                    updated = enabled 
+                      ? [...current, scale]
+                      : current.filter(s => s !== scale);
+                  }
                   updateSettingsMutation.mutate({ enabled_scales: updated });
                 }}
                 onToggleChord={(chord, enabled) => {
                   const current = practiceSettings?.enabled_chords || CHORD_TYPES.map(c => c.name);
-                  const updated = enabled 
-                    ? [...current, chord]
-                    : current.filter(c => c !== chord);
+                  let updated;
+                  if (Array.isArray(chord)) {
+                    // Bulk update (All/None)
+                    updated = enabled ? chord : [];
+                  } else {
+                    // Single toggle
+                    updated = enabled 
+                      ? [...current, chord]
+                      : current.filter(c => c !== chord);
+                  }
                   updateSettingsMutation.mutate({ enabled_chords: updated });
                 }}
               />

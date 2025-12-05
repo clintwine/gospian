@@ -19,15 +19,12 @@ export default function GranularSettingsPanel({
   const allScales = SCALES.map(s => s.name);
   const allChords = CHORD_TYPES.map(c => c.name);
 
-  const toggleAll = (items, enabledItems, toggleFn, enable) => {
-    items.forEach(item => {
-      const isEnabled = enabledItems.includes(item);
-      if (enable && !isEnabled) {
-        toggleFn(item, true);
-      } else if (!enable && isEnabled) {
-        toggleFn(item, false);
-      }
-    });
+  const toggleAll = (items, toggleFn, enable) => {
+    if (enable) {
+      toggleFn(items, true);
+    } else {
+      toggleFn([], false);
+    }
   };
 
   if (exerciseType === 'intervals') {
@@ -39,14 +36,14 @@ export default function GranularSettingsPanel({
           <h3 className="text-sm font-semibold">Select Intervals</h3>
           <div className="flex gap-2">
             <button
-              onClick={() => toggleAll(allIntervals, enabledIntervals, onToggleInterval, true)}
+              onClick={() => onToggleInterval(allIntervals, true)}
               className="text-xs text-[#3E82FC] hover:underline"
             >
               All
             </button>
             <span className="text-xs text-muted-foreground">|</span>
             <button
-              onClick={() => toggleAll(allIntervals, enabledIntervals, onToggleInterval, false)}
+              onClick={() => onToggleInterval([], false)}
               className="text-xs text-muted-foreground hover:underline"
             >
               None
@@ -86,14 +83,14 @@ export default function GranularSettingsPanel({
           <h3 className="text-sm font-semibold">Select Scales</h3>
           <div className="flex gap-2">
             <button
-              onClick={() => toggleAll(allScales, enabledScales, onToggleScale, true)}
+              onClick={() => onToggleScale(allScales, true)}
               className="text-xs text-[#3E82FC] hover:underline"
             >
               All
             </button>
             <span className="text-xs text-muted-foreground">|</span>
             <button
-              onClick={() => toggleAll(allScales, enabledScales, onToggleScale, false)}
+              onClick={() => onToggleScale([], false)}
               className="text-xs text-muted-foreground hover:underline"
             >
               None
@@ -133,14 +130,14 @@ export default function GranularSettingsPanel({
           <h3 className="text-sm font-semibold">Select Chord Types</h3>
           <div className="flex gap-2">
             <button
-              onClick={() => toggleAll(allChords, enabledChords, onToggleChord, true)}
+              onClick={() => onToggleChord(allChords, true)}
               className="text-xs text-[#3E82FC] hover:underline"
             >
               All
             </button>
             <span className="text-xs text-muted-foreground">|</span>
             <button
-              onClick={() => toggleAll(allChords, enabledChords, onToggleChord, false)}
+              onClick={() => onToggleChord([], false)}
               className="text-xs text-muted-foreground hover:underline"
             >
               None
