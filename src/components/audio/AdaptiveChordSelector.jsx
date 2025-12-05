@@ -70,7 +70,7 @@ export class AdaptiveChordSelector {
     });
   }
 
-  selectNextChord() {
+  selectNextChord(forceSameRoot = false, fixedRoot = null) {
     const availableChords = CHORD_TIERS[this.currentTier];
     
     // Filter out recently used chords (last 3)
@@ -83,29 +83,38 @@ export class AdaptiveChordSelector {
     // Priority 1: Untried chords (50% chance)
     const untriedChords = this.getUntriedChords(chordsToConsider);
     if (untriedChords.length > 0 && Math.random() < 0.5) {
-      return this.selectRandomChord(untriedChords);
+      return this.selectRandomChord(untriedChords, forceSameRoot, fixedRoot);
     }
     
     // Priority 2: Struggling chords (40% chance)
     const strugglingChords = this.getStrugglingChords(chordsToConsider);
     if (strugglingChords.length > 0 && Math.random() < 0.4) {
-      return this.selectRandomChord(strugglingChords);
+      return this.selectRandomChord(strugglingChords, forceSameRoot, fixedRoot);
     }
     
     // Priority 3: Random from available chords
-    return this.selectRandomChord(chordsToConsider);
+    return this.selectRandomChord(chordsToConsider, forceSameRoot, fixedRoot);
   }
 
-  selectRandomChord(chordList) {
-    const selected = chordList[Math.floor(Math.random() * chordList.length)];
+  selectRandomChord(chordList, forceSameRoot = false, fixedRoot = null) {
+    const selectedType = chordList[Math.floor(Math.random() * chordList.length)];
     
-    // Track recent chords
-    this.recentChords.push(selected);
+    // Track recent chord types
+    this.recentChords.push(selectedType);
     if (this.recentChords.length > 3) {
       this.recentChords.shift();
     }
     
-    return selected;
+    // Return chord type and root
+    return {
+      type: selectedType,
+      root: fixedRoot || this.getRandomRoot()
+    };
+  }
+
+  getRandomRoot() {
+    const roots = ['C4', 'D4', 'E4', 'F4', 'G4'];
+    return roots[Math.floor(Math.random() * roots.length)];
   }
 
   async recordAttempt(userEmail, chordType, isCorrect) {

@@ -21,7 +21,9 @@ export default function PracticeMode() {
 
   const [exerciseType, setExerciseType] = useState(initialExerciseType);
   const [difficulty, setDifficulty] = useState(initialDifficulty);
+  const [forceSameRoot, setForceSameRoot] = useState(true);
   const adaptiveChordSelector = useRef(null);
+  const fixedChordRoot = useRef(null);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -42,7 +44,18 @@ export default function PracticeMode() {
   const questionSupplier = () => {
     // Use adaptive logic for chords
     if (exerciseType === 'chords' && adaptiveChordSelector.current) {
-      const chordType = adaptiveChordSelector.current.selectNextChord();
+      // Set fixed root on first chord if forceSameRoot is enabled
+      if (forceSameRoot && !fixedChordRoot.current) {
+        const roots = ['C4', 'D4', 'E4', 'F4', 'G4'];
+        fixedChordRoot.current = roots[Math.floor(Math.random() * roots.length)];
+      } else if (!forceSameRoot) {
+        fixedChordRoot.current = null;
+      }
+      
+      const { type: chordType, root } = adaptiveChordSelector.current.selectNextChord(
+        forceSameRoot, 
+        fixedChordRoot.current
+      );
       const chord = CHORD_TYPES.find(c => c.name === chordType);
       
       if (chord) {
@@ -50,6 +63,7 @@ export default function PracticeMode() {
           correctAnswer: { name: chord.name },
           options: CHORD_TYPES.map(c => ({ name: c.name })).sort(() => Math.random() - 0.5),
           chordType: chord.name,
+          baseNote: root,
         };
       }
     }
@@ -142,6 +156,31 @@ export default function PracticeMode() {
                   </SelectContent>
                 </Select>
               </div>
+              {exerciseType === 'chords' && (
+                <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/20">
+                  <div>
+                    <p className="text-sm font-medium">Force Same Root</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      All chords use the same root note
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setForceSameRoot(!forceSameRoot);
+                      fixedChordRoot.current = null;
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      forceSameRoot ? 'bg-[#3E82FC]' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        forceSameRoot ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground mt-4">
                 Changes will apply to the next question.
               </p>
