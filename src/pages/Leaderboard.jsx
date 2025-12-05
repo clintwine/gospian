@@ -36,7 +36,7 @@ export default function Leaderboard() {
     },
   });
 
-  const { data: friends } = useQuery({
+  const { data: friends = [] } = useQuery({
     queryKey: ['friends', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return [];
