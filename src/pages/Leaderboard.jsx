@@ -20,7 +20,7 @@ export default function Leaderboard() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: allStats, isLoading: statsLoading } = useQuery({
+  const { data: allStats = [], isLoading: statsLoading } = useQuery({
     queryKey: ['allUserStats'],
     queryFn: async () => {
       const stats = await base44.asServiceRole.entities.UserStats.list('-xp', 100);
@@ -28,7 +28,7 @@ export default function Leaderboard() {
     },
   });
 
-  const { data: allResults, isLoading: resultsLoading } = useQuery({
+  const { data: allResults = [], isLoading: resultsLoading } = useQuery({
     queryKey: ['allExerciseResults'],
     queryFn: async () => {
       const results = await base44.asServiceRole.entities.ExerciseResult.list('-created_date', 500);
