@@ -8,11 +8,11 @@ import { createPageUrl } from '@/utils';
 
 export default function Landing() {
   const handleSignUp = () => {
-    base44.auth.redirectToLogin();
+    base44.auth.redirectToLogin(window.location.origin + createPageUrl('Dashboard'));
   };
 
   const handleLogin = () => {
-    base44.auth.redirectToLogin();
+    base44.auth.redirectToLogin(window.location.origin + createPageUrl('Dashboard'));
   };
 
   const features = [
