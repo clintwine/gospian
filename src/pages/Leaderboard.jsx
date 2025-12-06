@@ -77,13 +77,26 @@ export default function Leaderboard() {
       return true;
     });
 
-    // Aggregate by user - only include users with filtered results OR all users if showing all-time + all exercises
+    // Aggregate by user
     const userAggregates = {};
     
-    // First, aggregate exercise results to see who has activity
-    const usersWithActivity = new Set();
+    // Initialize all users from stats when showing all-time + all exercises
+    if (timePeriod === 'all-time' && exerciseType === 'all') {
+      allStats.forEach(stat => {
+        userAggregates[stat.created_by] = {
+          email: stat.created_by,
+          xp: stat.xp || 0,
+          streak: stat.streak || 0,
+          level: stat.level || 1,
+          correctAnswers: 0,
+          totalQuestions: 0,
+          exercisesCompleted: 0,
+        };
+      });
+    }
+    
+    // Aggregate exercise results
     filteredResults.forEach(r => {
-      usersWithActivity.add(r.created_by);
       if (!userAggregates[r.created_by]) {
         // Get the user's stats for level and streak
         const userStat = allStats.find(s => s.created_by === r.created_by);
@@ -98,31 +111,16 @@ export default function Leaderboard() {
         };
       }
       const user = userAggregates[r.created_by];
-      user.xp += r.xp_earned || 0;
+      
+      // For filtered views (time period or exercise type), accumulate XP from filtered results
+      if (timePeriod !== 'all-time' || exerciseType !== 'all') {
+        user.xp += r.xp_earned || 0;
+      }
+      
       user.correctAnswers += r.correct_answers || 0;
       user.totalQuestions += r.total_questions || 0;
       user.exercisesCompleted += 1;
     });
-    
-    // For all-time + all exercises view, include all users from stats even if no recent activity
-    if (timePeriod === 'all-time' && exerciseType === 'all') {
-      allStats.forEach(stat => {
-        if (!userAggregates[stat.created_by]) {
-          userAggregates[stat.created_by] = {
-            email: stat.created_by,
-            xp: stat.xp || 0,
-            streak: stat.streak || 0,
-            level: stat.level || 1,
-            correctAnswers: 0,
-            totalQuestions: 0,
-            exercisesCompleted: 0,
-          };
-        } else {
-          // User has activity, set their total XP from stats
-          userAggregates[stat.created_by].xp = stat.xp || 0;
-        }
-      });
-    }
 
     // Convert to array and sort
     let sorted = Object.values(userAggregates);
