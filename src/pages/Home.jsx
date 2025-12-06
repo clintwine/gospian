@@ -8,9 +8,15 @@ import Landing from './Landing';
 export default function Home() {
   const navigate = useNavigate();
 
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isLoading, error } = useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch (err) {
+        return null;
+      }
+    },
     retry: false,
   });
 
