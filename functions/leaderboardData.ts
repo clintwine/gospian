@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
 
     // Fetch all user stats and exercise results using service role
     const allStats = await base44.asServiceRole.entities.UserStats.list('-xp', 100);
-    const allResults = await base44.asServiceRole.entities.ExerciseResult.list('-created_date', 500);
+    const allResults = await base44.asServiceRole.entities.ExerciseResult.list('-created_date', 1000);
     
     return Response.json({ allStats, allResults });
   } catch (error) {
