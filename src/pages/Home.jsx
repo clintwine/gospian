@@ -1,37 +1,28 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import Landing from './Landing';
-import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
   const navigate = useNavigate();
 
-  const { data: isAuthenticated, isLoading } = useQuery({
-    queryKey: ['isAuthenticated'],
-    queryFn: () => base44.auth.isAuthenticated(),
+  const { data: user, isLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
     retry: false,
   });
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+  React.useEffect(() => {
+    if (!isLoading && user) {
       navigate(createPageUrl('Dashboard'));
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [user, isLoading, navigate]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Skeleton className="h-64 w-full max-w-md" />
-      </div>
-    );
+    return null;
   }
 
-  if (!isAuthenticated) {
-    return <Landing />;
-  }
-
-  return null;
+  return <Landing />;
 }

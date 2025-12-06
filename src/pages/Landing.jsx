@@ -4,14 +4,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Music2, Headphones, Trophy, Zap, Users, TrendingUp, Target, Award, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { createPageUrl } from '@/utils';
 
 export default function Landing() {
   const handleSignUp = () => {
-    window.location.href = 'https://auth.base44.com/signup?app_id=' + window.location.hostname;
+    base44.auth.redirectToLogin(createPageUrl('Dashboard'));
   };
 
   const handleLogin = () => {
-    base44.auth.redirectToLogin();
+    base44.auth.redirectToLogin(createPageUrl('Dashboard'));
   };
 
   const features = [
