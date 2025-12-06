@@ -18,6 +18,7 @@ import Social from './pages/Social';
 import Training from './pages/Training';
 import PracticeStudio from './pages/PracticeStudio';
 import Landing from './pages/Landing';
+import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +43,7 @@ export const PAGES = {
     "Training": Training,
     "PracticeStudio": PracticeStudio,
     "Landing": Landing,
+    "Home": Home,
 }
 
 export const pagesConfig = {
