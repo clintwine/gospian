@@ -19,6 +19,7 @@ import Training from './pages/Training';
 import PracticeStudio from './pages/PracticeStudio';
 import Landing from './pages/Landing';
 import Home from './pages/Home';
+import FeedbackAdmin from './pages/FeedbackAdmin';
 import __Layout from './Layout.jsx';
 
 
@@ -44,6 +45,7 @@ export const PAGES = {
     "PracticeStudio": PracticeStudio,
     "Landing": Landing,
     "Home": Home,
+    "FeedbackAdmin": FeedbackAdmin,
 }
 
 export const pagesConfig = {

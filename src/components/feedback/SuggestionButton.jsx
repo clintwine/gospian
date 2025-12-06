@@ -5,8 +5,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Lightbulb, Send, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 
 export default function SuggestionButton() {
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [suggestion, setSuggestion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,6 +22,8 @@ export default function SuggestionButton() {
     setIsSubmitting(true);
 
     try {
+      const currentPage = location.pathname.split('/').pop() || 'Home';
+      
       // Use InvokeLLM to process and categorize the suggestion
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `User feedback/suggestion for ear training app: "${suggestion}"\n\nAnalyze this suggestion and provide:\n1. Category (UI/UX, Feature Request, Bug Report, Performance, Content, Other)\n2. Priority (Low, Medium, High, Critical)\n3. Summary (one sentence)\n4. Detailed analysis`,
@@ -34,20 +38,15 @@ export default function SuggestionButton() {
         }
       });
 
-      // Store the processed suggestion
-      await base44.integrations.Core.SendEmail({
-        to: 'feedback@gospian.app',
-        subject: `[${response.category}] New Suggestion: ${response.summary}`,
-        body: `
-Priority: ${response.priority}
-Category: ${response.category}
-
-Original Suggestion:
-${suggestion}
-
-AI Analysis:
-${response.analysis}
-        `
+      // Save to database
+      await base44.entities.Feedback.create({
+        suggestion: suggestion.trim(),
+        page: currentPage,
+        category: response.category,
+        priority: response.priority,
+        summary: response.summary,
+        analysis: response.analysis,
+        status: 'pending'
       });
 
       toast.success('Thank you! Your suggestion has been submitted.');
