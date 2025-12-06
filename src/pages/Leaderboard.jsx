@@ -54,61 +54,75 @@ export default function Leaderboard() {
   const filteredLeaderboardData = useMemo(() => {
     if (!allStats || !allResults || allStats.length === 0) return [];
 
-    // Filter results by time period
+    // Filter results by time period and exercise type
     const now = new Date();
     const filteredResults = allResults.filter(r => {
-      if (timePeriod === 'all-time') return true;
-      const resultDate = new Date(r.created_date);
-      if (timePeriod === 'daily') {
-        return resultDate.toDateString() === now.toDateString();
+      // Time period filter
+      if (timePeriod !== 'all-time') {
+        const resultDate = new Date(r.created_date);
+        if (timePeriod === 'daily') {
+          if (resultDate.toDateString() !== now.toDateString()) return false;
+        }
+        if (timePeriod === 'weekly') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          if (resultDate < weekAgo) return false;
+        }
       }
-      if (timePeriod === 'weekly') {
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return resultDate >= weekAgo;
+      
+      // Exercise type filter
+      if (exerciseType !== 'all') {
+        return r.exercise_type === exerciseType;
       }
+      
       return true;
-    }).filter(r => {
-      if (exerciseType === 'all') return true;
-      return r.exercise_type === exerciseType;
     });
 
-    // Aggregate by user
+    // Aggregate by user - only include users with filtered results OR all users if showing all-time + all exercises
     const userAggregates = {};
     
-    // Initialize with all users from stats
-    allStats.forEach(stat => {
-      userAggregates[stat.created_by] = {
-        email: stat.created_by,
-        xp: timePeriod === 'all-time' && exerciseType === 'all' ? (stat.xp || 0) : 0,
-        streak: stat.streak || 0,
-        level: stat.level || 1,
-        correctAnswers: 0,
-        totalQuestions: 0,
-        exercisesCompleted: 0,
-      };
-    });
-
-    // Aggregate exercise results
+    // First, aggregate exercise results to see who has activity
+    const usersWithActivity = new Set();
     filteredResults.forEach(r => {
+      usersWithActivity.add(r.created_by);
       if (!userAggregates[r.created_by]) {
+        // Get the user's stats for level and streak
+        const userStat = allStats.find(s => s.created_by === r.created_by);
         userAggregates[r.created_by] = {
           email: r.created_by,
           xp: 0,
-          streak: 0,
-          level: 1,
+          streak: userStat?.streak || 0,
+          level: userStat?.level || 1,
           correctAnswers: 0,
           totalQuestions: 0,
           exercisesCompleted: 0,
         };
       }
       const user = userAggregates[r.created_by];
-      if (timePeriod !== 'all-time' || exerciseType !== 'all') {
-        user.xp += r.xp_earned || 0;
-      }
+      user.xp += r.xp_earned || 0;
       user.correctAnswers += r.correct_answers || 0;
       user.totalQuestions += r.total_questions || 0;
       user.exercisesCompleted += 1;
     });
+    
+    // For all-time + all exercises view, include all users from stats even if no recent activity
+    if (timePeriod === 'all-time' && exerciseType === 'all') {
+      allStats.forEach(stat => {
+        if (!userAggregates[stat.created_by]) {
+          userAggregates[stat.created_by] = {
+            email: stat.created_by,
+            xp: stat.xp || 0,
+            streak: stat.streak || 0,
+            level: stat.level || 1,
+            correctAnswers: 0,
+            totalQuestions: 0,
+            exercisesCompleted: 0,
+          };
+        } else {
+          // User has activity, set their total XP from stats
+          userAggregates[stat.created_by].xp = stat.xp || 0;
+        }
+      });
+    }
 
     // Convert to array and sort
     let sorted = Object.values(userAggregates);
@@ -144,11 +158,8 @@ export default function Leaderboard() {
       });
     }
 
-    // Show all users for all-time view, or users with activity for filtered views
-    let filtered = sorted;
-    if (timePeriod !== 'all-time' || exerciseType !== 'all') {
-      filtered = sorted.filter(u => u.xp > 0 || u.exercisesCompleted > 0);
-    }
+    // For filtered views, only show users with activity
+    let filtered = sorted.filter(u => u.exercisesCompleted > 0 || (timePeriod === 'all-time' && exerciseType === 'all'));
     
     // Filter by friends only if enabled
     if (showFriendsOnly) {
