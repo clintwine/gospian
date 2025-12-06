@@ -264,6 +264,34 @@ export default function Layout({ children, currentPageName }) {
         </div>
       </main>
 
+      {/* User Info & Logout - Bottom Left */}
+      {user && (
+        <div className="hidden lg:block fixed bottom-6 left-6 z-40">
+          <Card className="border-0 shadow-xl bg-white/95 dark:bg-[#0A1A2F]/95 backdrop-blur-sm">
+            <CardContent className="p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3E82FC] to-[#2A9D8F] flex items-center justify-center">
+                <User className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate text-[#0A1A2F] dark:text-white">
+                  {user.full_name || 'User'}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="text-[#E76F51] hover:text-[#E76F51] hover:bg-[#E76F51]/10 shrink-0"
+                title="Log out"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Suggestion Button */}
       <SuggestionButton />
     </div>
