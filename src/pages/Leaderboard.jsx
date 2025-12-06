@@ -80,22 +80,7 @@ export default function Leaderboard() {
     // Aggregate by user
     const userAggregates = {};
     
-    // Initialize all users from stats when showing all-time + all exercises
-    if (timePeriod === 'all-time' && exerciseType === 'all') {
-      allStats.forEach(stat => {
-        userAggregates[stat.created_by] = {
-          email: stat.created_by,
-          xp: stat.xp || 0,
-          streak: stat.streak || 0,
-          level: stat.level || 1,
-          correctAnswers: 0,
-          totalQuestions: 0,
-          exercisesCompleted: 0,
-        };
-      });
-    }
-    
-    // Aggregate exercise results
+    // Aggregate exercise results from filtered data
     filteredResults.forEach(r => {
       if (!userAggregates[r.created_by]) {
         // Get the user's stats for level and streak
@@ -111,16 +96,31 @@ export default function Leaderboard() {
         };
       }
       const user = userAggregates[r.created_by];
-      
-      // For filtered views (time period or exercise type), accumulate XP from filtered results
-      if (timePeriod !== 'all-time' || exerciseType !== 'all') {
-        user.xp += r.xp_earned || 0;
-      }
-      
+      user.xp += r.xp_earned || 0;
       user.correctAnswers += r.correct_answers || 0;
       user.totalQuestions += r.total_questions || 0;
       user.exercisesCompleted += 1;
     });
+    
+    // For all-time + all exercises view, initialize all users from stats
+    if (timePeriod === 'all-time' && exerciseType === 'all') {
+      allStats.forEach(stat => {
+        if (!userAggregates[stat.created_by]) {
+          userAggregates[stat.created_by] = {
+            email: stat.created_by,
+            xp: stat.xp || 0,
+            streak: stat.streak || 0,
+            level: stat.level || 1,
+            correctAnswers: 0,
+            totalQuestions: 0,
+            exercisesCompleted: 0,
+          };
+        } else {
+          // Use total XP from stats for all-time view
+          userAggregates[stat.created_by].xp = stat.xp || 0;
+        }
+      });
+    }
 
     // Convert to array and sort
     let sorted = Object.values(userAggregates);
