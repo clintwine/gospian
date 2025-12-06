@@ -18,6 +18,7 @@ import {
   Users
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import XPBar from '@/components/ui/XPBar';
 import StreakBadge from '@/components/ui/StreakBadge';
