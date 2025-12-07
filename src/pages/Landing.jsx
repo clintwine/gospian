@@ -210,8 +210,24 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-[#D7E5FF] dark:border-slate-800">
-        <div className="max-w-7xl mx-auto text-center text-sm text-muted-foreground">
-          <p>© 2025 GOSPIAN. All rights reserved. Made with ♪ for musicians.</p>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <p>© 2025 GOSPIAN. All rights reserved. Made with ♪ for musicians.</p>
+            <div className="flex items-center gap-6">
+              <Link 
+                to={createPageUrl('PrivacyPolicy')} 
+                className="hover:text-[#3E82FC] transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              <Link 
+                to={createPageUrl('TermsOfService')} 
+                className="hover:text-[#3E82FC] transition-colors"
+              >
+                Terms of Service
+              </Link>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

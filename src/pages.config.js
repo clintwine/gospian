@@ -20,6 +20,8 @@ import PracticeStudio from './pages/PracticeStudio';
 import Landing from './pages/Landing';
 import Home from './pages/Home';
 import FeedbackAdmin from './pages/FeedbackAdmin';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import __Layout from './Layout.jsx';
 
 
@@ -46,6 +48,8 @@ export const PAGES = {
     "Landing": Landing,
     "Home": Home,
     "FeedbackAdmin": FeedbackAdmin,
+    "PrivacyPolicy": PrivacyPolicy,
+    "TermsOfService": TermsOfService,
 }
 
 export const pagesConfig = {
