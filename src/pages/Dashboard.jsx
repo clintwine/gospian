@@ -64,7 +64,7 @@ export default function Dashboard() {
   const { data: exerciseResults } = useQuery({
     queryKey: ['exerciseResults', user?.email],
     queryFn: async () => {
-      return await base44.entities.ExerciseResult.filter({ created_by: user.email }, '-created_date', 10);
+      return await base44.entities.ExerciseResult.filter({ created_by: user.email }, '-created_date', 100);
     },
     enabled: !!user?.email,
   });
@@ -76,6 +76,18 @@ export default function Dashboard() {
     const resultDate = new Date(r.created_date).toDateString();
     return today === resultDate;
   });
+
+  // Calculate Quick Start progress from exercise results
+  const calculateQuickStartProgress = (type, difficulty) => {
+    if (!exerciseResults) return 0;
+    const matching = exerciseResults.filter(
+      r => r.exercise_type === type && r.difficulty === difficulty
+    );
+    if (matching.length === 0) return 0;
+    // Return average accuracy of all matching exercises
+    const avgAccuracy = matching.reduce((sum, r) => sum + (r.accuracy || 0), 0) / matching.length;
+    return Math.round(avgAccuracy);
+  };
 
   const isLoading = userLoading || statsLoading;
 
@@ -138,7 +150,7 @@ export default function Dashboard() {
                 title="Interval Recognition"
                 description="Identify the distance between two notes"
                 difficulty="beginner"
-                progress={stats.quickstart_interval_beginner_progress || 0}
+                progress={calculateQuickStartProgress('intervals', 'beginner')}
                 xpReward={10}
               />
               <ExerciseCard
@@ -146,7 +158,7 @@ export default function Dashboard() {
                 title="Chord Identification"
                 description="Recognize chord qualities by ear"
                 difficulty="beginner"
-                progress={stats.quickstart_chord_beginner_progress || 0}
+                progress={calculateQuickStartProgress('chords', 'beginner')}
                 xpReward={10}
               />
               <ExerciseCard
@@ -154,7 +166,7 @@ export default function Dashboard() {
                 title="Advanced Intervals"
                 description="Master all 12 chromatic intervals"
                 difficulty="intermediate"
-                progress={stats.quickstart_interval_intermediate_progress || 0}
+                progress={calculateQuickStartProgress('intervals', 'intermediate')}
                 xpReward={15}
               />
               <ExerciseCard
@@ -162,7 +174,7 @@ export default function Dashboard() {
                 title="Scale Recognition"
                 description="Identify major and minor scales"
                 difficulty="beginner"
-                progress={stats.quickstart_scale_beginner_progress || 0}
+                progress={calculateQuickStartProgress('scales', 'beginner')}
                 xpReward={10}
                 locked={stats.level < 3}
               />
