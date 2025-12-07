@@ -73,7 +73,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Challenges', icon: Trophy, path: 'Challenges' },
     { name: 'Practice', icon: GraduationCap, path: 'PracticeStudio' },
     { name: 'Training', icon: Trophy, path: 'Training' },
-    { name: 'Social', icon: Users, path: 'Social' },
+    { name: 'Friends', icon: Users, path: 'Friends' },
     { name: 'Profile', icon: User, path: 'Profile' },
   ];
 
