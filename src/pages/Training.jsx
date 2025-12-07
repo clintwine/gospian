@@ -1,6 +1,7 @@
 import React from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { createPageUrl } from '@/utils';
 import AITrainingPlan from '@/components/training/AITrainingPlan';
 import { Skeleton } from "@/components/ui/skeleton";
 
