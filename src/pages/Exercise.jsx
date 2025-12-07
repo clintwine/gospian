@@ -113,6 +113,27 @@ export default function Exercise() {
           current_exercise_progress: exerciseResults.accuracy,
         },
       });
+
+      // Update Quick Start progress if applicable
+      let quickStartProgressField = null;
+      if (exerciseType === 'intervals' && difficulty === 'beginner') {
+        quickStartProgressField = 'quickstart_interval_beginner_progress';
+      } else if (exerciseType === 'chords' && difficulty === 'beginner') {
+        quickStartProgressField = 'quickstart_chord_beginner_progress';
+      } else if (exerciseType === 'intervals' && difficulty === 'intermediate') {
+        quickStartProgressField = 'quickstart_interval_intermediate_progress';
+      } else if (exerciseType === 'scales' && difficulty === 'beginner') {
+        quickStartProgressField = 'quickstart_scale_beginner_progress';
+      }
+
+      if (quickStartProgressField) {
+        await updateStatsMutation.mutateAsync({
+          id: userStats.id,
+          data: {
+            [quickStartProgressField]: 100,
+          },
+        });
+      }
     }
   };
 
