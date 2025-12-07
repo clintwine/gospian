@@ -85,13 +85,24 @@ export default function Leaderboard() {
       return true;
     });
 
-    // Aggregate by user
+    // Aggregate by user - always initialize from allStats first
     const userAggregates = {};
+    
+    allStats.forEach(stat => {
+      userAggregates[stat.created_by] = {
+        email: stat.created_by,
+        xp: 0,
+        streak: stat.streak || 0,
+        level: stat.level || 1,
+        correctAnswers: 0,
+        totalQuestions: 0,
+        exercisesCompleted: 0,
+      };
+    });
     
     // Aggregate exercise results from filtered data
     filteredResults.forEach(r => {
       if (!userAggregates[r.created_by]) {
-        // Get the user's stats for level and streak
         const userStat = allStats.find(s => s.created_by === r.created_by);
         userAggregates[r.created_by] = {
           email: r.created_by,
@@ -110,21 +121,10 @@ export default function Leaderboard() {
       user.exercisesCompleted += 1;
     });
     
-    // For all-time + all exercises view, initialize all users from stats
+    // For all-time + all exercises view, use total XP from stats
     if (timePeriod === 'all-time' && exerciseType === 'all') {
       allStats.forEach(stat => {
-        if (!userAggregates[stat.created_by]) {
-          userAggregates[stat.created_by] = {
-            email: stat.created_by,
-            xp: stat.xp || 0,
-            streak: stat.streak || 0,
-            level: stat.level || 1,
-            correctAnswers: 0,
-            totalQuestions: 0,
-            exercisesCompleted: 0,
-          };
-        } else {
-          // Use total XP from stats for all-time view
+        if (userAggregates[stat.created_by]) {
           userAggregates[stat.created_by].xp = stat.xp || 0;
         }
       });
