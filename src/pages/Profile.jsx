@@ -44,7 +44,14 @@ export default function Profile() {
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    retry: false,
   });
+
+  React.useEffect(() => {
+    if (!userLoading && !user) {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [user, userLoading]);
 
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ['userStats', user?.email],

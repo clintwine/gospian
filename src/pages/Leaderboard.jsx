@@ -15,10 +15,17 @@ export default function Leaderboard() {
   const [exerciseType, setExerciseType] = useState('all');
   const [showFriendsOnly, setShowFriendsOnly] = useState(false);
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    retry: false,
   });
+
+  React.useEffect(() => {
+    if (!userLoading && !currentUser) {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [currentUser, userLoading]);
 
   const { data: apiData, isLoading: dataLoading } = useQuery({
     queryKey: ['leaderboardData'],
@@ -199,7 +206,7 @@ export default function Leaderboard() {
     return '';
   };
 
-  const isLoading = dataLoading;
+  const isLoading = dataLoading || userLoading || !currentUser;
 
   if (isLoading) {
     return (

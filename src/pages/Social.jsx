@@ -11,10 +11,19 @@ import { Button } from "@/components/ui/button";
 export default function Social() {
   const [selectedFriend, setSelectedFriend] = useState(null);
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    retry: false,
   });
+
+  React.useEffect(() => {
+    if (!userLoading && !currentUser) {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [currentUser, userLoading]);
+
+  if (userLoading || !currentUser) return null;
 
   const { data: friends = [] } = useQuery({
     queryKey: ['friends', currentUser?.email],

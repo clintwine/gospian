@@ -69,10 +69,19 @@ export default function Exercises() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    retry: false,
   });
+
+  React.useEffect(() => {
+    if (!userLoading && !user) {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [user, userLoading]);
+
+  if (userLoading || !user) return null;
 
   const { data: userStats } = useQuery({
     queryKey: ['userStats', user?.email],

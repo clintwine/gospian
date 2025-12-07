@@ -5,10 +5,17 @@ import AITrainingPlan from '@/components/training/AITrainingPlan';
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Training() {
-  const { data: user } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    retry: false,
   });
+
+  React.useEffect(() => {
+    if (!userLoading && !user) {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [user, userLoading]);
 
   const { data: userStats } = useQuery({
     queryKey: ['userStats', user?.email],
