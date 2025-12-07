@@ -68,14 +68,6 @@ export default function Friends() {
     },
   });
 
-  React.useEffect(() => {
-    if (!userLoading && !currentUser) {
-      window.location.href = createPageUrl('Home');
-    }
-  }, [currentUser, userLoading]);
-
-  if (userLoading || !currentUser) return null;
-
   const sendRequestMutation = useMutation({
     mutationFn: async (receiverEmail) => {
       await base44.entities.FriendRequest.create({
@@ -180,8 +172,16 @@ export default function Friends() {
     );
   }, [allUsers, currentUser, searchQuery]);
 
+  React.useEffect(() => {
+    if (!userLoading && !currentUser) {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [currentUser, userLoading]);
+
   const friendEmails = getFriendEmails();
   const pendingReceiverEmails = sentRequests?.map(r => r.receiver_email) || [];
+
+  if (userLoading || !currentUser) return null;
 
   if (friendsLoading) {
     return (
