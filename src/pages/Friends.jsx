@@ -21,14 +21,6 @@ export default function Friends() {
     retry: false,
   });
 
-  React.useEffect(() => {
-    if (!userLoading && !currentUser) {
-      window.location.href = createPageUrl('Home');
-    }
-  }, [currentUser, userLoading]);
-
-  if (userLoading || !currentUser) return null;
-
   const { data: allUsers = [], isLoading: usersLoading } = useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => {
@@ -75,6 +67,14 @@ export default function Friends() {
       return await base44.asServiceRole.entities.UserStats.list();
     },
   });
+
+  React.useEffect(() => {
+    if (!userLoading && !currentUser) {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [currentUser, userLoading]);
+
+  if (userLoading || !currentUser) return null;
 
   const sendRequestMutation = useMutation({
     mutationFn: async (receiverEmail) => {
