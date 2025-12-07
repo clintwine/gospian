@@ -15,10 +15,19 @@ export default function Friends() {
   const [searchQuery, setSearchQuery] = useState('');
   const queryClient = useQueryClient();
 
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    retry: false,
   });
+
+  React.useEffect(() => {
+    if (!userLoading && !currentUser) {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [currentUser, userLoading]);
+
+  if (userLoading || !currentUser) return null;
 
   const { data: allUsers = [], isLoading: usersLoading } = useQuery({
     queryKey: ['allUsers'],
