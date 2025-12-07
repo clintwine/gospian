@@ -10,6 +10,8 @@ import ExerciseCard from '@/components/dashboard/ExerciseCard';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Award, TrendingUp, Target } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
@@ -51,6 +53,10 @@ export default function Dashboard() {
         theme: 'light',
         exercises_completed: 0,
         perfect_scores: 0,
+        quickstart_interval_beginner_progress: 0,
+        quickstart_chord_beginner_progress: 0,
+        quickstart_interval_intermediate_progress: 0,
+        quickstart_scale_beginner_progress: 0,
       });
     }
   }, [user, userStats, statsLoading]);
@@ -132,7 +138,7 @@ export default function Dashboard() {
                 title="Interval Recognition"
                 description="Identify the distance between two notes"
                 difficulty="beginner"
-                progress={35}
+                progress={stats.quickstart_interval_beginner_progress || 0}
                 xpReward={10}
               />
               <ExerciseCard
@@ -140,7 +146,7 @@ export default function Dashboard() {
                 title="Chord Identification"
                 description="Recognize chord qualities by ear"
                 difficulty="beginner"
-                progress={20}
+                progress={stats.quickstart_chord_beginner_progress || 0}
                 xpReward={10}
               />
               <ExerciseCard
@@ -148,7 +154,7 @@ export default function Dashboard() {
                 title="Advanced Intervals"
                 description="Master all 12 chromatic intervals"
                 difficulty="intermediate"
-                progress={0}
+                progress={stats.quickstart_interval_intermediate_progress || 0}
                 xpReward={15}
               />
               <ExerciseCard
@@ -156,7 +162,7 @@ export default function Dashboard() {
                 title="Scale Recognition"
                 description="Identify major and minor scales"
                 difficulty="beginner"
-                progress={0}
+                progress={stats.quickstart_scale_beginner_progress || 0}
                 xpReward={10}
                 locked={stats.level < 3}
               />
@@ -228,9 +234,14 @@ export default function Dashboard() {
                   <Award className="w-6 h-6 text-gray-400" />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-3">
+              <p className="text-xs text-muted-foreground mt-3 mb-4">
                 Complete more exercises to earn badges
               </p>
+              <Link to={createPageUrl('Leaderboard')}>
+                <Button variant="outline" className="w-full text-xs">
+                  View Leaderboard
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
