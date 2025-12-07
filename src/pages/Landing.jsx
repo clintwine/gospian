@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,24 @@ import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 
 export default function Landing() {
+  const { data: user, isLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      try {
+        return await base44.auth.me();
+      } catch (err) {
+        return null;
+      }
+    },
+    retry: false,
+  });
+
+  React.useEffect(() => {
+    if (!isLoading && user) {
+      window.location.href = createPageUrl('Dashboard');
+    }
+  }, [user, isLoading]);
+
   const handleSignUp = () => {
     base44.auth.redirectToLogin(window.location.origin + createPageUrl('Dashboard'));
   };
@@ -15,6 +34,10 @@ export default function Landing() {
   const handleLogin = () => {
     base44.auth.redirectToLogin(window.location.origin + createPageUrl('Dashboard'));
   };
+
+  if (isLoading) {
+    return null;
+  }
 
   const features = [
     {
