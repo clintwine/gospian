@@ -16,7 +16,14 @@ export default function Dashboard() {
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    retry: false,
   });
+
+  React.useEffect(() => {
+    if (!userLoading && !user) {
+      window.location.href = createPageUrl('Home');
+    }
+  }, [user, userLoading]);
 
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ['userStats', user?.email],
@@ -65,7 +72,7 @@ export default function Dashboard() {
 
   const isLoading = userLoading || statsLoading;
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="grid gap-6">
