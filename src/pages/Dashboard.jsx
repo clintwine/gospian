@@ -84,6 +84,8 @@ export default function Dashboard() {
     enabled: !!user?.email,
   });
 
+  const tier = subscription?.tier || 'free';
+
   // Detect skill plateau (no improvement in 7 days)
   React.useEffect(() => {
     if (exerciseResults && tier === 'free') {
@@ -144,7 +146,6 @@ export default function Dashboard() {
   }
 
   const stats = userStats || { xp: 0, level: 1, streak: 0, freeze_tokens: 0, daily_exercises_used: 0 };
-  const tier = subscription?.tier || 'free';
   const dailyLimit = tier === 'free' ? 10 : null;
   const exercisesRemaining = dailyLimit ? Math.max(0, dailyLimit - (stats.daily_exercises_used || 0)) : null;
 
