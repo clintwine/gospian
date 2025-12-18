@@ -23,6 +23,7 @@ import FeedbackAdmin from './pages/FeedbackAdmin';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Pricing from './pages/Pricing';
+import MetricsAdmin from './pages/MetricsAdmin';
 import __Layout from './Layout.jsx';
 
 
@@ -52,6 +53,7 @@ export const PAGES = {
     "PrivacyPolicy": PrivacyPolicy,
     "TermsOfService": TermsOfService,
     "Pricing": Pricing,
+    "MetricsAdmin": MetricsAdmin,
 }
 
 export const pagesConfig = {

@@ -14,9 +14,13 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import PlateauDetectionAlert from '@/components/subscription/PlateauDetectionAlert';
+import StreakProtectionAlert from '@/components/subscription/StreakProtectionAlert';
+import BlurredProgressChart from '@/components/subscription/BlurredProgressChart';
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
+  const [showPlateauAlert, setShowPlateauAlert] = React.useState(false);
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -79,6 +83,27 @@ export default function Dashboard() {
     },
     enabled: !!user?.email,
   });
+
+  // Detect skill plateau (no improvement in 7 days)
+  React.useEffect(() => {
+    if (exerciseResults && tier === 'free') {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recentResults = exerciseResults.filter(r => new Date(r.created_date) > sevenDaysAgo);
+      
+      if (recentResults.length >= 5) {
+        const avgAccuracy = recentResults.reduce((sum, r) => sum + (r.accuracy || 0), 0) / recentResults.length;
+        const firstHalf = recentResults.slice(0, Math.floor(recentResults.length / 2));
+        const secondHalf = recentResults.slice(Math.floor(recentResults.length / 2));
+        
+        const firstAvg = firstHalf.reduce((sum, r) => sum + (r.accuracy || 0), 0) / firstHalf.length;
+        const secondAvg = secondHalf.reduce((sum, r) => sum + (r.accuracy || 0), 0) / secondHalf.length;
+        
+        if (secondAvg <= firstAvg + 2) { // No significant improvement
+          setShowPlateauAlert(true);
+        }
+      }
+    }
+  }, [exerciseResults, tier]);
 
   // Check if daily challenge completed today
   const dailyChallengeCompleted = exerciseResults?.some(r => {
@@ -240,6 +265,9 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Progress Chart */}
+          <BlurredProgressChart userTier={tier} />
 
           {/* Quick Stats */}
           <Card className="border-0 shadow-lg">
