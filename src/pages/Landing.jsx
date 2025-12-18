@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Music2, Headphones, Trophy, Zap, Users, TrendingUp, Target, Award, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Music2, Headphones, Trophy, Zap, Users, TrendingUp, Target, Award, ArrowRight, CheckCircle2, Sparkles, Crown, Check } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 
@@ -209,6 +209,155 @@ export default function Landing() {
                 </Button>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing Section */}
+      <div className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-[#D7E5FF]/30 dark:from-[#0A1A2F] dark:to-[#243B73]/20">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <Badge className="bg-gradient-to-r from-[#E9C46A] to-[#E76F51] mb-4">
+              Founders Pricing – Limited Time
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#0A1A2F] dark:text-white mb-4">
+              Choose Your Plan
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Train your ear with plans designed for every musician
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
+            {/* Free Plan */}
+            <div className="relative border-2 border-gray-200 dark:border-slate-700 rounded-2xl p-8 bg-white dark:bg-slate-900 hover:scale-105 hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                <Zap className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-center mb-2">Free</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4 min-h-[40px]">
+                Train your ear every day — free.
+              </p>
+              <div className="text-center mb-6">
+                <div className="text-4xl font-bold">$0</div>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Basic interval & pitch training</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">10 exercises per day</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Limited progress tracking</span>
+                </li>
+              </ul>
+              <Button
+                className="w-full"
+                size="lg"
+                variant="outline"
+                onClick={handleSignUp}
+              >
+                Start Free
+              </Button>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="relative border-2 border-[#3E82FC] rounded-2xl p-8 bg-white dark:bg-slate-900 shadow-2xl scale-105 hover:scale-110 hover:shadow-2xl transition-all duration-300">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#3E82FC] to-[#243B73]">
+                Most Popular
+              </Badge>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#3E82FC] to-[#243B73] flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-center mb-2">Pro</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4 min-h-[40px]">
+                Progress faster with unlimited, personalized ear training.
+              </p>
+              <div className="text-center mb-6">
+                <div className="text-4xl font-bold">$9.99<span className="text-base font-normal text-muted-foreground">/month</span></div>
+                <p className="text-xs text-[#2A9D8F] font-semibold mt-1">or $59.99/year (save $60)</p>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Unlimited exercises</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Full interval, chord & scale library</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Personalized practice plans</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Progress analytics</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Offline access</span>
+                </li>
+              </ul>
+              <Button
+                className="w-full bg-gradient-to-r from-[#3E82FC] to-[#243B73]"
+                size="lg"
+                onClick={handleSignUp}
+              >
+                Upgrade to Pro
+              </Button>
+              <p className="text-xs text-center text-muted-foreground mt-3">Cancel anytime.</p>
+            </div>
+
+            {/* Pro Plus Plan */}
+            <div className="relative border-2 border-gray-200 dark:border-slate-700 rounded-2xl p-8 bg-white dark:bg-slate-900 hover:scale-105 hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#E9C46A] to-[#E76F51] flex items-center justify-center">
+                <Crown className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-center mb-2">Pro Plus</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4 min-h-[40px]">
+                Master real musical hearing — not just drills.
+              </p>
+              <div className="text-center mb-6">
+                <div className="text-4xl font-bold">$14.99<span className="text-base font-normal text-muted-foreground">/month</span></div>
+                <p className="text-xs text-[#2A9D8F] font-semibold mt-1">or $89.99/year (save $90)</p>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm font-semibold">Everything in Pro, plus:</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Melodic dictation</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Real-music context exercises</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Custom exercise builder</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                  <span className="text-sm">Advanced analytics & exportable reports</span>
+                </li>
+              </ul>
+              <Button
+                className="w-full"
+                size="lg"
+                variant="outline"
+                onClick={handleSignUp}
+              >
+                Go Pro Plus
+              </Button>
+              <p className="text-xs text-center text-muted-foreground mt-3">Cancel anytime.</p>
+            </div>
           </div>
         </div>
       </div>
