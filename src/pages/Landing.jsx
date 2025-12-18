@@ -4,7 +4,13 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Music2, Headphones, Trophy, Zap, Users, TrendingUp, Target, Award, ArrowRight, CheckCircle2, Sparkles, Crown, Check } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Music2, Headphones, Trophy, Zap, Users, TrendingUp, Target, Award, ArrowRight, CheckCircle2, Sparkles, Crown, Check, Play, Flame, Brain, GraduationCap, BarChart3 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 
@@ -41,27 +47,27 @@ export default function Landing() {
 
   const features = [
     {
-      icon: Headphones,
-      title: 'Ear Training Excellence',
-      description: 'Master intervals, chords, and scales with our scientifically-designed exercises.',
+      icon: Brain,
+      title: 'AI Plateau Detection',
+      description: 'Smart algorithms detect when you\'re stuck and automatically adjust your training to break through.',
       gradient: 'from-[#3E82FC] to-[#2A9D8F]',
     },
     {
       icon: Trophy,
-      title: 'Competitive Challenges',
-      description: 'Test your skills in daily, weekly, and speed challenges. Climb the leaderboard!',
+      title: 'Global Leaderboards',
+      description: 'Compete with friends or worldwide musicians. Track your rank in real-time across all exercises.',
       gradient: 'from-[#E9C46A] to-[#F4A261]',
     },
     {
-      icon: TrendingUp,
-      title: 'AI-Powered Progress',
-      description: 'Get personalized training plans that adapt to your skill level and goals.',
+      icon: BarChart3,
+      title: 'XP & Mastery Tracking',
+      description: 'Level up as you train. Track mastery percentages for every chord, interval, and scale.',
       gradient: 'from-[#2A9D8F] to-[#264653]',
     },
     {
-      icon: Users,
-      title: 'Social Learning',
-      description: 'Connect with musicians worldwide, share achievements, and learn together.',
+      icon: GraduationCap,
+      title: 'Real-Music Context',
+      description: 'Move beyond drills. Train with real musical arrangements to bridge practice and performance.',
       gradient: 'from-[#E76F51] to-[#E9C46A]',
     },
   ];
@@ -145,6 +151,36 @@ export default function Landing() {
         </div>
       </div>
 
+      {/* Interactive Demo Section */}
+      <div className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0A1A2F]">
+        <div className="max-w-4xl mx-auto text-center">
+          <Badge className="mb-4 bg-gradient-to-r from-[#3E82FC] to-[#2A9D8F]">
+            Try It Now
+          </Badge>
+          <h2 className="text-3xl font-bold text-[#0A1A2F] dark:text-white mb-4">
+            Test Your Ear in 5 Seconds
+          </h2>
+          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Experience our studio-quality sound engine before you sign up. Can you identify this interval?
+          </p>
+          <Card className="border-2 border-[#3E82FC] bg-gradient-to-br from-[#D7E5FF]/30 to-white dark:from-[#243B73]/20 dark:to-slate-900 max-w-md mx-auto">
+            <CardContent className="p-8">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-[#3E82FC] to-[#2A9D8F] text-lg py-6"
+                onClick={() => alert('Demo: Perfect 5th played! Full exercise library available after signup.')}
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Play a Perfect 5th
+              </Button>
+              <p className="text-xs text-muted-foreground mt-4">
+                Full library of intervals, chords, and scales available inside
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       {/* Features Section */}
       <div className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0A1A2F]">
         <div className="max-w-7xl mx-auto">
@@ -173,8 +209,83 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* Benefits Section */}
+      {/* Skill Growth Section */}
       <div className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#0A1A2F] dark:text-white mb-4">
+              Track Your Musical Growth
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              More than drills—a complete mastery system
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="border-0 shadow-xl">
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3E82FC] to-[#2A9D8F] flex items-center justify-center mx-auto mb-4">
+                  <Flame className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-[#0A1A2F] dark:text-white">Streak Protection</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Build consistency with daily streaks. Pro users get automatic streak protection to maintain momentum.
+                </p>
+                <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
+                  <p className="text-2xl font-bold text-orange-600">🔥 7 Days</p>
+                  <p className="text-xs text-muted-foreground">Your streak grows with you</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-xl">
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#E9C46A] to-[#E76F51] flex items-center justify-center mx-auto mb-4">
+                  <Trophy className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-[#0A1A2F] dark:text-white">XP & Levels</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Every exercise earns XP. Level up to unlock advanced training modes and compete globally.
+                </p>
+                <div className="bg-[#D7E5FF] dark:bg-slate-800 rounded-lg p-3">
+                  <p className="text-2xl font-bold text-[#3E82FC]">Level 12</p>
+                  <div className="w-full bg-gray-200 dark:bg-slate-700 h-2 rounded-full mt-2">
+                    <div className="w-3/4 bg-gradient-to-r from-[#3E82FC] to-[#2A9D8F] h-2 rounded-full"></div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-xl">
+              <CardContent className="p-6 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2A9D8F] to-[#264653] flex items-center justify-center mx-auto mb-4">
+                  <Target className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-[#0A1A2F] dark:text-white">Chord Mastery</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Track accuracy for every chord type. See exactly where you need more practice.
+                </p>
+                <div className="space-y-2 text-left">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs">Major</span>
+                    <span className="text-xs font-bold text-[#2A9D8F]">95%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs">Minor7</span>
+                    <span className="text-xs font-bold text-[#E9C46A]">78%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs">Dim7</span>
+                    <span className="text-xs font-bold text-[#E76F51]">62%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Benefits Section */}
+      <div className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-[#0A1A2F]">
         <div className="max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -281,28 +392,44 @@ export default function Landing() {
                 <div className="text-4xl font-bold">$9.99<span className="text-base font-normal text-muted-foreground">/month</span></div>
                 <p className="text-xs text-[#2A9D8F] font-semibold mt-1">or $59.99/year (save $60)</p>
               </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm">Unlimited exercises</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm">Full interval, chord & scale library</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm">Personalized practice plans</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm">Progress analytics</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm">Offline access</span>
-                </li>
-              </ul>
+              <TooltipProvider>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <span className="text-sm">Unlimited exercises</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-sm cursor-help underline decoration-dotted">Full interval, chord & scale library</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">50+ intervals, 20+ chord types, 15+ scales. From basics to jazz extensions.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-sm cursor-help underline decoration-dotted">Personalized practice plans</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">AI analyzes your weak spots (like Minor 6ths) and prioritizes them in your daily queue.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <span className="text-sm">Progress analytics</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <span className="text-sm">Offline access</span>
+                  </li>
+                </ul>
+              </TooltipProvider>
               <Button
                 className="w-full bg-gradient-to-r from-[#3E82FC] to-[#243B73]"
                 size="lg"
@@ -326,28 +453,37 @@ export default function Landing() {
                 <div className="text-4xl font-bold">$14.99<span className="text-base font-normal text-muted-foreground">/month</span></div>
                 <p className="text-xs text-[#2A9D8F] font-semibold mt-1">or $89.99/year (save $90)</p>
               </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm font-semibold">Everything in Pro, plus:</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm">Melodic dictation</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm">Real-music context exercises</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm">Custom exercise builder</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
-                  <span className="text-sm">Advanced analytics & exportable reports</span>
-                </li>
-              </ul>
+              <TooltipProvider>
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <span className="text-sm font-semibold">Everything in Pro, plus:</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <span className="text-sm">Melodic dictation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="text-sm cursor-help underline decoration-dotted">Real-music context exercises</span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">Train with actual musical arrangements, not just isolated piano notes. Bridge the gap between practice and performance.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <span className="text-sm">Custom exercise builder</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
+                    <span className="text-sm">Advanced analytics & exportable reports</span>
+                  </li>
+                </ul>
+              </TooltipProvider>
               <Button
                 className="w-full"
                 size="lg"
@@ -384,7 +520,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-[#D7E5FF] dark:border-slate-800">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground mb-4">
             <p>© 2025 GOSPIAN. All rights reserved. Made with ♪ for musicians.</p>
             <div className="flex items-center gap-6">
               <Link 
@@ -400,6 +536,18 @@ export default function Landing() {
                 Terms of Service
               </Link>
             </div>
+          </div>
+          <div className="text-center pt-4 border-t border-[#D7E5FF] dark:border-slate-800">
+            <p className="text-xs text-muted-foreground mb-2">
+              <GraduationCap className="w-4 h-4 inline mr-1" />
+              Running a music school or teaching studio?
+            </p>
+            <a 
+              href="mailto:educators@gospian.com" 
+              className="text-xs text-[#3E82FC] hover:underline"
+            >
+              Contact us for classroom dashboards and team pricing →
+            </a>
           </div>
         </div>
       </footer>
