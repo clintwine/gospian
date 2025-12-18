@@ -105,24 +105,24 @@ export default function Exercise() {
         : (userStats.perfect_scores || 0);
 
       // Update streak if first exercise today
-      const today = new Date().toDateString();
+      const today = new Date().toISOString().split('T')[0];
+      const todayString = new Date().toDateString();
       const lastActivity = userStats.last_activity_date 
         ? new Date(userStats.last_activity_date).toDateString() 
         : null;
       
       let newStreak = userStats.streak || 0;
-      if (lastActivity !== today) {
+      if (lastActivity !== todayString) {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         if (lastActivity === yesterday.toDateString()) {
           newStreak += 1;
-        } else if (lastActivity !== today) {
+        } else if (lastActivity !== todayString) {
           newStreak = 1;
         }
       }
 
       // Reset daily counter if it's a new day
-      const today = new Date().toISOString().split('T')[0];
       const lastResetDate = userStats?.daily_reset_date;
       const needsReset = !lastResetDate || lastResetDate !== today;
       const newDailyUsed = needsReset ? 1 : (userStats?.daily_exercises_used || 0) + 1;
@@ -135,7 +135,7 @@ export default function Exercise() {
           exercises_completed: newExercisesCompleted,
           perfect_scores: newPerfectScores,
           streak: newStreak,
-          last_activity_date: new Date().toISOString().split('T')[0],
+          last_activity_date: today,
           daily_exercises_used: newDailyUsed,
           daily_reset_date: today,
           current_exercise_type: exerciseType,
