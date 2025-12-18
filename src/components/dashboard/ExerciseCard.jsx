@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Music, Headphones, Waves, Lock, CheckCircle2 } from 'lucide-react';
+import { Music, Headphones, Waves, Lock, CheckCircle2, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -25,7 +25,8 @@ export default function ExerciseCard({
   progress = 0, 
   xpReward = 10,
   locked = false,
-  mastered = false 
+  mastered = false,
+  requiredTier = null
 }) {
   const Icon = exerciseIcons[type] || Music;
 
@@ -61,6 +62,12 @@ export default function ExerciseCard({
               <Badge variant="outline" className={`text-[10px] sm:text-xs shrink-0 ${difficultyColors[difficulty]}`}>
                 {difficulty}
               </Badge>
+              {requiredTier && locked && (
+                <Badge variant="outline" className="text-[10px] border-[#E9C46A] text-[#E9C46A]">
+                  <Crown className="w-3 h-3 mr-1" />
+                  {requiredTier === 'pro' ? 'Pro' : 'Pro+'}
+                </Badge>
+              )}
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 line-clamp-2">{description}</p>
             
@@ -81,6 +88,14 @@ export default function ExerciseCard({
       </CardContent>
     </Card>
   );
+
+  if (locked && requiredTier) {
+    return (
+      <Link to={createPageUrl('Pricing')}>
+        {content}
+      </Link>
+    );
+  }
 
   if (locked) {
     return content;
