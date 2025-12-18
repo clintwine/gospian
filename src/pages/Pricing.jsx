@@ -63,61 +63,51 @@ export default function Pricing() {
     {
       name: 'Free',
       tier: 'free',
+      tagline: 'Train your ear every day — free.',
       icon: Zap,
       color: 'from-gray-400 to-gray-500',
       monthlyPrice: 0,
       yearlyPrice: 0,
+      cta: 'Start Free',
       features: [
-        'Basic interval recognition',
-        'Pitch identification exercises',
+        'Basic interval & pitch training',
         '10 exercises per day',
-        'Basic progress tracking',
-        'Community support'
-      ],
-      limitations: [
-        'No chord progressions',
-        'No melodic dictation',
-        'No adaptive training',
-        'No advanced analytics',
-        'No offline access'
+        'Limited progress tracking'
       ]
     },
     {
       name: 'Pro',
       tier: 'pro',
+      tagline: 'Progress faster with unlimited, personalized ear training.',
       icon: Sparkles,
       color: 'from-[#3E82FC] to-[#243B73]',
       monthlyPrice: 9.99,
       yearlyPrice: 59.99,
       recommended: true,
+      cta: 'Upgrade to Pro',
       features: [
-        'Unlimited daily exercises',
-        'Full interval, chord & scale libraries',
-        'Personalized training plans',
-        'Full progress tracking & analytics',
-        'Offline access',
-        'Priority support',
-        'Custom practice routines',
-        'Advanced ear training exercises'
+        'Unlimited exercises',
+        'Full interval, chord & scale library',
+        'Personalized practice plans',
+        'Progress analytics',
+        'Offline access'
       ]
     },
     {
       name: 'Pro Plus',
       tier: 'pro_plus',
+      tagline: 'Master real musical hearing — not just drills.',
       icon: Crown,
       color: 'from-[#E9C46A] to-[#E76F51]',
       monthlyPrice: 14.99,
       yearlyPrice: 89.99,
+      cta: 'Go Pro Plus',
       features: [
         'Everything in Pro, plus:',
-        'Melodic dictation exercises',
-        'Real-music context training',
+        'Melodic dictation',
+        'Real-music context exercises',
         'Custom exercise builder',
-        'Advanced analytics dashboard',
-        'Accuracy over time tracking',
-        'Speed & retention metrics',
-        'Exportable progress reports',
-        'Exclusive masterclasses'
+        'Advanced analytics & exportable reports'
       ]
     }
   ];
@@ -140,6 +130,9 @@ export default function Pricing() {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8">
       <div className="text-center mb-12">
+        <Badge className="bg-gradient-to-r from-[#E9C46A] to-[#E76F51] mb-4">
+          Founders Pricing – Limited Time
+        </Badge>
         <h1 className="text-4xl font-bold text-[#0A1A2F] dark:text-white mb-4">
           Choose Your Plan
         </h1>
@@ -174,13 +167,13 @@ export default function Pricing() {
           return (
             <Card
               key={plan.tier}
-              className={`relative border-2 ${
+              className={`relative border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
                 plan.recommended ? 'border-[#3E82FC] shadow-2xl scale-105' : 'border-border'
               } ${isCurrentPlan ? 'bg-[#D7E5FF]/20' : ''}`}
             >
               {plan.recommended && (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#3E82FC] to-[#243B73]">
-                  Recommended
+                  Most Popular
                 </Badge>
               )}
               {isCurrentPlan && (
@@ -194,6 +187,9 @@ export default function Pricing() {
                   <Icon className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-2xl text-center">{plan.name}</CardTitle>
+                <p className="text-sm text-muted-foreground text-center mt-2 min-h-[40px]">
+                  {plan.tagline}
+                </p>
                 <div className="text-center mt-4">
                   <div className="text-4xl font-bold">
                     ${price}
@@ -204,8 +200,8 @@ export default function Pricing() {
                     )}
                   </div>
                   {plan.tier !== 'free' && yearlyBilling && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      ${(plan.yearlyPrice / 12).toFixed(2)}/month
+                    <p className="text-xs text-[#2A9D8F] font-semibold mt-1">
+                      Save ${((plan.monthlyPrice * 12) - plan.yearlyPrice).toFixed(0)}/year
                     </p>
                   )}
                 </div>
@@ -217,11 +213,6 @@ export default function Pricing() {
                     <li key={idx} className="flex items-start gap-2">
                       <Check className="w-5 h-5 text-[#2A9D8F] shrink-0 mt-0.5" />
                       <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                  {plan.limitations?.map((limitation, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-muted-foreground">
-                      <span className="text-sm line-through">{limitation}</span>
                     </li>
                   ))}
                 </ul>
@@ -236,9 +227,11 @@ export default function Pricing() {
                   })}
                   variant={plan.recommended ? 'default' : 'outline'}
                 >
-                  {isCurrentPlan ? 'Current Plan' : 
-                   canUpgrade ? 'Get Started' : 'Downgrade Not Available'}
+                  {isCurrentPlan ? 'Current Plan' : canUpgrade ? plan.cta : 'Downgrade Not Available'}
                 </Button>
+                <p className="text-xs text-center text-muted-foreground mt-3">
+                  {plan.tier !== 'free' && 'Cancel anytime.'}
+                </p>
               </CardContent>
             </Card>
           );
