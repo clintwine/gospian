@@ -15,7 +15,8 @@ import {
   X,
   LogOut,
   GraduationCap,
-  Users
+  Users,
+  Crown
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -75,6 +76,10 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Training', icon: Trophy, path: 'Training' },
     { name: 'Friends', icon: Users, path: 'Friends' },
     { name: 'Profile', icon: User, path: 'Profile' },
+  ];
+
+  const proNavItems = [
+    { name: 'Pricing', path: 'Pricing' }
   ];
 
   const isActive = (path) => currentPageName === path;
@@ -151,7 +156,18 @@ export default function Layout({ children, currentPageName }) {
               )}
 
               {user && <NotificationBell userEmail={user.email} />}
-              
+
+              <Link to={createPageUrl('Pricing')}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-[#E9C46A] hover:text-[#E9C46A] hover:bg-[#E9C46A]/10"
+                >
+                  <Crown className="w-4 h-4 mr-2" />
+                  Upgrade
+                </Button>
+              </Link>
+
               <Button
                 variant="ghost"
                 size="icon"

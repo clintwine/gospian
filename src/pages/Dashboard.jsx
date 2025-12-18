@@ -8,10 +8,12 @@ import ContinueTrainingCard from '@/components/dashboard/ContinueTrainingCard';
 import DailyChallengeCard from '@/components/dashboard/DailyChallengeCard';
 import ExerciseCard from '@/components/dashboard/ExerciseCard';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Award, TrendingUp, Target } from 'lucide-react';
+import { Award, TrendingUp, Target, Lock, Crown } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
@@ -33,6 +35,15 @@ export default function Dashboard() {
     queryFn: async () => {
       const stats = await base44.entities.UserStats.filter({ created_by: user.email });
       return stats[0];
+    },
+    enabled: !!user?.email,
+  });
+
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription', user?.email],
+    queryFn: async () => {
+      const subs = await base44.entities.Subscription.filter({ created_by: user.email });
+      return subs[0] || { tier: 'free', status: 'active' };
     },
     enabled: !!user?.email,
   });
@@ -107,17 +118,48 @@ export default function Dashboard() {
     );
   }
 
-  const stats = userStats || { xp: 0, level: 1, streak: 0, freeze_tokens: 0 };
+  const stats = userStats || { xp: 0, level: 1, streak: 0, freeze_tokens: 0, daily_exercises_used: 0 };
+  const tier = subscription?.tier || 'free';
+  const dailyLimit = tier === 'free' ? 10 : null;
+  const exercisesRemaining = dailyLimit ? Math.max(0, dailyLimit - (stats.daily_exercises_used || 0)) : null;
 
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Welcome Header */}
       <div className="mb-4 sm:mb-6 md:mb-8">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0A1A2F] dark:text-white mb-1 sm:mb-2">
-          Welcome back, {user?.full_name?.split(' ')[0] || 'Musician'}!
-        </h1>
+        <div className="flex items-center justify-between mb-1 sm:mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#0A1A2F] dark:text-white">
+            Welcome back, {user?.full_name?.split(' ')[0] || 'Musician'}!
+          </h1>
+          {tier === 'free' && (
+            <Link to={createPageUrl('Pricing')}>
+              <Button size="sm" className="bg-gradient-to-r from-[#E9C46A] to-[#E76F51]">
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade
+              </Button>
+            </Link>
+          )}
+        </div>
         <p className="text-sm sm:text-base text-muted-foreground">Continue your ear training journey</p>
       </div>
+
+      {/* Free Tier Limit Warning */}
+      {tier === 'free' && exercisesRemaining !== null && (
+        <Alert className="mb-6 border-[#E9C46A] bg-[#E9C46A]/10">
+          <AlertDescription className="flex items-center justify-between">
+            <span>
+              {exercisesRemaining > 0 
+                ? `${exercisesRemaining} free exercises remaining today` 
+                : 'Daily exercise limit reached'}
+            </span>
+            <Link to={createPageUrl('Pricing')}>
+              <Button size="sm" variant="outline" className="border-[#E9C46A] text-[#E9C46A]">
+                Upgrade for Unlimited
+              </Button>
+            </Link>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Stats Overview - Mobile */}
       <div className="lg:hidden mb-6">
@@ -152,6 +194,7 @@ export default function Dashboard() {
                 difficulty="beginner"
                 progress={calculateQuickStartProgress('intervals', 'beginner')}
                 xpReward={10}
+                locked={tier === 'free' && exercisesRemaining === 0}
               />
               <ExerciseCard
                 type="chords"
@@ -160,6 +203,8 @@ export default function Dashboard() {
                 difficulty="beginner"
                 progress={calculateQuickStartProgress('chords', 'beginner')}
                 xpReward={10}
+                locked={tier === 'free' && (exercisesRemaining === 0 || stats.level < 2)}
+                requiredTier={stats.level < 2 ? 'pro' : null}
               />
               <ExerciseCard
                 type="intervals"
@@ -168,6 +213,8 @@ export default function Dashboard() {
                 difficulty="intermediate"
                 progress={calculateQuickStartProgress('intervals', 'intermediate')}
                 xpReward={15}
+                locked={tier === 'free' || stats.level < 3}
+                requiredTier="pro"
               />
               <ExerciseCard
                 type="scales"
@@ -176,7 +223,8 @@ export default function Dashboard() {
                 difficulty="beginner"
                 progress={calculateQuickStartProgress('scales', 'beginner')}
                 xpReward={10}
-                locked={stats.level < 3}
+                locked={tier === 'free' || stats.level < 3}
+                requiredTier="pro"
               />
             </div>
           </div>
