@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import ExerciseInterface from '@/components/exercise/ExerciseInterface';
 import ResultsScreen from '@/components/exercise/ResultsScreen';
+import DailyLimitModal from '@/components/subscription/DailyLimitModal';
 import {
   Select,
   SelectContent,
@@ -32,6 +33,7 @@ export default function Exercise() {
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState(null);
   const [exerciseKey, setExerciseKey] = useState(0);
+  const [showLimitModal, setShowLimitModal] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -49,6 +51,15 @@ export default function Exercise() {
     enabled: !!user?.email,
   });
 
+  const { data: subscription } = useQuery({
+    queryKey: ['subscription', user?.email],
+    queryFn: async () => {
+      const subs = await base44.entities.Subscription.filter({ created_by: user.email });
+      return subs[0] || { tier: 'free', status: 'active' };
+    },
+    enabled: !!user?.email,
+  });
+
   const updateStatsMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.UserStats.update(id, data),
     onSuccess: () => queryClient.invalidateQueries(['userStats']),
@@ -60,6 +71,16 @@ export default function Exercise() {
   });
 
   const handleComplete = async (exerciseResults) => {
+    // Check if free user has reached daily limit
+    const tier = subscription?.tier || 'free';
+    const dailyLimit = tier === 'free' ? 10 : null;
+    const currentUsed = userStats?.daily_exercises_used || 0;
+    
+    if (tier === 'free' && dailyLimit && currentUsed >= dailyLimit) {
+      setShowLimitModal(true);
+      return;
+    }
+
     setResults(exerciseResults);
     setShowResults(true);
 
@@ -100,6 +121,12 @@ export default function Exercise() {
         }
       }
 
+      // Reset daily counter if it's a new day
+      const today = new Date().toISOString().split('T')[0];
+      const lastResetDate = userStats?.daily_reset_date;
+      const needsReset = !lastResetDate || lastResetDate !== today;
+      const newDailyUsed = needsReset ? 1 : (userStats?.daily_exercises_used || 0) + 1;
+
       await updateStatsMutation.mutateAsync({
         id: userStats.id,
         data: {
@@ -109,10 +136,25 @@ export default function Exercise() {
           perfect_scores: newPerfectScores,
           streak: newStreak,
           last_activity_date: new Date().toISOString().split('T')[0],
+          daily_exercises_used: newDailyUsed,
+          daily_reset_date: today,
           current_exercise_type: exerciseType,
           current_exercise_progress: exerciseResults.accuracy,
         },
       });
+
+      // Track conversion metric if daily limit reached
+      const tier = subscription?.tier || 'free';
+      const dailyLimit = tier === 'free' ? 10 : null;
+      if (tier === 'free' && dailyLimit && newDailyUsed >= dailyLimit) {
+        await base44.entities.ConversionMetric.create({
+          user_email: user.email,
+          event_type: 'daily_limit_reached',
+          from_tier: 'free',
+          metadata: { exercises_count: newDailyUsed }
+        });
+        setShowLimitModal(true);
+      }
     }
   };
 
@@ -216,6 +258,9 @@ export default function Exercise() {
           questionsCount={10}
         />
       )}
+
+      {/* Daily Limit Modal */}
+      <DailyLimitModal open={showLimitModal} onOpenChange={setShowLimitModal} />
     </div>
   );
 }
