@@ -29,6 +29,7 @@ export default function ExerciseInterface({
 }) {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
+  const [firstLoad, setFirstLoad] = useState(true);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [correctCount, setCorrectCount] = useState(0);
@@ -68,6 +69,17 @@ export default function ExerciseInterface({
   useEffect(() => {
     setCurrentQuestion(generateQuestion());
   }, [generateQuestion]);
+
+  // Auto-play on first question load
+  useEffect(() => {
+    if (firstLoad && currentQuestion && questionNumber === 1) {
+      const timer = setTimeout(() => {
+        handlePlaySound();
+        setFirstLoad(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [firstLoad, currentQuestion, questionNumber]);
 
   const handlePlaySound = async () => {
     if (isPlaying || !currentQuestion) return;
@@ -365,16 +377,19 @@ export default function ExerciseInterface({
                 )}
               </motion.button>
               <div className="flex flex-col">
-                <p className="text-white/90 text-sm font-medium">
-                  {hasPlayed ? 'Tap to replay' : 'Tap to play'}
+                <p className="text-white font-semibold text-base">
+                  {exerciseType === 'intervals' ? 'What interval do you hear?' :
+                   exerciseType === 'chords' ? 'What chord do you hear?' :
+                   exerciseType === 'scales' ? 'What scale do you hear?' :
+                   'Listen and identify:'}
                 </p>
                 {hasPlayed && (
                   <button 
                     onClick={handlePlaySound}
-                    className="text-white/60 hover:text-white text-xs flex items-center gap-1 mt-0.5"
+                    className="text-white/70 hover:text-white text-xs flex items-center gap-1 mt-1"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    Replay sound
+                    Tap to replay
                   </button>
                 )}
               </div>
@@ -405,6 +420,13 @@ export default function ExerciseInterface({
       )}
 
       {/* Answer Options */}
+      <div className="text-center mb-3">
+        <p className="text-sm sm:text-base font-medium text-[#0A1A2F] dark:text-white">
+          Choose the correct {exerciseType === 'intervals' ? 'interval' :
+           exerciseType === 'chords' ? 'chord' :
+           exerciseType === 'scales' ? 'scale' : 'answer'}:
+        </p>
+      </div>
       <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
         <AnimatePresence>
           {currentQuestion.options.map((option, index) => {
@@ -491,7 +513,7 @@ export default function ExerciseInterface({
 
       {!hasPlayed && !showFeedback && (
         <p className="text-center text-muted-foreground text-xs sm:text-sm px-2">
-          Play the audio first to reveal answer options
+          {questionNumber === 1 ? 'Sound will play automatically...' : 'Tap play to hear the next question'}
         </p>
       )}
     </div>
