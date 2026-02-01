@@ -249,37 +249,14 @@ export default function Exercise() {
           onRetry={handleRetry}
         />
       ) : (
-        {exerciseType === 'rhythm' ? (
-          <RhythmExerciseInterface
-            key={exerciseKey}
-            difficulty={difficulty}
-            onComplete={(correct) => {
-              if (correct) {
-                handleComplete({ correct: 10, total: 10, accuracy: 100, xpEarned: 100 });
-              }
-            }}
-          />
-        ) : exerciseType === 'melody' ? (
-          <MelodyExerciseInterface
-            key={exerciseKey}
-            difficulty={difficulty}
-            audioType={audioType}
-            onComplete={(correct) => {
-              if (correct) {
-                handleComplete({ correct: 10, total: 10, accuracy: 100, xpEarned: 100 });
-              }
-            }}
-          />
-        ) : (
-          <ExerciseInterface
-            key={exerciseKey}
-            exerciseType={exerciseType}
-            difficulty={difficulty}
-            audioType={audioType}
-            onComplete={handleComplete}
-            questionsCount={10}
-          />
-        )}
+        <ExerciseInterface
+          key={exerciseKey}
+          exerciseType={exerciseType}
+          difficulty={difficulty}
+          audioType={audioType}
+          onComplete={handleComplete}
+          questionsCount={10}
+        />
       )}
 
       {/* Daily Limit Modal */}
