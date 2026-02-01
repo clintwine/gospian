@@ -73,10 +73,22 @@ export class AdaptiveChordSelector {
   selectNextChord(forceSameRoot = false, fixedRoot = null) {
     const availableChords = CHORD_TIERS[this.currentTier];
     
-    // Filter out recently used chords (last 3)
-    const nonRecentChords = availableChords.filter(
-      chord => !this.recentChords.includes(chord)
-    );
+    // When using fixed root, prevent same chord from appearing more than twice consecutively
+    let nonRecentChords;
+    if (forceSameRoot && this.recentChords.length >= 2) {
+      const last = this.recentChords[this.recentChords.length - 1];
+      const secondLast = this.recentChords[this.recentChords.length - 2];
+      
+      // If last 2 chords were the same, exclude it
+      if (last === secondLast) {
+        nonRecentChords = availableChords.filter(chord => chord !== last);
+      } else {
+        nonRecentChords = availableChords.filter(chord => !this.recentChords.includes(chord));
+      }
+    } else {
+      // Normal case: filter out recently used chords (last 3)
+      nonRecentChords = availableChords.filter(chord => !this.recentChords.includes(chord));
+    }
     
     const chordsToConsider = nonRecentChords.length > 0 ? nonRecentChords : availableChords;
     
