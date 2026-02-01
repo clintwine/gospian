@@ -290,7 +290,7 @@ export default function ExerciseInterface({
     }
   };
 
-  const proceedToNext = () => {
+  const proceedToNext = async () => {
     if (!isPracticeMode && questionNumber >= questionsCount) {
       const accuracy = Math.round((correctCount / questionsCount) * 100);
       const bonusXP = accuracy === 100 ? 10 : 0;
@@ -319,6 +319,12 @@ export default function ExerciseInterface({
     setShowNextButton(false);
     setHighlightChordIndex(null);
     setHighlightAllChord(false);
+
+    // Auto-play interval sounds when moving to next question
+    if (exerciseType === 'intervals') {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      handlePlaySound();
+    }
   };
 
   const handleNext = async () => {
