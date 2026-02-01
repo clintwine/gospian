@@ -78,6 +78,10 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Profile', icon: User, path: 'Profile' },
   ];
 
+  const teacherItems = user?.role === 'admin' ? [
+    { name: 'Teacher', icon: GraduationCap, path: 'TeacherDashboard' },
+  ] : [];
+
   const proNavItems = [
     { name: 'Pricing', path: 'Pricing' }
   ];
@@ -128,7 +132,7 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Nav Links */}
             <div className="flex items-center gap-1">
-              {navItems.map((item) => (
+              {[...navItems, ...teacherItems].map((item) => (
                 <Link
                   key={item.path}
                   to={createPageUrl(item.path)}
@@ -222,7 +226,7 @@ export default function Layout({ children, currentPageName }) {
               </SheetTrigger>
               <SheetContent side="right" className="w-72">
                 <div className="flex flex-col gap-2 mt-8">
-                  {navItems.map((item) => (
+                  {[...navItems, ...teacherItems].map((item) => (
                     <Link
                       key={item.path}
                       to={createPageUrl(item.path)}
