@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
@@ -13,7 +13,9 @@ import ResourceList from '@/components/classroom/ResourceList';
 import AssignmentList from '@/components/classroom/AssignmentList';
 
 export default function ClassroomDetails() {
-  const { classroomId } = useParams();
+  const location = useLocation();
+  const urlParams = new URLSearchParams(location.search);
+  const classroomId = urlParams.get('id');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const queryClient = useQueryClient();
 
