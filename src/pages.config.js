@@ -50,6 +50,7 @@
 import AccuracyChallenge from './pages/AccuracyChallenge';
 import Badges from './pages/Badges';
 import Challenges from './pages/Challenges';
+import CustomExerciseBuilder from './pages/CustomExerciseBuilder';
 import DailyChallenge from './pages/DailyChallenge';
 import Dashboard from './pages/Dashboard';
 import Exercise from './pages/Exercise';
@@ -70,11 +71,11 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Profile from './pages/Profile';
 import Social from './pages/Social';
 import SpeedChallenge from './pages/SpeedChallenge';
+import TeacherDashboard from './pages/TeacherDashboard';
 import TermsOfService from './pages/TermsOfService';
 import Training from './pages/Training';
 import WeeklyChallenge from './pages/WeeklyChallenge';
-import TeacherDashboard from './pages/TeacherDashboard';
-import CustomExerciseBuilder from './pages/CustomExerciseBuilder';
+import ClassroomDetails from './pages/ClassroomDetails';
 import __Layout from './Layout.jsx';
 
 
@@ -82,6 +83,7 @@ export const PAGES = {
     "AccuracyChallenge": AccuracyChallenge,
     "Badges": Badges,
     "Challenges": Challenges,
+    "CustomExerciseBuilder": CustomExerciseBuilder,
     "DailyChallenge": DailyChallenge,
     "Dashboard": Dashboard,
     "Exercise": Exercise,
@@ -102,11 +104,11 @@ export const PAGES = {
     "Profile": Profile,
     "Social": Social,
     "SpeedChallenge": SpeedChallenge,
+    "TeacherDashboard": TeacherDashboard,
     "TermsOfService": TermsOfService,
     "Training": Training,
     "WeeklyChallenge": WeeklyChallenge,
-    "TeacherDashboard": TeacherDashboard,
-    "CustomExerciseBuilder": CustomExerciseBuilder,
+    "ClassroomDetails": ClassroomDetails,
 }
 
 export const pagesConfig = {
