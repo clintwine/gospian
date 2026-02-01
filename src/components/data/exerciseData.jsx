@@ -1,4 +1,5 @@
 // Predefined exercise data for intervals, chords, and scales
+import { expandedIntervals, expandedChords, expandedScales } from './expandedExerciseData';
 
 export const intervalExercises = [
   // A1 (Beginner) - Basic intervals
@@ -517,9 +518,6 @@ export const getExercises = (type, level) => {
 
 // Get a random exercise from a set (enhanced with expanded data)
 export const getRandomExercise = (type, level) => {
-  // Import expanded data
-  import { expandedIntervals, expandedChords, expandedScales } from './expandedExerciseData';
-  
   let exercises = getExercises(type, level);
   
   // Add expanded exercises for better variety
