@@ -515,9 +515,88 @@ export const getExercises = (type, level) => {
   return exercises;
 };
 
-// Get a random exercise from a set
+// Get a random exercise from a set (enhanced with expanded data)
 export const getRandomExercise = (type, level) => {
-  const exercises = getExercises(type, level);
+  // Import expanded data
+  import { expandedIntervals, expandedChords, expandedScales } from './expandedExerciseData';
+  
+  let exercises = getExercises(type, level);
+  
+  // Add expanded exercises for better variety
+  if (type === 'intervals' && expandedIntervals[level]) {
+    const expandedExs = expandedIntervals[level].map(interval => ({
+      type: 'intervals',
+      level,
+      answer: interval.name,
+      semitones: interval.semitones,
+      options: generateIntervalOptions(interval.name, level),
+      playMode: Math.random() > 0.5 ? 'melodic' : 'harmonic',
+      baseNote: 'C4'
+    }));
+    exercises = [...exercises, ...expandedExs];
+  }
+  
+  if (type === 'chords' && expandedChords[level]) {
+    const expandedExs = expandedChords[level].map(chord => ({
+      type: 'chords',
+      level,
+      answer: chord.name,
+      chordType: chord.name,
+      options: generateChordOptions(chord.name, level),
+      baseNote: 'C4'
+    }));
+    exercises = [...exercises, ...expandedExs];
+  }
+  
+  if (type === 'scales' && expandedScales[level]) {
+    const expandedExs = expandedScales[level].map(scale => ({
+      type: 'scales',
+      level,
+      answer: scale.name,
+      scaleType: scale.name,
+      options: generateScaleOptions(scale.name, level),
+      baseNote: 'C4'
+    }));
+    exercises = [...exercises, ...expandedExs];
+  }
+  
   if (exercises.length === 0) return null;
   return exercises[Math.floor(Math.random() * exercises.length)];
 };
+
+// Helper functions for generating options
+function generateIntervalOptions(correctAnswer, level) {
+  const allIntervals = {
+    beginner: ['Unison', 'Major 2nd', 'Major 3rd', 'Perfect 4th', 'Perfect 5th', 'Octave'],
+    intermediate: ['Minor 2nd', 'Major 2nd', 'Minor 3rd', 'Major 3rd', 'Perfect 4th', 'Tritone', 'Perfect 5th', 'Minor 6th', 'Major 6th'],
+    advanced: ['Minor 7th', 'Major 7th', 'Minor 9th', 'Major 9th', 'Perfect 11th', 'Minor 13th', 'Major 13th']
+  };
+  
+  const pool = allIntervals[level] || allIntervals.beginner;
+  const wrong = pool.filter(i => i !== correctAnswer).sort(() => 0.5 - Math.random()).slice(0, 3);
+  return [correctAnswer, ...wrong].sort(() => 0.5 - Math.random());
+}
+
+function generateChordOptions(correctAnswer, level) {
+  const allChords = {
+    beginner: ['Major', 'Minor', 'Diminished', 'Augmented'],
+    intermediate: ['Major 7th', 'Minor 7th', 'Dominant 7th', 'Sus2', 'Sus4'],
+    advanced: ['Major 9th', 'Minor 9th', 'Dominant 13th', 'Altered Dominant', 'Half Diminished 7th']
+  };
+  
+  const pool = allChords[level] || allChords.beginner;
+  const wrong = pool.filter(c => c !== correctAnswer).sort(() => 0.5 - Math.random()).slice(0, 3);
+  return [correctAnswer, ...wrong].sort(() => 0.5 - Math.random());
+}
+
+function generateScaleOptions(correctAnswer, level) {
+  const allScales = {
+    beginner: ['Major', 'Natural Minor', 'Pentatonic Major', 'Pentatonic Minor'],
+    intermediate: ['Harmonic Minor', 'Melodic Minor', 'Dorian', 'Mixolydian'],
+    advanced: ['Whole Tone', 'Diminished', 'Blues Scale', 'Lydian Dominant', 'Super Locrian']
+  };
+  
+  const pool = allScales[level] || allScales.beginner;
+  const wrong = pool.filter(s => s !== correctAnswer).sort(() => 0.5 - Math.random()).slice(0, 3);
+  return [correctAnswer, ...wrong].sort(() => 0.5 - Math.random());
+}

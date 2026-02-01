@@ -17,10 +17,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import PlateauDetectionAlert from '@/components/subscription/PlateauDetectionAlert';
 import StreakProtectionAlert from '@/components/subscription/StreakProtectionAlert';
 import BlurredProgressChart from '@/components/subscription/BlurredProgressChart';
+import { useAchievementTracker } from '@/components/achievements/AchievementTracker';
+import { useQuestManager } from '@/components/quests/QuestManager';
+import DailyQuestCard from '@/components/quests/DailyQuestCard';
+import { useDifficultyAdjuster, generateRecommendations } from '@/components/adaptive/DifficultyAdjuster';
+import ChallengeFriendModal from '@/components/challenges/ChallengeFriendModal';
 
 export default function Dashboard() {
   const queryClient = useQueryClient();
   const [showPlateauAlert, setShowPlateauAlert] = React.useState(false);
+  const [showChallengeModal, setShowChallengeModal] = React.useState(false);
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -84,6 +90,42 @@ export default function Dashboard() {
     enabled: !!user?.email,
   });
 
+  const { data: achievements } = useQuery({
+    queryKey: ['achievements', user?.email],
+    queryFn: async () => {
+      return await base44.entities.Achievement.filter({ created_by: user.email });
+    },
+    enabled: !!user?.email,
+  });
+
+  const { data: dailyQuests } = useQuery({
+    queryKey: ['dailyQuests', user?.email],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      return await base44.entities.DailyQuest.filter({ quest_date: today });
+    },
+    enabled: !!user?.email,
+  });
+
+  const { data: friends = [] } = useQuery({
+    queryKey: ['friends', user?.email],
+    queryFn: async () => {
+      const sent = await base44.entities.Friend.filter({ user_email: user.email });
+      const received = await base44.entities.Friend.filter({ friend_email: user.email });
+      return [...sent, ...received];
+    },
+    enabled: !!user?.email,
+  });
+
+  // Initialize achievement tracker and quest manager
+  useAchievementTracker(userStats, exerciseResults, friends);
+  useQuestManager(user);
+
+  // Get adaptive recommendations
+  const recommendations = React.useMemo(() => {
+    return generateRecommendations(exerciseResults, null);
+  }, [exerciseResults]);
+
   const tier = subscription?.tier || 'free';
 
   // Detect skill plateau (no improvement in 7 days)
@@ -142,6 +184,13 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Challenge Friend Modal */}
+      <ChallengeFriendModal
+        open={showChallengeModal}
+        onClose={() => setShowChallengeModal(false)}
+        currentUser={user}
+      />
     );
   }
 
@@ -208,6 +257,38 @@ export default function Dashboard() {
           />
           
           <DailyChallengeCard completed={dailyChallengeCompleted} />
+
+          {/* Daily Quests */}
+          {dailyQuests && dailyQuests.length > 0 && (
+            <div>
+              <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#0A1A2F] dark:text-white">Daily Quests</h2>
+              <div className="space-y-3">
+                {dailyQuests.map((quest) => (
+                  <DailyQuestCard key={quest.id} quest={quest} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recommendations */}
+          {recommendations && recommendations.length > 0 && (
+            <Card className="border-[#3E82FC] bg-[#3E82FC]/5">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Target className="w-4 h-4 text-[#3E82FC]" />
+                  Recommendations for You
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {recommendations.slice(0, 3).map((rec, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-sm">
+                    <span className="text-[#3E82FC] shrink-0">•</span>
+                    <p className="text-muted-foreground">{rec}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Quick Start Exercises */}
           <div>
@@ -300,7 +381,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Recent Badges */}
+          {/* Recent Achievements */}
           <Card className="border-0 shadow-lg">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -310,27 +391,52 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                <div className="w-12 h-12 rounded-xl bg-[#D7E5FF] dark:bg-slate-700 flex items-center justify-center">
-                  <Target className="w-6 h-6 text-[#243B73] dark:text-[#3E82FC]" />
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-[#2A9D8F]/20 flex items-center justify-center">
-                  <Award className="w-6 h-6 text-[#2A9D8F]" />
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center opacity-50">
-                  <Award className="w-6 h-6 text-gray-400" />
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center opacity-50">
-                  <Award className="w-6 h-6 text-gray-400" />
-                </div>
+                {achievements && achievements.length > 0 ? (
+                  achievements.slice(0, 4).map((ach) => (
+                    <div
+                      key={ach.id}
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        ach.rarity === 'legendary' ? 'bg-gradient-to-br from-[#E9C46A] to-[#E76F51]' :
+                        ach.rarity === 'epic' ? 'bg-gradient-to-br from-purple-400 to-purple-600' :
+                        ach.rarity === 'rare' ? 'bg-gradient-to-br from-blue-400 to-blue-600' :
+                        'bg-[#D7E5FF] dark:bg-slate-700'
+                      }`}
+                      title={ach.title}
+                    >
+                      <Award className={`w-6 h-6 ${
+                        ach.rarity === 'common' ? 'text-[#243B73] dark:text-[#3E82FC]' : 'text-white'
+                      }`} />
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center opacity-50">
+                      <Award className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center opacity-50">
+                      <Award className="w-6 h-6 text-gray-400" />
+                    </div>
+                  </>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-3 mb-4">
-                Complete more exercises to earn badges
+                {achievements && achievements.length > 0 
+                  ? `${achievements.length} achievements unlocked!`
+                  : 'Complete exercises to unlock achievements'}
               </p>
-              <Link to={createPageUrl('Leaderboard')}>
-                <Button variant="outline" className="w-full text-xs">
-                  View Leaderboard
+              <div className="space-y-2">
+                <Button
+                  onClick={() => setShowChallengeModal(true)}
+                  className="w-full text-xs bg-[#3E82FC]"
+                >
+                  Challenge a Friend
                 </Button>
-              </Link>
+                <Link to={createPageUrl('Leaderboard')}>
+                  <Button variant="outline" className="w-full text-xs">
+                    View Leaderboard
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>
