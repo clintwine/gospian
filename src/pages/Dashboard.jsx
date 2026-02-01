@@ -184,13 +184,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* Challenge Friend Modal */}
-      <ChallengeFriendModal
-        open={showChallengeModal}
-        onClose={() => setShowChallengeModal(false)}
-        currentUser={user}
-      />
     );
   }
 
@@ -441,6 +434,13 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Challenge Friend Modal */}
+      <ChallengeFriendModal
+        open={showChallengeModal}
+        onClose={() => setShowChallengeModal(false)}
+        currentUser={user}
+      />
     </div>
   );
 }
