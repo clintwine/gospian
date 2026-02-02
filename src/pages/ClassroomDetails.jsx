@@ -11,6 +11,7 @@ import StudentManagementPanel from '@/components/classroom/StudentManagementPane
 import StudentProgressView from '@/components/classroom/StudentProgressView';
 import ResourceList from '@/components/classroom/ResourceList';
 import AssignmentList from '@/components/classroom/AssignmentList';
+import ClassroomPricingSettings from '@/components/classroom/ClassroomPricingSettings';
 
 export default function ClassroomDetails() {
   const location = useLocation();
@@ -251,13 +252,19 @@ export default function ClassroomDetails() {
           />
         </div>
 
-        {/* Right Column - Assignments */}
-        <div>
+        {/* Right Column - Assignments & Settings */}
+        <div className="space-y-6">
           <AssignmentList
             assignments={assignments}
             onDelete={(id) => deleteAssignmentMutation.mutate(id)}
             isLoading={deleteAssignmentMutation.isPending}
             classroomId={classroomId}
+          />
+
+          <ClassroomPricingSettings
+            classroom={classroom}
+            onUpdate={(data) => updateClassroomMutation.mutate(data)}
+            isLoading={isLoading}
           />
         </div>
       </div>

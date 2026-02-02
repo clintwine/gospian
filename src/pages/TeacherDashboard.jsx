@@ -34,10 +34,19 @@ export default function TeacherDashboard() {
       return await base44.entities.Classroom.create({
         classroom_name: name,
         teacher_email: user.email,
+        teacher_name: user.full_name,
         description: '',
         join_code: joinCode,
         student_emails: [],
         active: true,
+        is_public: true,
+        is_paid: false,
+        rating: 0,
+        rating_count: 0,
+        total_enrollments: 0,
+        requires_approval: false,
+        category: 'general',
+        level: 'all_levels',
       });
     },
     onSuccess: () => {

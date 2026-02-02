@@ -16,7 +16,8 @@ import {
   LogOut,
   GraduationCap,
   Users,
-  Crown
+  Crown,
+  BookOpen
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -74,6 +75,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Challenges', icon: Trophy, path: 'Challenges' },
     { name: 'Practice', icon: GraduationCap, path: 'PracticeStudio' },
     { name: 'Training', icon: Trophy, path: 'Training' },
+    { name: 'Classrooms', icon: BookOpen, path: 'ClassroomMarketplace' },
     { name: 'Friends', icon: Users, path: 'Friends' },
     { name: 'Profile', icon: User, path: 'Profile' },
   ];
