@@ -50,6 +50,7 @@
 import AccuracyChallenge from './pages/AccuracyChallenge';
 import Badges from './pages/Badges';
 import Challenges from './pages/Challenges';
+import ClassroomDetails from './pages/ClassroomDetails';
 import CustomExerciseBuilder from './pages/CustomExerciseBuilder';
 import DailyChallenge from './pages/DailyChallenge';
 import Dashboard from './pages/Dashboard';
@@ -75,7 +76,9 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import TermsOfService from './pages/TermsOfService';
 import Training from './pages/Training';
 import WeeklyChallenge from './pages/WeeklyChallenge';
-import ClassroomDetails from './pages/ClassroomDetails';
+import ClassroomMarketplace from './pages/ClassroomMarketplace';
+import ManageEnrollments from './pages/ManageEnrollments';
+import RevenueSettings from './pages/RevenueSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -83,6 +86,7 @@ export const PAGES = {
     "AccuracyChallenge": AccuracyChallenge,
     "Badges": Badges,
     "Challenges": Challenges,
+    "ClassroomDetails": ClassroomDetails,
     "CustomExerciseBuilder": CustomExerciseBuilder,
     "DailyChallenge": DailyChallenge,
     "Dashboard": Dashboard,
@@ -108,7 +112,9 @@ export const PAGES = {
     "TermsOfService": TermsOfService,
     "Training": Training,
     "WeeklyChallenge": WeeklyChallenge,
-    "ClassroomDetails": ClassroomDetails,
+    "ClassroomMarketplace": ClassroomMarketplace,
+    "ManageEnrollments": ManageEnrollments,
+    "RevenueSettings": RevenueSettings,
 }
 
 export const pagesConfig = {
