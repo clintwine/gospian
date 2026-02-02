@@ -12,6 +12,7 @@ import StudentProgressView from '@/components/classroom/StudentProgressView';
 import ResourceList from '@/components/classroom/ResourceList';
 import AssignmentList from '@/components/classroom/AssignmentList';
 import ClassroomPricingSettings from '@/components/classroom/ClassroomPricingSettings';
+import RateClassroomCard from '@/components/classroom/RateClassroomCard';
 
 export default function ClassroomDetails() {
   const location = useLocation();
@@ -198,15 +199,18 @@ export default function ClassroomDetails() {
     );
   }
 
-  // Check if user is the teacher
-  if (user?.email !== classroom.teacher_email) {
+  // Check if user is the teacher or enrolled student
+  const isTeacher = user?.email === classroom.teacher_email;
+  const isEnrolledStudent = classroom.student_emails?.includes(user?.email);
+
+  if (!isTeacher && !isEnrolledStudent) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8 text-center">
         <p className="text-muted-foreground mb-4">
           You don't have permission to view this classroom
         </p>
-        <Link to={createPageUrl('TeacherDashboard')}>
-          <Button className="bg-[#3E82FC]">Back to Dashboard</Button>
+        <Link to={createPageUrl('ClassroomMarketplace')}>
+          <Button className="bg-[#3E82FC]">Back to Marketplace</Button>
         </Link>
       </div>
     );
@@ -216,10 +220,10 @@ export default function ClassroomDetails() {
     <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
       {/* Header */}
       <div className="mb-8">
-        <Link to={createPageUrl('TeacherDashboard')}>
+        <Link to={createPageUrl(isTeacher ? 'TeacherDashboard' : 'ClassroomMarketplace')}>
           <Button variant="ghost" className="text-muted-foreground hover:text-[#243B73] mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            Back to {isTeacher ? 'Dashboard' : 'Marketplace'}
           </Button>
         </Link>
         <h1 className="text-3xl font-bold text-[#0A1A2F] dark:text-white">
@@ -233,21 +237,23 @@ export default function ClassroomDetails() {
         <div className="lg:col-span-2 space-y-6">
           <ClassroomOverviewCard
             classroom={classroom}
-            onUpdate={(data) => updateClassroomMutation.mutate(data)}
+            onUpdate={isTeacher ? (data) => updateClassroomMutation.mutate(data) : undefined}
             isLoading={isLoading}
           />
 
-          <StudentManagementPanel
-            students={students}
-            onAddStudent={(email) => addStudentMutation.mutate(email)}
-            onRemoveStudent={(email) => removeStudentMutation.mutate(email)}
-            onViewProgress={(email) => setSelectedStudent(email)}
-            isLoading={isLoading}
-          />
+          {isTeacher && (
+            <StudentManagementPanel
+              students={students}
+              onAddStudent={(email) => addStudentMutation.mutate(email)}
+              onRemoveStudent={(email) => removeStudentMutation.mutate(email)}
+              onViewProgress={(email) => setSelectedStudent(email)}
+              isLoading={isLoading}
+            />
+          )}
 
           <ResourceList
             resources={resources}
-            onDelete={(id) => deleteResourceMutation.mutate(id)}
+            onDelete={isTeacher ? (id) => deleteResourceMutation.mutate(id) : undefined}
             isLoading={deleteResourceMutation.isPending}
           />
         </div>
@@ -256,16 +262,23 @@ export default function ClassroomDetails() {
         <div className="space-y-6">
           <AssignmentList
             assignments={assignments}
-            onDelete={(id) => deleteAssignmentMutation.mutate(id)}
+            onDelete={isTeacher ? (id) => deleteAssignmentMutation.mutate(id) : undefined}
             isLoading={deleteAssignmentMutation.isPending}
             classroomId={classroomId}
           />
 
-          <ClassroomPricingSettings
-            classroom={classroom}
-            onUpdate={(data) => updateClassroomMutation.mutate(data)}
-            isLoading={isLoading}
-          />
+          {isTeacher ? (
+            <ClassroomPricingSettings
+              classroom={classroom}
+              onUpdate={(data) => updateClassroomMutation.mutate(data)}
+              isLoading={isLoading}
+            />
+          ) : (
+            <RateClassroomCard
+              classroom={classroom}
+              studentEmail={user?.email}
+            />
+          )}
         </div>
       </div>
 

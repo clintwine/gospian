@@ -51,6 +51,7 @@ import AccuracyChallenge from './pages/AccuracyChallenge';
 import Badges from './pages/Badges';
 import Challenges from './pages/Challenges';
 import ClassroomDetails from './pages/ClassroomDetails';
+import ClassroomMarketplace from './pages/ClassroomMarketplace';
 import CustomExerciseBuilder from './pages/CustomExerciseBuilder';
 import DailyChallenge from './pages/DailyChallenge';
 import Dashboard from './pages/Dashboard';
@@ -62,6 +63,7 @@ import Friends from './pages/Friends';
 import Home from './pages/Home';
 import Landing from './pages/Landing';
 import Leaderboard from './pages/Leaderboard';
+import ManageEnrollments from './pages/ManageEnrollments';
 import MetricsAdmin from './pages/MetricsAdmin';
 import PerfectPitchChallenge from './pages/PerfectPitchChallenge';
 import PracticeMode from './pages/PracticeMode';
@@ -70,15 +72,13 @@ import PracticeStudio from './pages/PracticeStudio';
 import Pricing from './pages/Pricing';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Profile from './pages/Profile';
+import RevenueSettings from './pages/RevenueSettings';
 import Social from './pages/Social';
 import SpeedChallenge from './pages/SpeedChallenge';
 import TeacherDashboard from './pages/TeacherDashboard';
 import TermsOfService from './pages/TermsOfService';
 import Training from './pages/Training';
 import WeeklyChallenge from './pages/WeeklyChallenge';
-import ClassroomMarketplace from './pages/ClassroomMarketplace';
-import ManageEnrollments from './pages/ManageEnrollments';
-import RevenueSettings from './pages/RevenueSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -87,6 +87,7 @@ export const PAGES = {
     "Badges": Badges,
     "Challenges": Challenges,
     "ClassroomDetails": ClassroomDetails,
+    "ClassroomMarketplace": ClassroomMarketplace,
     "CustomExerciseBuilder": CustomExerciseBuilder,
     "DailyChallenge": DailyChallenge,
     "Dashboard": Dashboard,
@@ -98,6 +99,7 @@ export const PAGES = {
     "Home": Home,
     "Landing": Landing,
     "Leaderboard": Leaderboard,
+    "ManageEnrollments": ManageEnrollments,
     "MetricsAdmin": MetricsAdmin,
     "PerfectPitchChallenge": PerfectPitchChallenge,
     "PracticeMode": PracticeMode,
@@ -106,15 +108,13 @@ export const PAGES = {
     "Pricing": Pricing,
     "PrivacyPolicy": PrivacyPolicy,
     "Profile": Profile,
+    "RevenueSettings": RevenueSettings,
     "Social": Social,
     "SpeedChallenge": SpeedChallenge,
     "TeacherDashboard": TeacherDashboard,
     "TermsOfService": TermsOfService,
     "Training": Training,
     "WeeklyChallenge": WeeklyChallenge,
-    "ClassroomMarketplace": ClassroomMarketplace,
-    "ManageEnrollments": ManageEnrollments,
-    "RevenueSettings": RevenueSettings,
 }
 
 export const pagesConfig = {
