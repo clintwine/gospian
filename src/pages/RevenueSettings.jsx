@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -33,7 +33,7 @@ export default function RevenueSettings() {
   });
 
   // Load existing fee percentage
-  React.useEffect(() => {
+  useEffect(() => {
     const feeSetting = settings.find(s => s.setting_key === 'marketplace_fee_percentage');
     if (feeSetting) {
       setFeePercentage(feeSetting.setting_value);

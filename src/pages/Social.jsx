@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
@@ -18,7 +18,7 @@ export default function Social() {
     retry: false,
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!userLoading && !currentUser) {
       window.location.href = createPageUrl('Home');
     }
