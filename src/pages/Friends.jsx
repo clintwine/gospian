@@ -64,19 +64,41 @@ export default function Friends() {
   const { data: allStats = [] } = useQuery({
     queryKey: ['allUserStats'],
     queryFn: async () => {
-      return await base44.asServiceRole.entities.UserStats.list();
+      const stats = await Promise.all(
+        allUsers.map((appUser) => base44.entities.UserStats.filter({ created_by: appUser.email }))
+      );
+      return stats.map((items) => items[0]).filter(Boolean);
     },
+    enabled: allUsers.length > 0,
   });
 
   const sendRequestMutation = useMutation({
     mutationFn: async (receiverEmail) => {
+      const existingSent = await base44.entities.FriendRequest.filter({
+        sender_email: currentUser.email,
+        receiver_email: receiverEmail,
+        status: 'pending'
+      });
+      const existingReceived = await base44.entities.FriendRequest.filter({
+        sender_email: receiverEmail,
+        receiver_email: currentUser.email,
+        status: 'pending'
+      });
+      const existingFriend = friends.find(f =>
+        (f.user_email === currentUser.email && f.friend_email === receiverEmail) ||
+        (f.user_email === receiverEmail && f.friend_email === currentUser.email)
+      );
+
+      if (existingSent.length || existingReceived.length || existingFriend) {
+        return;
+      }
+
       await base44.entities.FriendRequest.create({
         sender_email: currentUser.email,
         receiver_email: receiverEmail,
         status: 'pending'
       });
       
-      // Send notification
       await base44.functions.invoke('createNotification', {
         recipientEmail: receiverEmail,
         type: 'friend_request',
@@ -93,18 +115,32 @@ export default function Friends() {
   const acceptRequestMutation = useMutation({
     mutationFn: async (request) => {
       await base44.entities.FriendRequest.update(request.id, { status: 'accepted' });
-      await base44.entities.Friend.create({
+
+      const existingFriendA = await base44.entities.Friend.filter({
         user_email: request.sender_email,
-        friend_email: request.receiver_email,
-        status: 'active'
+        friend_email: request.receiver_email
       });
-      await base44.entities.Friend.create({
+      const existingFriendB = await base44.entities.Friend.filter({
         user_email: request.receiver_email,
-        friend_email: request.sender_email,
-        status: 'active'
+        friend_email: request.sender_email
       });
+
+      if (!existingFriendA.length) {
+        await base44.entities.Friend.create({
+          user_email: request.sender_email,
+          friend_email: request.receiver_email,
+          status: 'active'
+        });
+      }
+
+      if (!existingFriendB.length) {
+        await base44.entities.Friend.create({
+          user_email: request.receiver_email,
+          friend_email: request.sender_email,
+          status: 'active'
+        });
+      }
       
-      // Send notification
       await base44.functions.invoke('createNotification', {
         recipientEmail: request.sender_email,
         type: 'friend_accepted',

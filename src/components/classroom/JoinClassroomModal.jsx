@@ -24,7 +24,15 @@ export default function JoinClassroomModal({ open, onClose, classroom, currentUs
         }
       }
 
-      // Create enrollment request
+      const existingEnrollments = await base44.entities.ClassroomEnrollment.filter({
+        classroom_id: classroom.id,
+        student_email: currentUser.email
+      });
+
+      if (existingEnrollments.some(e => ['pending', 'approved', 'enrolled'].includes(e.status))) {
+        throw new Error('You already have an active enrollment or request for this classroom');
+      }
+
       const enrollment = await base44.entities.ClassroomEnrollment.create({
         classroom_id: classroom.id,
         student_email: currentUser.email,

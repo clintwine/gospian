@@ -73,8 +73,8 @@ export default function AddResourceForm({ open, onClose, classroomId }) {
       let fileUrl = null;
 
       if (file) {
-        const { url: uploadedUrl } = await base44.integrations.Core.UploadFile({ file });
-        fileUrl = uploadedUrl;
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        fileUrl = file_url;
       }
 
       const resourceData = {

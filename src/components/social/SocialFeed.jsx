@@ -20,10 +20,14 @@ export default function SocialFeed({ currentUser, friends }) {
   const { data: posts = [] } = useQuery({
     queryKey: ['socialPosts'],
     queryFn: async () => {
-      const allPosts = await base44.asServiceRole.entities.SocialPost.list('-created_date', 50);
-      return allPosts.filter(p => 
-        p.created_by === currentUser?.email || friendEmails.includes(p.created_by)
+      const myPosts = await base44.entities.SocialPost.filter({ created_by: currentUser.email }, '-created_date', 50);
+      const friendPostsArrays = await Promise.all(
+        friendEmails.map((email) => base44.entities.SocialPost.filter({ created_by: email }, '-created_date', 20))
       );
+      const allPosts = [...myPosts, ...friendPostsArrays.flat()];
+      return allPosts
+        .filter((post, index, arr) => arr.findIndex((p) => p.id === post.id) === index)
+        .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!currentUser?.email,
     refetchInterval: 10000,
@@ -47,7 +51,7 @@ export default function SocialFeed({ currentUser, friends }) {
 
   const likePostMutation = useMutation({
     mutationFn: async ({ postId, likes }) => {
-      await base44.asServiceRole.entities.SocialPost.update(postId, { likes });
+      await base44.entities.SocialPost.update(postId, { likes });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['socialPosts']);
@@ -56,7 +60,7 @@ export default function SocialFeed({ currentUser, friends }) {
 
   const commentMutation = useMutation({
     mutationFn: async ({ postId, comments }) => {
-      await base44.asServiceRole.entities.SocialPost.update(postId, { comments });
+      await base44.entities.SocialPost.update(postId, { comments });
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['socialPosts']);
