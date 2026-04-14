@@ -141,8 +141,8 @@ export default function Profile() {
       <Card className="border-0 shadow-xl mb-6 overflow-hidden">
         <div className="h-24 bg-gradient-to-r from-[#0A1A2F] to-[#243B73]" />
         <CardContent className="relative pt-0 pb-6 px-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-12">
-            <div className="relative w-24 h-24 rounded-2xl bg-white dark:bg-slate-800 border-4 border-white dark:border-slate-800 shadow-xl flex items-center justify-center overflow-hidden">
+          <div className="-mt-12 flex flex-col gap-4 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_280px] lg:items-end">
+            <div className="mx-auto lg:mx-0 relative w-24 h-24 rounded-2xl bg-white dark:bg-slate-800 border-4 border-white dark:border-slate-800 shadow-xl flex items-center justify-center overflow-hidden">
               {user?.profile_picture ? (
                 <img src={user.profile_picture} alt="Profile" className="w-full h-full object-cover" />
               ) : (
@@ -153,12 +153,12 @@ export default function Profile() {
                 onUpdate={(url) => updateProfilePictureMutation.mutate(url)} 
               />
             </div>
-            <div className="text-center sm:text-left flex-1">
-              <div className="flex items-center gap-2 justify-center sm:justify-start">
-                <h1 className="text-2xl font-bold">{user?.full_name || 'Musician'}</h1>
+            <div className="min-w-0 text-center lg:text-left lg:pb-1">
+              <div className="flex flex-wrap items-center gap-2 justify-center lg:justify-start">
+                <h1 className="text-2xl font-bold break-words">{user?.full_name || 'Musician'}</h1>
                 <Dialog open={showEditor} onOpenChange={setShowEditor}>
                   <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
                       <Edit className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
@@ -167,11 +167,11 @@ export default function Profile() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <p className="text-muted-foreground mb-2">{user?.email}</p>
+              <p className="text-muted-foreground mb-2 break-all">{user?.email}</p>
               {user?.bio && (
-                <p className="text-sm text-muted-foreground italic max-w-md">{user.bio}</p>
+                <p className="text-sm text-muted-foreground italic max-w-md mx-auto lg:mx-0">{user.bio}</p>
               )}
-              <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+              <div className="flex flex-wrap gap-2 mt-3 justify-center lg:justify-start">
                 {user?.favorite_instruments?.map(inst => (
                   <Badge key={inst} className="bg-[#3E82FC]/20 text-[#3E82FC] border-0">
                     <Music2 className="w-3 h-3 mr-1" />
@@ -186,7 +186,7 @@ export default function Profile() {
                 ))}
               </div>
             </div>
-            <div className="w-full sm:w-64">
+            <div className="w-full lg:w-[280px] lg:justify-self-end lg:self-center">
               <XPBar xp={stats.xp} level={stats.level} />
             </div>
           </div>
