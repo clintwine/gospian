@@ -82,8 +82,6 @@ export default function Exercises() {
     }
   }, [user, userLoading]);
 
-  if (userLoading || !user) return null;
-
   const { data: userStats } = useQuery({
     queryKey: ['userStats', user?.email],
     queryFn: async () => {
@@ -100,6 +98,8 @@ export default function Exercises() {
     },
     enabled: !!user?.email,
   });
+
+  if (userLoading || !user) return null;
 
   const getExerciseProgress = (type, difficulty) => {
     const results = exerciseResults?.filter(

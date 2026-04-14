@@ -24,8 +24,6 @@ export default function Social() {
     }
   }, [currentUser, userLoading]);
 
-  if (userLoading || !currentUser) return null;
-
   const { data: friends = [] } = useQuery({
     queryKey: ['friends', currentUser?.email],
     queryFn: async () => {
@@ -43,6 +41,8 @@ export default function Social() {
       return data.users || [];
     },
   });
+
+  if (userLoading || !currentUser) return null;
 
   const getFriendEmails = () => {
     if (!friends || !currentUser) return [];

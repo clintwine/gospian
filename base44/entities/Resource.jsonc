@@ -1,0 +1,75 @@
+{
+  "name": "Resource",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of the resource"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the resource"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL of uploaded file"
+    },
+    "link_url": {
+      "type": "string",
+      "description": "External link URL"
+    },
+    "classroom_id": {
+      "type": "string",
+      "description": "ID of the classroom this resource belongs to"
+    },
+    "teacher_email": {
+      "type": "string",
+      "description": "Email of the teacher who created the resource"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "file",
+        "link",
+        "video",
+        "article"
+      ],
+      "description": "Type of resource"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Tags for organizing resources"
+    }
+  },
+  "required": [
+    "title",
+    "classroom_id",
+    "teacher_email",
+    "resource_type"
+  ],
+  "rls": {
+    "create": {
+      "teacher_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "teacher_email": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "teacher_email": "{{user.email}}"
+    },
+    "delete": {
+      "teacher_email": "{{user.email}}"
+    }
+  }
+}

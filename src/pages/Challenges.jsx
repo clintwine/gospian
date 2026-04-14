@@ -79,8 +79,6 @@ export default function Challenges() {
     }
   }, [user, userLoading]);
 
-  if (userLoading || !user) return null;
-
   const { data: userStats } = useQuery({
     queryKey: ['userStats', user?.email],
     queryFn: async () => {
@@ -97,6 +95,8 @@ export default function Challenges() {
     },
     enabled: !!user?.email,
   });
+
+  if (userLoading || !user) return null;
 
   const userLevel = userStats?.level || 1;
 

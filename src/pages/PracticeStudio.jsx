@@ -27,8 +27,6 @@ export default function PracticeStudio() {
     }
   }, [currentUser, userLoading]);
 
-  if (userLoading || !currentUser) return null;
-
   const { data: routines = [] } = useQuery({
     queryKey: ['practiceRoutines'],
     queryFn: async () => {
@@ -51,6 +49,8 @@ export default function PracticeStudio() {
       queryClient.invalidateQueries(['practiceRoutines']);
     },
   });
+
+  if (userLoading || !currentUser) return null;
 
   const practiceModes = [
     {

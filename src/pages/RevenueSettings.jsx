@@ -18,20 +18,6 @@ export default function RevenueSettings() {
     queryFn: () => base44.auth.me(),
   });
 
-  // Only admins can access this page
-  if (user?.role !== 'admin') {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <Alert variant="destructive">
-          <Shield className="w-4 h-4" />
-          <AlertDescription>
-            Access denied. Only platform administrators can view this page.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   const { data: settings = [] } = useQuery({
     queryKey: ['platformSettings'],
     queryFn: async () => {
@@ -88,6 +74,20 @@ export default function RevenueSettings() {
     }
     updateSettingsMutation.mutate(percentage);
   };
+
+  // Only admins can access this page
+  if (user?.role !== 'admin') {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <Alert variant="destructive">
+          <Shield className="w-4 h-4" />
+          <AlertDescription>
+            Access denied. Only platform administrators can view this page.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   // Calculate revenue stats
   const totalRevenue = payments
