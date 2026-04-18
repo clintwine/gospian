@@ -6,21 +6,27 @@
  */
 import * as Tone from 'tone';
 
-// ─── Salamander sample URLs ───────────────────────────────────────────────────
-const SALAMANDER_BASE = 'https://tonejs.github.io/audio/salamander/';
-const SALAMANDER_NOTES = [
-  'A0','C1','Ds1','Fs1','A1','C2','Ds2','Fs2','A2',
-  'C3','Ds3','Fs3','A3','C4','Ds4','Fs4','A4',
-  'C5','Ds5','Fs5','A5','C6','Ds6','Fs6','A6',
-  'C7','Ds7','Fs7','A7','C8'
+// ─── Piano sample URLs (midi-js-soundfonts, acoustic_grand_piano) ─────────────
+// Using a reliable, CORS-friendly CDN instead of tonejs.github.io
+const SF_BASE = 'https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/acoustic_grand_piano-mp3/';
+
+// Notes available in the soundfont (every 3 semitones roughly, all octaves)
+const SF_NOTES = [
+  'A0','Bb0','B0',
+  'C1','Db1','D1','Eb1','E1','F1','Gb1','G1','Ab1','A1','Bb1','B1',
+  'C2','Db2','D2','Eb2','E2','F2','Gb2','G2','Ab2','A2','Bb2','B2',
+  'C3','Db3','D3','Eb3','E3','F3','Gb3','G3','Ab3','A3','Bb3','B3',
+  'C4','Db4','D4','Eb4','E4','F4','Gb4','G4','Ab4','A4','Bb4','B4',
+  'C5','Db5','D5','Eb5','E5','F5','Gb5','G5','Ab5','A5','Bb5','B5',
+  'C6','Db6','D6','Eb6','E6','F6','Gb6','G6','Ab6','A6','Bb6','B6',
+  'C7','Db7','D7','Eb7','E7','F7','Gb7','G7','Ab7','A7','Bb7','B7',
+  'C8'
 ];
 
 function buildSalamanderUrls() {
   const urls = {};
-  SALAMANDER_NOTES.forEach(n => {
-    // Tone.Sampler uses scientific notation: Ds4 → D#4
-    const toneName = n.replace('s', '#');
-    urls[toneName] = `${SALAMANDER_BASE}${n}v8.mp3`;
+  SF_NOTES.forEach(n => {
+    urls[n] = `${SF_BASE}${n}.mp3`;
   });
   return urls;
 }
