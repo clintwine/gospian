@@ -194,6 +194,11 @@ export async function init(progressCallback) {
   if (isInitialized) return;
   await Tone.start();
   audioUnlocked = true;
+  
+  // Ensure transport is started
+  if (Tone.Transport.state !== 'running') {
+    Tone.Transport.start();
+  }
 
   buildChain();
   await reverb.ready;
@@ -226,6 +231,10 @@ function hv(base = 0.75) {
 export function playNote(midi, { duration = '2n', velocity = 0.75, time } = {}) {
   if (!sampler || !isInitialized) return;
   try {
+    // Ensure audio context is running
+    if (Tone.Transport.state !== 'running') {
+      Tone.Transport.start();
+    }
     const note = midiToNoteName(Math.max(21, Math.min(108, midi)));
     const t = time ?? Tone.now();
     sampler.triggerAttackRelease(note, duration, t, hv(velocity));
