@@ -8,15 +8,17 @@ import { ArrowLeft, Play, Trophy, Zap, Clock, CheckCircle2, XCircle, RotateCcw }
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  playInterval, 
-  generateIntervalQuestion, 
-  playChord, 
-  generateChordQuestion,
-  initAudioContext,
-  playTone,
-  getNoteFrequency
-} from '@/components/audio/AudioEngine';
+import {
+  playInterval as _playInterval,
+  playChordMidi,
+  playNote,
+  midiToNoteName,
+  noteNameToMidi,
+  CHORD_TYPES,
+  INTERVALS,
+  ALL_KEYS_MIDI,
+  delay,
+} from '@/lib/audio/audioEngine';
 import PianoKeyboard from '@/components/audio/PianoKeyboard';
 
 export default function DailyChallenge() {
@@ -61,9 +63,17 @@ export default function DailyChallenge() {
   const generateQuestion = useCallback(() => {
     const isChord = Math.random() > 0.6;
     if (isChord) {
-      return { ...generateChordQuestion(), type: 'chords' };
+      const chords = ['Major', 'Minor', 'Dominant7', 'Major7', 'Minor7', 'Diminished'];
+      const chordType = chords[Math.floor(Math.random() * chords.length)];
+      const chord = CHORD_TYPES.find(c => c.name === chordType);
+      const options = chords.map(n => ({ name: n })).sort(() => Math.random() - 0.5);
+      return { type: 'chords', chordType, correctAnswer: { name: chordType }, options };
     }
-    return { ...generateIntervalQuestion('intermediate'), type: 'intervals' };
+    const intervals = INTERVALS.filter(i => i.semitones >= 1 && i.semitones <= 9);
+    const iv = intervals[Math.floor(Math.random() * intervals.length)];
+    const pool = intervals.map(i => ({ name: i.name })).sort(() => Math.random() - 0.5).slice(0, 4);
+    if (!pool.find(o => o.name === iv.name)) pool[0] = { name: iv.name };
+    return { type: 'intervals', semitones: iv.semitones, correctAnswer: { name: iv.name }, options: pool.sort(() => Math.random() - 0.5) };
   }, []);
 
   // Timer
@@ -84,7 +94,6 @@ export default function DailyChallenge() {
   }, [gameState]);
 
   const startGame = () => {
-    initAudioContext();
     setGameState('playing');
     setTimeLeft(90);
     setScore(0);
@@ -107,10 +116,13 @@ export default function DailyChallenge() {
     const noteToUse = currentBaseNote;
     let baseNote;
 
+    const rootMidi = noteToUse ? noteNameToMidi(noteToUse) : ALL_KEYS_MIDI[Math.floor(Math.random() * ALL_KEYS_MIDI.length)];
+    baseNote = midiToNoteName(rootMidi);
     if (currentQuestion.type === 'chords') {
-      baseNote = await playChord(currentQuestion.chordType, 'piano', noteToUse);
+      const chord = CHORD_TYPES.find(c => c.name === currentQuestion.chordType);
+      if (chord) playChordMidi(chord.intervals.map(s => rootMidi + s), { duration: '2n', velocity: 0.75, arpeggiate: true });
     } else {
-      baseNote = await playInterval(currentQuestion.semitones, 'piano', 'melodic', noteToUse);
+      await _playInterval(rootMidi, currentQuestion.semitones, { mode: 'melodic-asc' });
     }
 
     // Store the base note for consistent replays
@@ -123,23 +135,16 @@ export default function DailyChallenge() {
 
   const replayIntervalAnimation = async (semitones, baseNote) => {
     setIsAnimating(true);
-    
-    const baseFreq = getNoteFrequency(baseNote, 0);
-    const secondFreq = getNoteFrequency(baseNote, semitones);
-    
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
+    const rootMidi = noteNameToMidi(baseNote);
+    await delay(200);
     setReplayHighlight('first');
-    playTone(baseFreq, 0.5, 'piano');
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
+    playNote(rootMidi, { duration: '0.5s', velocity: 0.7 });
+    await delay(600);
     setReplayHighlight('second');
-    playTone(secondFreq, 0.5, 'piano');
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
+    playNote(rootMidi + semitones, { duration: '0.5s', velocity: 0.7 });
+    await delay(600);
     setReplayHighlight('both');
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
+    await delay(400);
     setIsAnimating(false);
     setReplayHighlight(null);
   };

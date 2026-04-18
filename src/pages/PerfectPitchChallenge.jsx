@@ -6,7 +6,7 @@ import { Play, Volume2, ArrowRight, Trophy, Clock, Target, CheckCircle2, XCircle
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { initAudioContext, playTone, getNoteFrequency } from '@/components/audio/AudioEngine';
+import { playNote, noteNameToMidi } from '@/lib/audio/audioEngine';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -68,17 +68,10 @@ export default function PerfectPitchChallenge() {
   const handlePlaySound = () => {
     if (isPlaying || !currentNote) return;
     
-    initAudioContext();
     setIsPlaying(true);
     setHasPlayed(true);
-
-    const baseNote = currentNote.slice(0, -1);
-    const octave = currentNote.slice(-1);
-    const noteWithOctave = `${baseNote}${octave}`;
-    
-    const freq = getNoteFrequency('C4', 0);
-    const targetFreq = getNoteFrequency(noteWithOctave, 0);
-    playTone(targetFreq, 1.0, 'piano');
+    const midi = noteNameToMidi(currentNote);
+    playNote(midi, { duration: '1s', velocity: 0.8 });
 
     setTimeout(() => setIsPlaying(false), 1200);
   };
