@@ -40,6 +40,13 @@ export default function Dashboard() {
     }
   }, [user, userLoading]);
 
+  // Redirect to placement test on first login
+  React.useEffect(() => {
+    if (user && !statsLoading && userStats && userStats.placement_completed !== true) {
+      window.location.href = createPageUrl('PlacementTest');
+    }
+  }, [user, userStats, statsLoading]);
+
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ['userStats', user?.email],
     queryFn: async () => {
@@ -116,6 +123,38 @@ export default function Dashboard() {
     },
     enabled: !!user?.email,
   });
+
+  // Streak mercy — check if a freeze should be consumed for yesterday's missed day
+  React.useEffect(() => {
+    if (!userStats?.id) return;
+    const today = new Date().toISOString().split('T')[0];
+    const last = userStats.last_activity_date;
+    if (!last || last === today) return;
+    const diffDays = Math.round((new Date(today) - new Date(last)) / 86400000);
+    if (diffDays === 1 && (userStats.streak || 0) > 0) {
+      // Missed exactly one day — consume a freeze if available
+      const freezes = userStats.streak_freezes_available ?? 1;
+      if (freezes > 0) {
+        base44.entities.UserStats.update(userStats.id, {
+          streak_freezes_available: freezes - 1,
+          streak_freeze_used_today: true,
+          last_activity_date: today, // prevent re-trigger
+        });
+      }
+    }
+    // Refill 1 freeze every 7 days (max 2)
+    const lastRefill = userStats.streak_freeze_last_refill || '2000-01-01';
+    const daysSinceRefill = Math.round((new Date(today) - new Date(lastRefill)) / 86400000);
+    if (daysSinceRefill >= 7) {
+      const current = userStats.streak_freezes_available ?? 1;
+      if (current < 2) {
+        base44.entities.UserStats.update(userStats.id, {
+          streak_freezes_available: Math.min(2, current + 1),
+          streak_freeze_last_refill: today,
+        });
+      }
+    }
+  }, [userStats]);
 
   // Initialize achievement tracker and quest manager
   useAchievementTracker(userStats, exerciseResults, friends);
@@ -442,6 +481,12 @@ export default function Dashboard() {
                 <Link to="/DroneMode">
                   <Button variant="outline" className="w-full text-xs border-[#2A9D8F] text-[#2A9D8F]">
                     🎵 Drone Mode
+                  </Button>
+                </Link>
+                <Link to="/SingBack">
+                  <Button variant="outline" className="w-full text-xs border-[#E76F51] text-[#E76F51] relative">
+                    🎤 Sing-Back
+                    <span className="absolute -top-2 -right-1 bg-[#E76F51] text-white text-[9px] font-bold px-1 rounded">NEW</span>
                   </Button>
                 </Link>
               </div>

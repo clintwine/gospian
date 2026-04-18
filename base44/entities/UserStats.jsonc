@@ -1,0 +1,155 @@
+{
+  "name": "UserStats",
+  "type": "object",
+  "properties": {
+    "xp": {
+      "type": "number",
+      "default": 0,
+      "description": "Total experience points"
+    },
+    "level": {
+      "type": "number",
+      "default": 1,
+      "description": "Current level"
+    },
+    "streak": {
+      "type": "number",
+      "default": 0,
+      "description": "Current streak in days"
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Last activity date for streak tracking"
+    },
+    "freeze_tokens": {
+      "type": "number",
+      "default": 1,
+      "description": "Legacy streak freeze tokens (display only)"
+    },
+    "streak_freezes_available": {
+      "type": "number",
+      "default": 1,
+      "description": "Streak freeze charges available (max 2)"
+    },
+    "streak_freeze_last_refill": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when streak freeze was last refilled"
+    },
+    "streak_freeze_used_today": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a freeze was auto-used on last missed day"
+    },
+    "exercises_completed": {
+      "type": "number",
+      "default": 0,
+      "description": "Total exercises completed"
+    },
+    "perfect_scores": {
+      "type": "number",
+      "default": 0,
+      "description": "Total perfect accuracy exercises"
+    },
+    "daily_exercises_used": {
+      "type": "number",
+      "default": 0,
+      "description": "Exercises completed today (legacy, no longer enforced)"
+    },
+    "daily_reset_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Last date daily counter was reset"
+    },
+    "theme": {
+      "type": "string",
+      "enum": [
+        "light",
+        "dark"
+      ],
+      "default": "light",
+      "description": "User theme preference"
+    },
+    "audio_type": {
+      "type": "string",
+      "enum": [
+        "piano",
+        "guitar",
+        "synth",
+        "sine"
+      ],
+      "default": "piano",
+      "description": "Preferred audio sound type"
+    },
+    "current_exercise_type": {
+      "type": "string",
+      "description": "Last exercise type for continue training"
+    },
+    "current_exercise_progress": {
+      "type": "number",
+      "default": 0,
+      "description": "Progress in current exercise set"
+    },
+    "placement_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether placement test has been completed"
+    },
+    "placement_level": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "default": "beginner",
+      "description": "Result of placement test"
+    },
+    "preferred_session_mode": {
+      "type": "string",
+      "enum": [
+        "quick",
+        "standard",
+        "deep"
+      ],
+      "default": "standard",
+      "description": "User's preferred session length mode"
+    },
+    "practice_reminder_time": {
+      "type": "string",
+      "description": "Daily practice reminder time HH:MM"
+    },
+    "quickstart_interval_beginner_progress": {
+      "type": "number",
+      "default": 0
+    },
+    "quickstart_chord_beginner_progress": {
+      "type": "number",
+      "default": 0
+    },
+    "quickstart_interval_intermediate_progress": {
+      "type": "number",
+      "default": 0
+    },
+    "quickstart_scale_beginner_progress": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

@@ -12,19 +12,41 @@ import { INTERVALS, CHORD_TYPES, midiToNoteName, ALL_KEYS_MIDI } from '@/lib/aud
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-function accuracyColor(acc) {
-  if (acc === null) return 'bg-slate-100 dark:bg-slate-800 text-slate-400';
-  if (acc >= 90) return 'bg-[#2A9D8F]/20 text-[#2A9D8F]';
-  if (acc >= 70) return 'bg-[#E9C46A]/20 text-[#0A1A2F] dark:text-white';
-  return 'bg-[#E76F51]/20 text-[#E76F51]';
-}
-
 function HeatCell({ label, accuracy }) {
+  // Colorblind-safe: color + pattern + symbol
+  let containerClass = 'bg-slate-100 dark:bg-slate-800 text-slate-400';
+  let symbol = '';
+  let patternStyle = {};
+
+  if (accuracy !== null) {
+    if (accuracy >= 90) {
+      containerClass = 'bg-[#2A9D8F]/20 text-[#2A9D8F] border border-[#2A9D8F]/30';
+      symbol = '✓';
+    } else if (accuracy >= 70) {
+      containerClass = 'bg-[#E9C46A]/20 text-[#0A1A2F] dark:text-white border border-[#E9C46A]/40';
+      symbol = '~';
+      // Diagonal stripe pattern via gradient
+      patternStyle = {
+        backgroundImage: 'repeating-linear-gradient(45deg, rgba(233,196,106,0.15) 0px, rgba(233,196,106,0.15) 3px, transparent 3px, transparent 9px)',
+      };
+    } else {
+      containerClass = 'bg-[#E76F51]/10 text-[#E76F51] border border-[#E76F51]/30';
+      symbol = '✗';
+      // Dot pattern
+      patternStyle = {
+        backgroundImage: 'radial-gradient(circle, rgba(231,111,81,0.25) 1px, transparent 1px)',
+        backgroundSize: '6px 6px',
+      };
+    }
+  }
+
   const display = accuracy !== null ? `${Math.round(accuracy)}%` : '—';
   return (
-    <div className={`rounded-lg p-2 text-center text-xs font-medium transition-all ${accuracyColor(accuracy)}`}>
+    <div className={`rounded-lg p-2 text-center text-xs font-medium transition-all relative overflow-hidden ${containerClass}`}
+      style={patternStyle}>
       <div className="font-semibold truncate">{label}</div>
       <div className="text-[11px] opacity-80">{display}</div>
+      {symbol && <div className="text-[10px] font-bold opacity-70">{symbol}</div>}
     </div>
   );
 }
@@ -125,7 +147,7 @@ export default function WeaknessDashboard() {
         <CardContent>
           <div className="grid grid-cols-6 sm:grid-cols-12 gap-2">
             {keyItems.map(k => (
-              <HeatCell key={k.midi} label={k.name} accuracy={get('scales', k.name)} />
+              <HeatCell key={k.midi} label={k.name} accuracy={get('key', k.name)} />
             ))}
           </div>
         </CardContent>

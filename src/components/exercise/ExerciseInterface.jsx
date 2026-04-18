@@ -22,6 +22,7 @@ import { subscribeNoteOn } from '@/lib/audio/midiInput';
 import PianoKeyboard from '../audio/PianoKeyboard';
 import { getRandomExercise, getExercisePool } from '@/components/data/exerciseData';
 import { useItemMastery } from '@/lib/audio/useItemMastery';
+import LearnCard from '@/components/learn/LearnCard';
 
 function pickRootMidi(keyFilter = 'all') {
   const pool = keyFilter === 'flat' ? FLAT_KEYS_MIDI : ALL_KEYS_MIDI;
@@ -67,7 +68,8 @@ export default function ExerciseInterface({
   playInContext = false,
   keyFilter = 'all',
 }) {
-  const { recordAttempt, getWeight } = useItemMastery();
+  const { recordAttempt, getWeight, getAttempts, getDueItems } = useItemMastery();
+  const [learnItem, setLearnItem] = useState(null);
 
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
@@ -108,6 +110,25 @@ export default function ExerciseInterface({
     if (!exercise) return null;
     const baseNote = pickRootMidi(keyFilter);
 
+    // Check if item is brand new — trigger Learn card
+    const itemId = exercise.chordType || exercise.scaleType ||
+      (exercise.semitones !== undefined ? `${exercise.semitones}st` : null);
+    if (itemId && getAttempts(exerciseType, itemId) === 0) {
+      // We'll show LearnCard — return question with isNew flag
+      return {
+        ...exercise,
+        correctAnswer: { name: exercise.answer },
+        options: exercise.options.map(opt => ({ name: opt })),
+        semitones: exercise.semitones,
+        chordType: exercise.chordType,
+        scaleType: exercise.scaleType,
+        playMode: exercise.playMode || 'melodic',
+        baseNote,
+        isNew: true,
+        itemId,
+      };
+    }
+
     return {
       ...exercise,
       correctAnswer: { name: exercise.answer },
@@ -118,7 +139,7 @@ export default function ExerciseInterface({
       playMode: exercise.playMode || 'melodic',
       baseNote,
     };
-  }, [exerciseType, difficulty, isPracticeMode, questionSupplier, keyFilter, getWeight]);
+  }, [exerciseType, difficulty, isPracticeMode, questionSupplier, keyFilter, getWeight, getAttempts]);
 
   useEffect(() => {
     setCurrentQuestion(generateQuestion());
@@ -298,6 +319,12 @@ export default function ExerciseInterface({
       (currentQuestion.semitones !== undefined ? `${currentQuestion.semitones}st` : 'unknown');
     recordAttempt(exerciseType, itemId, correct);
 
+    // Record per-root-key mastery for the Keys heatmap
+    if (currentBaseNote) {
+      const rootPitchClass = currentBaseNote.replace(/\d/, '');
+      recordAttempt('key', rootPitchClass, correct);
+    }
+
     if (correct) {
       if (!isPracticeMode) { setCorrectCount(prev => prev + 1); onXPEarned?.(10); }
       setReplayHighlight('both');
@@ -340,6 +367,40 @@ export default function ExerciseInterface({
 
   if (!currentQuestion) return null;
   const progress = ((questionNumber - 1) / questionsCount) * 100;
+
+  // Show LearnCard for brand-new items
+  if (currentQuestion.isNew) {
+    const learnItemDef = currentQuestion.chordType
+      ? { name: currentQuestion.chordType }
+      : currentQuestion.scaleType
+        ? { name: currentQuestion.scaleType }
+        : { name: currentQuestion.correctAnswer?.name, semitones: currentQuestion.semitones };
+    const rootMidiForLearn = noteNameToMidi(currentQuestion.baseNote);
+    return (
+      <div className="w-full max-w-2xl mx-auto px-1">
+        {!isPracticeMode && (
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs sm:text-sm font-medium">Question {questionNumber} of {questionsCount}</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+        )}
+        <LearnCard
+          item={learnItemDef}
+          exerciseType={exerciseType}
+          rootMidi={rootMidiForLearn}
+          onComplete={() => {
+            // Mark as seen with 3 correct so it enters normal SRS pool
+            for (let i = 0; i < 3; i++) {
+              recordAttempt(exerciseType, currentQuestion.itemId, true);
+            }
+            setCurrentQuestion(prev => ({ ...prev, isNew: false }));
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto px-1">

@@ -1,11 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
 import ExerciseCard from '@/components/dashboard/ExerciseCard';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Headphones, Waves, Filter } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Music, Headphones, Waves, Filter, Clock, Zap, BookOpen, BarChart2 } from 'lucide-react';
+
+const SESSION_MODES = [
+  { id: 'quick',    label: 'Quick',    icon: Zap,      desc: '~2 min · 5 questions',  questions: 5,  color: 'text-[#E9C46A]', bg: 'bg-[#E9C46A]/10 border-[#E9C46A]' },
+  { id: 'standard', label: 'Standard', icon: Clock,    desc: '~5 min · 15 questions', questions: 15, color: 'text-[#3E82FC]', bg: 'bg-[#3E82FC]/10 border-[#3E82FC]' },
+  { id: 'deep',     label: 'Deep',     icon: BookOpen, desc: '~15 min · 40 questions',questions: 40, color: 'text-[#2A9D8F]', bg: 'bg-[#2A9D8F]/10 border-[#2A9D8F]' },
+];
 
 const EXERCISES = [
   {
@@ -69,6 +76,7 @@ const EXERCISES = [
 export default function Exercises() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const queryClient = useQueryClient();
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -86,10 +94,18 @@ export default function Exercises() {
     queryKey: ['userStats', user?.email],
     queryFn: async () => {
       const stats = await base44.entities.UserStats.filter({ created_by: user.email });
-      return stats[0] || { level: 1 };
+      return stats[0] || { level: 1, preferred_session_mode: 'standard' };
     },
     enabled: !!user?.email,
   });
+
+  const sessionMode = userStats?.preferred_session_mode || 'standard';
+
+  const updateSessionMode = async (mode) => {
+    if (!userStats?.id) return;
+    await base44.entities.UserStats.update(userStats.id, { preferred_session_mode: mode });
+    queryClient.invalidateQueries(['userStats']);
+  };
 
   const { data: exerciseResults } = useQuery({
     queryKey: ['exerciseResults', user?.email],
@@ -128,6 +144,27 @@ export default function Exercises() {
         <p className="text-sm sm:text-base text-muted-foreground">
           Practice and improve your ear training skills
         </p>
+      </div>
+
+      {/* Session Mode Picker */}
+      <div className="mb-6">
+        <p className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+          <Clock className="w-4 h-4" /> Session Length
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          {SESSION_MODES.map(m => {
+            const Icon = m.icon;
+            const active = sessionMode === m.id;
+            return (
+              <button key={m.id} onClick={() => updateSessionMode(m.id)}
+                className={`rounded-xl border-2 p-3 text-center transition-all ${active ? m.bg : 'border-border bg-background hover:bg-muted/50'}`}>
+                <Icon className={`w-5 h-5 mx-auto mb-1 ${active ? m.color : 'text-muted-foreground'}`} />
+                <p className={`text-sm font-semibold ${active ? m.color : 'text-foreground'}`}>{m.label}</p>
+                <p className="text-[11px] text-muted-foreground">{m.desc}</p>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Filters */}
