@@ -40,13 +40,6 @@ export default function Dashboard() {
     }
   }, [user, userLoading]);
 
-  // Redirect to placement test on first login
-  React.useEffect(() => {
-    if (user && !statsLoading && userStats && userStats.placement_completed !== true) {
-      window.location.href = createPageUrl('PlacementTest');
-    }
-  }, [user, userStats, statsLoading]);
-
   const { data: userStats, isLoading: statsLoading } = useQuery({
     queryKey: ['userStats', user?.email],
     queryFn: async () => {
@@ -55,6 +48,13 @@ export default function Dashboard() {
     },
     enabled: !!user?.email,
   });
+
+  // Redirect to placement test on first login
+  React.useEffect(() => {
+    if (user && !statsLoading && userStats && userStats.placement_completed !== true) {
+      window.location.href = createPageUrl('PlacementTest');
+    }
+  }, [user, userStats, statsLoading]);
 
   const { data: subscription } = useQuery({
     queryKey: ['subscription', user?.email],
