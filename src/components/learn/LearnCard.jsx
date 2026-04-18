@@ -25,7 +25,7 @@ const INTERVAL_DESCRIPTIONS = {
   'Minor 3rd':  'Sad, melancholic feel (e.g. C→E♭)',
   'Major 3rd':  'Bright, happy feel (e.g. C→E)',
   'Perfect 4th':'Stable, strong (e.g. C→F)',
-  'Tritone':    'Very tense — the "devil's interval" (e.g. C→F#)',
+  'Tritone':    'Very tense — the devil interval (e.g. C→F#)',
   'Perfect 5th':'Open, powerful — power chords (e.g. C→G)',
   'Minor 6th':  'Somewhat dark (e.g. C→A♭)',
   'Major 6th':  'Sweet, uplifting (e.g. C→A)',
