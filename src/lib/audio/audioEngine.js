@@ -174,7 +174,8 @@ async function buildSampler(instrumentKey) {
       },
       onerror: (e) => {
         console.warn('Sampler load error (some samples may be missing):', e);
-        setTimeout(() => resolve(s), 100); // resolve anyway — Tone interpolates from what loaded
+        // Don't resolve here — create fallback synth instead
+        reject(e);
       },
     });
 
@@ -204,7 +205,19 @@ export async function init(progressCallback) {
   await reverb.ready;
 
   progressCallback?.(10);
-  sampler = await buildSampler(currentInstrument);
+  
+  // Try to load sampler, fall back to synth if it fails
+  try {
+    sampler = await buildSampler(currentInstrument);
+  } catch (e) {
+    console.log('Sampler failed, using fallback synth');
+    synth = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 },
+    });
+    synth.connect(compressor);
+  }
+  
   progressCallback?.(100);
 
   isInitialized = true;
@@ -229,7 +242,7 @@ function hv(base = 0.75) {
 }
 
 export function playNote(midi, { duration = '2n', velocity = 0.75, time } = {}) {
-  if (!sampler || !isInitialized) return;
+  if (!isInitialized) return;
   try {
     // Ensure audio context is running
     if (Tone.Transport.state !== 'running') {
@@ -237,14 +250,20 @@ export function playNote(midi, { duration = '2n', velocity = 0.75, time } = {}) 
     }
     const note = midiToNoteName(Math.max(21, Math.min(108, midi)));
     const t = time ?? Tone.now();
-    sampler.triggerAttackRelease(note, duration, t, hv(velocity));
+    
+    // Use sampler if available, otherwise use synth
+    if (sampler) {
+      sampler.triggerAttackRelease(note, duration, t, hv(velocity));
+    } else if (synth) {
+      synth.triggerAttackRelease(note, duration, t, hv(velocity));
+    }
   } catch (e) {
     console.warn('Playback error:', e.message);
   }
 }
 
 export function playChordMidi(midiArray, { duration = '2n', velocity = 0.75, arpeggiate = false } = {}) {
-  if (!sampler || !isInitialized) return;
+  if (!isInitialized) return;
   try {
     const now = Tone.now();
     midiArray.forEach((midi, i) => {
@@ -257,7 +276,7 @@ export function playChordMidi(midiArray, { duration = '2n', velocity = 0.75, arp
 }
 
 export async function playInterval(rootMidi, semitones, { mode = 'melodic-asc' } = {}) {
-  if (!sampler) return;
+  if (!sampler && !synth) return;
   const top = rootMidi + semitones;
   if (mode === 'harmonic') {
     playChordMidi([rootMidi, top], { duration: '2n', velocity: 0.75 });
@@ -273,7 +292,7 @@ export async function playInterval(rootMidi, semitones, { mode = 'melodic-asc' }
 }
 
 export async function playProgression(chords, { bpm = 72, velocity = 0.75 } = {}) {
-  if (!sampler) return;
+  if (!sampler && !synth) return;
   const secPerBeat = 60 / bpm;
   for (const chord of chords) {
     playChordMidi(chord, { duration: '2n', velocity, arpeggiate: true });
@@ -282,7 +301,7 @@ export async function playProgression(chords, { bpm = 72, velocity = 0.75 } = {}
 }
 
 export async function playCadence(rootMidi, velocity = 0.5) {
-  if (!sampler) return;
+  if (!sampler && !synth) return;
   const I  = [rootMidi,   rootMidi+4,  rootMidi+7];
   const IV = [rootMidi+5, rootMidi+9,  rootMidi+12];
   const V  = [rootMidi+7, rootMidi+11, rootMidi+14];
