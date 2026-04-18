@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { INTERVALS } from '@/components/audio/AudioEngine';
-import { SCALES } from '@/components/audio/AudioEngine';
-import { CHORD_TYPES } from '@/components/audio/AudioEngine';
+import { INTERVALS, SCALES, CHORD_TYPES } from '@/lib/audio/audioEngine';
 
 export default function GranularSettingsPanel({ 
   exerciseType, 
