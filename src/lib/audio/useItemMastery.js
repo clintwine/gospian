@@ -41,5 +41,25 @@ export function useItemMastery() {
     });
   }, []);
 
-  return { recordAttempt, getWeight, getAllMastery };
+  const getAttempts = useCallback((exerciseType, itemId) => {
+    const store = loadStore();
+    const key = `${exerciseType}__${itemId}`;
+    return (store[key] || []).length;
+  }, []);
+
+  const getDueItems = useCallback((exerciseType) => {
+    const store = loadStore();
+    return Object.entries(store)
+      .filter(([key]) => key.startsWith(`${exerciseType}__`))
+      .map(([key, history]) => {
+        const itemId = key.replace(`${exerciseType}__`, '');
+        const recent = history.slice(-5);
+        const accuracy = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
+        return { itemId, accuracy, attempts: history.length };
+      })
+      .filter(item => item.accuracy < 80)
+      .sort((a, b) => a.accuracy - b.accuracy);
+  }, []);
+
+  return { recordAttempt, getWeight, getAllMastery, getAttempts, getDueItems };
 }
