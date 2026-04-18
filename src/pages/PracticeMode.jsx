@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AdaptiveChordSelector } from '@/components/audio/AdaptiveChordSelector';
-import { CHORD_TYPES, INTERVALS, SCALES } from '@/components/audio/AudioEngine';
+import { CHORD_TYPES, INTERVALS, SCALES } from '@/lib/audio/audioEngine';
 import GranularSettingsPanel from '@/components/practice/GranularSettingsPanel';
 import { Separator } from "@/components/ui/separator";
 
