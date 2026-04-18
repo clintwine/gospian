@@ -1,11 +1,11 @@
 /**
- * Web MIDI input manager.
- * Usage: midiInput.init(onNoteOn, onDeviceChange)
+ * Web MIDI input manager with pub-sub pattern.
+ * Multiple components can subscribe to note-on events independently.
  */
 
 let access = null;
-let onNoteOnCb = null;
-let onDeviceChangeCb = null;
+const noteOnSubscribers = new Set();
+const deviceChangeSubscribers = new Set();
 
 function attachListeners() {
   if (!access) return;
@@ -13,12 +13,13 @@ function attachListeners() {
     input.onmidimessage = (evt) => {
       const [status, note, velocity] = evt.data;
       const type = status & 0xf0;
-      if ((type === 0x90) && velocity > 0) {
-        onNoteOnCb?.({ midi: note, velocity });
+      if (type === 0x90 && velocity > 0) {
+        noteOnSubscribers.forEach(cb => cb({ midi: note, velocity }));
       }
     };
   }
-  onDeviceChangeCb?.(getDevices());
+  const devices = getDevices();
+  deviceChangeSubscribers.forEach(cb => cb(devices));
 }
 
 export function getDevices() {
@@ -26,21 +27,32 @@ export function getDevices() {
   return [...access.inputs.values()].map(i => ({ id: i.id, name: i.name }));
 }
 
-export async function init(noteOnCallback, deviceChangeCallback) {
-  onNoteOnCb = noteOnCallback;
-  onDeviceChangeCb = deviceChangeCallback;
+export async function init() {
   if (!navigator.requestMIDIAccess) return false;
-  access = await navigator.requestMIDIAccess();
-  access.onstatechange = () => {
+  try {
+    access = await navigator.requestMIDIAccess();
+    access.onstatechange = () => attachListeners();
     attachListeners();
-    onDeviceChangeCb?.(getDevices());
-  };
-  attachListeners();
-  return true;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Subscribe to note-on events. Returns an unsubscribe function. */
+export function subscribeNoteOn(callback) {
+  noteOnSubscribers.add(callback);
+  return () => noteOnSubscribers.delete(callback);
+}
+
+/** Subscribe to device changes. Returns an unsubscribe function. */
+export function subscribeDeviceChange(callback) {
+  deviceChangeSubscribers.add(callback);
+  return () => deviceChangeSubscribers.delete(callback);
 }
 
 export function dispose() {
+  noteOnSubscribers.clear();
+  deviceChangeSubscribers.clear();
   access = null;
-  onNoteOnCb = null;
-  onDeviceChangeCb = null;
 }

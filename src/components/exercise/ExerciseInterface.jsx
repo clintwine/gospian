@@ -4,28 +4,57 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Play, RotateCcw, Volume2, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  playInterval, 
-  playChord, 
-  playScale,
-  initAudioContext,
-  playTone,
-  getNoteFrequency,
-  CHORD_TYPES
-} from '../audio/AudioEngine';
+import {
+  playInterval as _playInterval,
+  playChordMidi,
+  playNote,
+  playCadence,
+  midiToNoteName,
+  noteNameToMidi,
+  ALL_KEYS_MIDI,
+  FLAT_KEYS_MIDI,
+  CHORD_TYPES,
+  SCALES,
+  weightedPick,
+  delay,
+} from '@/lib/audio/audioEngine';
+import { subscribeNoteOn } from '@/lib/audio/midiInput';
 import PianoKeyboard from '../audio/PianoKeyboard';
-import { getRandomExercise } from '@/components/data/exerciseData';
+import { getRandomExercise, getExercisePool } from '@/components/data/exerciseData';
 import { useItemMastery } from '@/lib/audio/useItemMastery';
-import { playCadence, midiToNoteName, ALL_KEYS_MIDI, FLAT_KEYS_MIDI } from '@/lib/audio/audioEngine';
 
-// Pick a random root from all 12 keys
 function pickRootMidi(keyFilter = 'all') {
   const pool = keyFilter === 'flat' ? FLAT_KEYS_MIDI : ALL_KEYS_MIDI;
   const midi = pool[Math.floor(Math.random() * pool.length)];
-  return midiToNoteName(midi); // e.g. "C4", "F#3"
+  return midiToNoteName(midi);
 }
 
-export default function ExerciseInterface({ 
+// ─── Legacy shim helpers (avoid importing old AudioEngine.jsx) ────────────────
+function playToneNote(midi, durationSec = 0.6) {
+  playNote(Math.max(21, Math.min(108, midi)), { duration: `${durationSec}s`, velocity: 0.72 });
+}
+
+async function playChordByType(chordType, rootNote) {
+  const rootMidi = noteNameToMidi(rootNote);
+  const chord = CHORD_TYPES.find(c => c.name === chordType);
+  if (!chord) return;
+  playChordMidi(chord.intervals.map(s => rootMidi + s), { duration: '2n', velocity: 0.75, arpeggiate: true });
+}
+
+async function playScaleByType(scaleType, rootNote) {
+  const rootMidi = noteNameToMidi(rootNote);
+  const scale = SCALES.find(s => s.name === scaleType);
+  if (!scale) return [];
+  const notes = [];
+  for (const s of scale.intervals) {
+    playNote(rootMidi + s, { duration: '8n', velocity: 0.7 });
+    notes.push(midiToNoteName(rootMidi + s));
+    await delay(350);
+  }
+  return notes;
+}
+
+export default function ExerciseInterface({
   exerciseType = 'intervals',
   difficulty = 'beginner',
   audioType = 'piano',
@@ -39,6 +68,7 @@ export default function ExerciseInterface({
   keyFilter = 'all',
 }) {
   const { recordAttempt, getWeight } = useItemMastery();
+
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
   const [firstLoad, setFirstLoad] = useState(true);
@@ -51,23 +81,33 @@ export default function ExerciseInterface({
   const [currentBaseNote, setCurrentBaseNote] = useState(null);
   const [currentScaleNotes, setCurrentScaleNotes] = useState([]);
   const [isReplayingCorrect, setIsReplayingCorrect] = useState(false);
-  const [replayHighlight, setReplayHighlight] = useState(null); // 'first', 'second', 'both', or scale index
-  const [showScaleNotes, setShowScaleNotes] = useState(false); // Only show full scale after correct answer
-  const [isPlayingAnimation, setIsPlayingAnimation] = useState(false); // Block next during animation
-  const [showNextButton, setShowNextButton] = useState(false); // Show next button after animation
-  const [highlightChordIndex, setHighlightChordIndex] = useState(null); // Current chord note being highlighted
-  const [highlightAllChord, setHighlightAllChord] = useState(false); // Highlight all chord notes together
+  const [replayHighlight, setReplayHighlight] = useState(null);
+  const [showScaleNotes, setShowScaleNotes] = useState(false);
+  const [isPlayingAnimation, setIsPlayingAnimation] = useState(false);
+  const [showNextButton, setShowNextButton] = useState(false);
+  const [highlightChordIndex, setHighlightChordIndex] = useState(null);
+  const [highlightAllChord, setHighlightAllChord] = useState(false);
 
+  // ─── Adaptive weighted question generation ────────────────────────────────
   const generateQuestion = useCallback(() => {
-    if (isPracticeMode && questionSupplier) {
-      return questionSupplier();
+    if (isPracticeMode && questionSupplier) return questionSupplier();
+
+    // Try to get a weighted pool; fall back to random if pool unavailable
+    let exercise;
+    const pool = getExercisePool ? getExercisePool(exerciseType, difficulty) : null;
+    if (pool && pool.length > 0) {
+      exercise = weightedPick(pool, (item) => {
+        const itemId = item.chordType || item.scaleType ||
+          (item.semitones !== undefined ? `${item.semitones}st` : String(item.answer));
+        return getWeight(exerciseType, itemId);
+      });
+    } else {
+      exercise = getRandomExercise(exerciseType, difficulty);
     }
-    const exercise = getRandomExercise(exerciseType, difficulty);
+
     if (!exercise) return null;
-    
-    // Use all 12 keys — override fixed baseNote with random key
     const baseNote = pickRootMidi(keyFilter);
-    
+
     return {
       ...exercise,
       correctAnswer: { name: exercise.answer },
@@ -78,17 +118,17 @@ export default function ExerciseInterface({
       playMode: exercise.playMode || 'melodic',
       baseNote,
     };
-  }, [exerciseType, difficulty, isPracticeMode, questionSupplier, keyFilter]);
+  }, [exerciseType, difficulty, isPracticeMode, questionSupplier, keyFilter, getWeight]);
 
   useEffect(() => {
     setCurrentQuestion(generateQuestion());
   }, [generateQuestion]);
 
-  // Keyboard shortcuts: Space=replay, 1-9=answer, Enter=next
+  // ─── Keyboard shortcuts ───────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e) => {
       if (e.code === 'Space') { e.preventDefault(); handlePlaySound(); }
-      if (e.code === 'Enter' && showFeedback) { handleNext(); }
+      if (e.code === 'Enter' && showFeedback) handleNext();
       const num = parseInt(e.key);
       if (!isNaN(num) && num >= 1 && currentQuestion?.options) {
         const opt = currentQuestion.options[num - 1];
@@ -99,300 +139,210 @@ export default function ExerciseInterface({
     return () => window.removeEventListener('keydown', handler);
   }, [showFeedback, hasPlayed, currentQuestion]);
 
-  // Auto-play on first question load
+  // ─── MIDI input wiring ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!currentQuestion || showFeedback || !hasPlayed) return;
+
+    let pendingNotes = [];
+
+    const unsub = subscribeNoteOn(({ midi }) => {
+      if (showFeedback || !hasPlayed) return;
+
+      if (exerciseType === 'intervals') {
+        pendingNotes.push(midi);
+        if (pendingNotes.length === 2) {
+          const semitones = Math.abs(pendingNotes[1] - pendingNotes[0]);
+          const match = currentQuestion.options.find(o => {
+            const iv = INTERVALS_MAP[o.name];
+            return iv !== undefined && iv === semitones;
+          });
+          if (match) handleAnswer(match);
+          pendingNotes = [];
+        }
+      } else if (exerciseType === 'chords') {
+        pendingNotes.push(midi % 12);
+        clearTimeout(pendingNotes._timer);
+        pendingNotes._timer = setTimeout(() => {
+          if (pendingNotes.length >= 3) {
+            const pcs = new Set(pendingNotes.map(n => n % 12));
+            const match = currentQuestion.options.find(o => {
+              const chord = CHORD_TYPES.find(c => c.name === o.name);
+              if (!chord) return false;
+              const rootPc = noteNameToMidi(currentBaseNote) % 12;
+              return chord.intervals.every(s => pcs.has((rootPc + s) % 12));
+            });
+            if (match) handleAnswer(match);
+          }
+          pendingNotes = [];
+        }, 600);
+      }
+    });
+
+    return unsub;
+  }, [currentQuestion, showFeedback, hasPlayed, exerciseType, currentBaseNote]);
+
+  // ─── Auto-play first question ─────────────────────────────────────────────
   useEffect(() => {
     if (firstLoad && currentQuestion && questionNumber === 1) {
-      const timer = setTimeout(() => {
-        handlePlaySound();
-        setFirstLoad(false);
-      }, 500);
-      return () => clearTimeout(timer);
+      const t = setTimeout(() => { handlePlaySound(); setFirstLoad(false); }, 500);
+      return () => clearTimeout(t);
     }
   }, [firstLoad, currentQuestion, questionNumber]);
 
   const handlePlaySound = async () => {
     if (isPlaying || !currentQuestion) return;
-    
-    initAudioContext();
     setIsPlaying(true);
     setHasPlayed(true);
 
-    // Play I–IV–V–I cadence as context if enabled
     if (playInContext && currentBaseNote) {
-      const { noteNameToMidi } = await import('@/lib/audio/audioEngine');
       const rootMidi = noteNameToMidi(currentBaseNote || currentQuestion.baseNote);
       await playCadence(rootMidi - 12, 0.45);
-      await new Promise(r => setTimeout(r, 200));
+      await delay(200);
     }
 
-    // Use the baseNote from the exercise data, or fall back to stored/random
     const noteToUse = currentBaseNote || currentQuestion.baseNote;
-    let baseNote;
-    
+    let baseNote = noteToUse;
+
     if (exerciseType === 'intervals') {
-      const playMode = currentQuestion.playMode || 'melodic';
-      baseNote = await playInterval(currentQuestion.semitones, audioType, playMode, noteToUse);
+      const rootMidi = noteNameToMidi(noteToUse);
+      const mode = currentQuestion.playMode === 'harmonic' ? 'harmonic' : 'melodic-asc';
+      await _playInterval(rootMidi, currentQuestion.semitones, { mode });
     } else if (exerciseType === 'chords') {
-      baseNote = await playChord(currentQuestion.chordType, audioType, noteToUse);
+      await playChordByType(currentQuestion.chordType, noteToUse);
     } else if (exerciseType === 'scales') {
-      const { playedNotes, baseNote: scaleBaseNote } = await playScale(currentQuestion.scaleType, audioType, noteToUse);
-      baseNote = scaleBaseNote;
-      setCurrentScaleNotes(playedNotes);
-    }
-    
-    // Always store the base note (only set once per question via noteToUse logic)
-    if (!currentBaseNote) {
-      setCurrentBaseNote(baseNote);
+      const notes = await playScaleByType(currentQuestion.scaleType, noteToUse);
+      setCurrentScaleNotes(notes);
     }
 
+    if (!currentBaseNote) setCurrentBaseNote(baseNote);
     setTimeout(() => setIsPlaying(false), exerciseType === 'scales' ? 3500 : 1500);
   };
 
+  // ─── Answer replay animations ─────────────────────────────────────────────
   const replayIntervalAnimation = async (semitones, baseNote, showFeedbackAfter = true) => {
     setIsPlayingAnimation(true);
     setIsReplayingCorrect(true);
-    
-    const baseFreq = getNoteFrequency(baseNote, 0);
-    const secondFreq = getNoteFrequency(baseNote, semitones);
-    
-    // Small delay before starting
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // 1. Melodic Forward: First note → Second note
-    setReplayHighlight('first');
-    playTone(baseFreq, 0.6, audioType);
-    await new Promise(resolve => setTimeout(resolve, 700));
-    
-    setReplayHighlight('second');
-    playTone(secondFreq, 0.6, audioType);
-    await new Promise(resolve => setTimeout(resolve, 700));
-    
-    // Brief pause
-    setReplayHighlight(null);
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
-    // 2. Melodic Backward: Second note → First note
-    setReplayHighlight('second');
-    playTone(secondFreq, 0.6, audioType);
-    await new Promise(resolve => setTimeout(resolve, 700));
-    
-    setReplayHighlight('first');
-    playTone(baseFreq, 0.6, audioType);
-    await new Promise(resolve => setTimeout(resolve, 700));
-    
-    // Brief pause
-    setReplayHighlight(null);
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
-    // 3. Harmonic: Both notes together
+    const rootMidi = noteNameToMidi(baseNote);
+    const topMidi  = rootMidi + semitones;
+
+    await delay(300);
+    setReplayHighlight('first');  playToneNote(rootMidi, 0.6); await delay(700);
+    setReplayHighlight('second'); playToneNote(topMidi, 0.6);  await delay(700);
+    setReplayHighlight(null); await delay(400);
+    setReplayHighlight('second'); playToneNote(topMidi, 0.6);  await delay(700);
+    setReplayHighlight('first');  playToneNote(rootMidi, 0.6); await delay(700);
+    setReplayHighlight(null); await delay(400);
     setReplayHighlight('both');
-    playTone(baseFreq, 1.2, audioType);
-    playTone(secondFreq, 1.2, audioType);
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    
-    setIsReplayingCorrect(false);
-    setReplayHighlight(null);
-    setIsPlayingAnimation(false);
-    if (showFeedbackAfter) {
-      setShowFeedback(true);
-      setShowNextButton(true);
-    }
+    playToneNote(rootMidi, 1.2); playToneNote(topMidi, 1.2);
+    await delay(1200);
+    setIsReplayingCorrect(false); setReplayHighlight(null); setIsPlayingAnimation(false);
+    if (showFeedbackAfter) { setShowFeedback(true); setShowNextButton(true); }
   };
 
   const replayChordAnimation = async (chordType, baseNote, showFeedbackAfter = true) => {
     setIsPlayingAnimation(true);
     setIsReplayingCorrect(true);
-
     const chord = CHORD_TYPES.find(c => c.name === chordType);
     if (!chord) {
-      setIsPlayingAnimation(false);
-      setIsReplayingCorrect(false);
-      if (showFeedbackAfter) {
-        setShowFeedback(true);
-        setShowNextButton(true);
-      }
+      setIsPlayingAnimation(false); setIsReplayingCorrect(false);
+      if (showFeedbackAfter) { setShowFeedback(true); setShowNextButton(true); }
       return;
     }
-
-    // Small delay before starting
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    // Play each note melodically with highlight
+    const rootMidi = noteNameToMidi(baseNote);
+    await delay(300);
     for (let i = 0; i < chord.intervals.length; i++) {
-      const semitones = chord.intervals[i];
-      const freq = getNoteFrequency(baseNote, semitones);
-
       setHighlightChordIndex(i);
-      playTone(freq, 0.5, audioType);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      playToneNote(rootMidi + chord.intervals[i], 0.5);
+      await delay(500);
     }
-
-    // Brief pause before harmonic
-    setHighlightChordIndex(null);
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    // Play all notes together (harmonic)
+    setHighlightChordIndex(null); await delay(300);
     setHighlightAllChord(true);
-    chord.intervals.forEach(semitones => {
-      const freq = getNoteFrequency(baseNote, semitones);
-      playTone(freq, 1.2, audioType);
-    });
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    setHighlightAllChord(false);
-    setHighlightChordIndex(null);
-    setIsReplayingCorrect(false);
-    setIsPlayingAnimation(false);
-
-    if (showFeedbackAfter) {
-      setShowFeedback(true);
-      setShowNextButton(true);
-    }
+    chord.intervals.forEach(s => playToneNote(rootMidi + s, 1.2));
+    await delay(1000);
+    setHighlightAllChord(false); setHighlightChordIndex(null);
+    setIsReplayingCorrect(false); setIsPlayingAnimation(false);
+    if (showFeedbackAfter) { setShowFeedback(true); setShowNextButton(true); }
   };
 
   const replayScaleAnimation = async (scaleType, baseNote, showFeedbackAfter = true) => {
     setIsPlayingAnimation(true);
     setIsReplayingCorrect(true);
     setShowScaleNotes(true);
-    
-    // Get scale intervals for synchronized playback
-    const scale = await import('../audio/AudioEngine').then(m => m.SCALES.find(s => s.name === scaleType));
-    if (!scale) return;
-    
-    const playedNotes = [];
+    const scale = SCALES.find(s => s.name === scaleType);
+    if (!scale) { setIsPlayingAnimation(false); setIsReplayingCorrect(false); return; }
+    const rootMidi = noteNameToMidi(baseNote);
+    const played = [];
     for (let i = 0; i < scale.intervals.length; i++) {
-      const semitones = scale.intervals[i];
-      const freq = getNoteFrequency(baseNote, semitones);
-      
-      // Get note name for display
-      const allNotes = ['C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3', 'A#3', 'B3',
-                        'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4',
-                        'C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5', 'A5'];
-      const baseIndex = allNotes.indexOf(baseNote);
-      const noteName = allNotes[baseIndex + semitones];
-      if (noteName) playedNotes.push(noteName);
-      
-      // Update notes and highlight simultaneously with sound
-      setCurrentScaleNotes([...playedNotes]);
+      played.push(midiToNoteName(rootMidi + scale.intervals[i]));
+      setCurrentScaleNotes([...played]);
       setReplayHighlight(i);
-      playTone(freq, 0.3, audioType);
-      
-      await new Promise(resolve => setTimeout(resolve, 350));
+      playToneNote(rootMidi + scale.intervals[i], 0.3);
+      await delay(350);
     }
-
-    await new Promise(resolve => setTimeout(resolve, 200));
-    setIsReplayingCorrect(false);
-    setReplayHighlight(null);
-    setIsPlayingAnimation(false);
-    if (showFeedbackAfter) {
-      setShowFeedback(true);
-      setShowNextButton(true);
-    }
+    await delay(200);
+    setIsReplayingCorrect(false); setReplayHighlight(null); setIsPlayingAnimation(false);
+    if (showFeedbackAfter) { setShowFeedback(true); setShowNextButton(true); }
   };
 
+  // ─── Answer handling ──────────────────────────────────────────────────────
   const handleAnswer = (option) => {
     if (showFeedback || !hasPlayed || isReplayingCorrect) return;
-
     setSelectedAnswer(option);
     const correct = option.name === currentQuestion.correctAnswer.name;
     setIsCorrect(correct);
 
-    // Record chord attempt for adaptive learning
-    if (exerciseType === 'chords' && onChordAttempt && currentQuestion.chordType) {
+    if (exerciseType === 'chords' && onChordAttempt && currentQuestion.chordType)
       onChordAttempt(currentQuestion.chordType, correct);
-    }
 
-    // SM-2 record
-    const itemId = currentQuestion.chordType || currentQuestion.scaleType || 
-                   (currentQuestion.semitones !== undefined ? `${currentQuestion.semitones}st` : 'unknown');
+    const itemId = currentQuestion.chordType || currentQuestion.scaleType ||
+      (currentQuestion.semitones !== undefined ? `${currentQuestion.semitones}st` : 'unknown');
     recordAttempt(exerciseType, itemId, correct);
 
     if (correct) {
-      if (!isPracticeMode) {
-        setCorrectCount(prev => prev + 1);
-        onXPEarned?.(10);
-      }
-      // Immediately show the second note highlight
+      if (!isPracticeMode) { setCorrectCount(prev => prev + 1); onXPEarned?.(10); }
       setReplayHighlight('both');
-      // Replay animation before showing feedback
-      if (exerciseType === 'intervals' && currentBaseNote) {
+      if (exerciseType === 'intervals' && currentBaseNote)
         replayIntervalAnimation(currentQuestion.semitones, currentBaseNote, true);
-      } else if (exerciseType === 'scales' && currentBaseNote) {
+      else if (exerciseType === 'scales' && currentBaseNote)
         replayScaleAnimation(currentQuestion.scaleType, currentBaseNote, true);
-      } else if (exerciseType === 'chords' && currentBaseNote) {
+      else if (exerciseType === 'chords' && currentBaseNote)
         replayChordAnimation(currentQuestion.chordType, currentBaseNote, true);
-      } else {
-        setShowFeedback(true);
-        setShowNextButton(true);
-      }
+      else { setShowFeedback(true); setShowNextButton(true); }
     } else {
-      setShowFeedback(true);
-      setShowNextButton(true);
+      setShowFeedback(true); setShowNextButton(true);
     }
   };
 
   const proceedToNext = async () => {
     if (!isPracticeMode && questionNumber >= questionsCount) {
       const accuracy = Math.round((correctCount / questionsCount) * 100);
-      const bonusXP = accuracy === 100 ? 10 : 0;
-      onComplete?.({
-        correct: correctCount,
-        total: questionsCount,
-        accuracy,
-        xpEarned: correctCount * 10 + bonusXP,
-      });
+      onComplete?.({ correct: correctCount, total: questionsCount, accuracy, xpEarned: correctCount * 10 + (accuracy === 100 ? 10 : 0) });
       return;
     }
-
     setQuestionNumber(prev => prev + 1);
-    if (isPracticeMode && questionSupplier) {
-      setCurrentQuestion(questionSupplier());
-    } else {
-      setCurrentQuestion(generateQuestion());
-    }
-    setSelectedAnswer(null);
-    setIsCorrect(null);
-    setShowFeedback(false);
-    setHasPlayed(false);
-    setCurrentBaseNote(null);
-    setCurrentScaleNotes([]);
-    setShowScaleNotes(false);
-    setShowNextButton(false);
-    setHighlightChordIndex(null);
-    setHighlightAllChord(false);
-
-    // Auto-play interval sounds when moving to next question
-    if (exerciseType === 'intervals') {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      handlePlaySound();
-    }
+    setCurrentQuestion(isPracticeMode && questionSupplier ? questionSupplier() : generateQuestion());
+    setSelectedAnswer(null); setIsCorrect(null); setShowFeedback(false);
+    setHasPlayed(false); setCurrentBaseNote(null); setCurrentScaleNotes([]);
+    setShowScaleNotes(false); setShowNextButton(false);
+    setHighlightChordIndex(null); setHighlightAllChord(false);
+    if (exerciseType === 'intervals') { await delay(300); handlePlaySound(); }
   };
 
   const handleNext = async () => {
     if (isPlayingAnimation) return;
-    
-    // If incorrect, play the correct answer animation first
     if (!isCorrect && currentBaseNote) {
-      if (exerciseType === 'intervals') {
-        await replayIntervalAnimation(currentQuestion.semitones, currentBaseNote, false);
-      } else if (exerciseType === 'scales') {
-        await replayScaleAnimation(currentQuestion.scaleType, currentBaseNote, false);
-      } else if (exerciseType === 'chords') {
-        await replayChordAnimation(currentQuestion.chordType, currentBaseNote, false);
-      }
+      if (exerciseType === 'intervals') await replayIntervalAnimation(currentQuestion.semitones, currentBaseNote, false);
+      else if (exerciseType === 'scales') await replayScaleAnimation(currentQuestion.scaleType, currentBaseNote, false);
+      else if (exerciseType === 'chords') await replayChordAnimation(currentQuestion.chordType, currentBaseNote, false);
     }
-    
     proceedToNext();
   };
 
   if (!currentQuestion) return null;
-
   const progress = ((questionNumber - 1) / questionsCount) * 100;
 
   return (
     <div className="w-full max-w-2xl mx-auto px-1">
-      {/* Progress Header (hidden in practice mode) */}
       {!isPracticeMode && (
         <div className="mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-2">
@@ -403,55 +353,43 @@ export default function ExerciseInterface({
         </div>
       )}
 
-      {/* Audio Player */}
       <Card className="mb-3 sm:mb-4 border-0 shadow-xl bg-gradient-to-br from-[#0A1A2F] to-[#243B73]">
         <CardContent className="p-3 sm:p-4">
-          <div className="flex items-center justify-center relative">
+          <div className="flex items-center justify-center">
             <div className="flex items-center gap-4">
               <motion.button
                 onClick={handlePlaySound}
                 disabled={isPlaying}
                 className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-all shrink-0 ${
-                  isPlaying 
-                    ? 'bg-[#3E82FC] scale-110' 
-                    : 'bg-white/10 hover:bg-white/20'
+                  isPlaying ? 'bg-[#3E82FC] scale-110' : 'bg-white/10 hover:bg-white/20'
                 }`}
                 whileTap={{ scale: 0.95 }}
               >
-                {isPlaying ? (
-                  <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-pulse" />
-                ) : (
-                  <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" />
-                )}
+                {isPlaying
+                  ? <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-pulse" />
+                  : <Play className="w-5 h-5 sm:w-6 sm:h-6 text-white ml-0.5" />}
               </motion.button>
               <div className="flex flex-col">
                 <p className="text-white font-semibold text-base">
                   {exerciseType === 'intervals' ? 'What interval do you hear?' :
-                   exerciseType === 'chords' ? 'What chord do you hear?' :
-                   exerciseType === 'scales' ? 'What scale do you hear?' :
-                   'Listen and identify:'}
+                   exerciseType === 'chords'    ? 'What chord do you hear?' :
+                   exerciseType === 'scales'    ? 'What scale do you hear?' : 'Listen and identify:'}
                 </p>
                 {hasPlayed && (
-                  <button 
-                    onClick={handlePlaySound}
-                    className="text-white/70 hover:text-white text-xs flex items-center gap-1 mt-1"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    Tap to replay
+                  <button onClick={handlePlaySound} className="text-white/70 hover:text-white text-xs flex items-center gap-1 mt-1">
+                    <RotateCcw className="w-3 h-3" /> Tap to replay
                   </button>
                 )}
               </div>
             </div>
-
           </div>
         </CardContent>
       </Card>
 
-      {/* Piano Keyboard Visualization */}
       {(exerciseType === 'intervals' || exerciseType === 'scales' || exerciseType === 'chords') && hasPlayed && currentBaseNote && (
         <div className="mb-6 sm:mb-8 pb-6">
-          <PianoKeyboard 
-            baseNote={currentBaseNote} 
+          <PianoKeyboard
+            baseNote={currentBaseNote}
             semitones={exerciseType === 'intervals' ? currentQuestion?.semitones : undefined}
             scaleNotes={exerciseType === 'scales' && showScaleNotes ? currentScaleNotes : undefined}
             chordType={exerciseType === 'chords' ? currentQuestion?.chordType : undefined}
@@ -467,48 +405,35 @@ export default function ExerciseInterface({
         </div>
       )}
 
-      {/* Answer Options */}
       <div className="text-center mb-3">
         <p className="text-sm sm:text-base font-medium text-[#0A1A2F] dark:text-white">
-          Choose the correct {exerciseType === 'intervals' ? 'interval' :
-           exerciseType === 'chords' ? 'chord' :
-           exerciseType === 'scales' ? 'scale' : 'answer'}:
+          Choose the correct {exerciseType === 'intervals' ? 'interval' : exerciseType === 'chords' ? 'chord' : exerciseType === 'scales' ? 'scale' : 'answer'}:
         </p>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6">
         <AnimatePresence>
           {currentQuestion.options.map((option, index) => {
-            const isSelected = selectedAnswer?.name === option.name;
+            const isSelected      = selectedAnswer?.name === option.name;
             const isCorrectAnswer = showFeedback && option.name === currentQuestion.correctAnswer.name;
-            const isWrongSelection = showFeedback && isSelected && !isCorrect;
-            const isSelectedBeforeFeedback = isSelected && !showFeedback && !isReplayingCorrect;
-
+            const isWrongSel      = showFeedback && isSelected && !isCorrect;
+            const isPreFeedback   = isSelected && !showFeedback && !isReplayingCorrect;
             return (
-              <motion.div
-                key={option.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
+              <motion.div key={option.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
                 <Button
                   variant="outline"
                   onClick={() => handleAnswer(option)}
                   disabled={showFeedback || !hasPlayed || isReplayingCorrect}
                   className={`w-full h-12 sm:h-14 text-sm sm:text-base font-medium transition-all ${
-                    !hasPlayed 
-                      ? 'opacity-50 cursor-not-allowed'
-                      : isCorrectAnswer
-                        ? 'bg-[#2A9D8F] border-[#2A9D8F] text-white hover:bg-[#2A9D8F]'
-                        : isWrongSelection
-                          ? 'bg-[#E76F51] border-[#E76F51] text-white hover:bg-[#E76F51]'
-                          : isSelectedBeforeFeedback
-                            ? 'bg-[#3E82FC] border-[#3E82FC] text-white'
-                            : 'hover:border-[#3E82FC] hover:bg-[#3E82FC]/10'
+                    !hasPlayed        ? 'opacity-50 cursor-not-allowed' :
+                    isCorrectAnswer   ? 'bg-[#2A9D8F] border-[#2A9D8F] text-white hover:bg-[#2A9D8F]' :
+                    isWrongSel        ? 'bg-[#E76F51] border-[#E76F51] text-white hover:bg-[#E76F51]' :
+                    isPreFeedback     ? 'bg-[#3E82FC] border-[#3E82FC] text-white' :
+                    'hover:border-[#3E82FC] hover:bg-[#3E82FC]/10'
                   }`}
                 >
                   {option.name}
                   {isCorrectAnswer && <CheckCircle2 className="w-5 h-5 ml-2" />}
-                  {isWrongSelection && <XCircle className="w-5 h-5 ml-2" />}
+                  {isWrongSel      && <XCircle className="w-5 h-5 ml-2" />}
                 </Button>
               </motion.div>
             );
@@ -516,41 +441,23 @@ export default function ExerciseInterface({
         </AnimatePresence>
       </div>
 
-      {/* Feedback & Next */}
       <AnimatePresence>
         {showFeedback && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
             <Card className={`border-2 ${isCorrect ? 'border-[#2A9D8F] bg-[#2A9D8F]/10' : 'border-[#E76F51] bg-[#E76F51]/10'}`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    {isCorrect ? (
-                      <CheckCircle2 className="w-6 h-6 text-[#2A9D8F]" />
-                    ) : (
-                      <XCircle className="w-6 h-6 text-[#E76F51]" />
-                    )}
+                    {isCorrect ? <CheckCircle2 className="w-6 h-6 text-[#2A9D8F]" /> : <XCircle className="w-6 h-6 text-[#E76F51]" />}
                     <div>
                       <p className={`font-semibold ${isCorrect ? 'text-[#2A9D8F]' : 'text-[#E76F51]'}`}>
                         {isCorrect ? 'Correct!' : 'Not quite'}
                       </p>
-                      {!isCorrect && (
-                        <p className="text-sm text-muted-foreground">
-                          The answer was: {currentQuestion.correctAnswer.name}
-                        </p>
-                      )}
+                      {!isCorrect && <p className="text-sm text-muted-foreground">The answer was: {currentQuestion.correctAnswer.name}</p>}
                     </div>
                   </div>
-                  <Button
-                    onClick={handleNext}
-                    disabled={isPlayingAnimation}
-                    className="bg-[#3E82FC] hover:bg-[#243B73] text-white"
-                  >
-                    Next
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button onClick={handleNext} disabled={isPlayingAnimation} className="bg-[#3E82FC] hover:bg-[#243B73] text-white">
+                    Next <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </CardContent>
@@ -567,3 +474,10 @@ export default function ExerciseInterface({
     </div>
   );
 }
+
+// Interval semitone lookup for MIDI matching
+const INTERVALS_MAP = {
+  'Unison': 0, 'Minor 2nd': 1, 'Major 2nd': 2, 'Minor 3rd': 3, 'Major 3rd': 4,
+  'Perfect 4th': 5, 'Tritone': 6, 'Perfect 5th': 7, 'Minor 6th': 8,
+  'Major 6th': 9, 'Minor 7th': 10, 'Major 7th': 11, 'Octave': 12,
+};

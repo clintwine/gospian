@@ -17,7 +17,9 @@ import {
   GraduationCap,
   Users,
   Crown,
-  BookOpen
+  BookOpen,
+  Target,
+  Radio
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -80,8 +82,8 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Friends', icon: Users, path: 'Friends' },
     { name: 'Profile', icon: User, path: 'Profile' },
     { name: 'Gospel', icon: Music2, path: 'GospelProgressions' },
-    { name: 'Weaknesses', icon: Trophy, path: 'WeaknessDashboard' },
-    { name: 'Drone', icon: Music2, path: 'DroneMode' },
+    { name: 'Weaknesses', icon: Target, path: 'WeaknessDashboard' },
+    { name: 'Drone', icon: Radio, path: 'DroneMode' },
   ];
 
   const teacherItems = user?.role === 'admin' ? [

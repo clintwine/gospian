@@ -79,6 +79,9 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import TermsOfService from './pages/TermsOfService';
 import Training from './pages/Training';
 import WeeklyChallenge from './pages/WeeklyChallenge';
+import GospelProgressions from './pages/GospelProgressions';
+import DroneMode from './pages/DroneMode';
+import WeaknessDashboard from './pages/WeaknessDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -115,6 +118,9 @@ export const PAGES = {
     "TermsOfService": TermsOfService,
     "Training": Training,
     "WeeklyChallenge": WeeklyChallenge,
+    "GospelProgressions": GospelProgressions,
+    "DroneMode": DroneMode,
+    "WeaknessDashboard": WeaknessDashboard,
 }
 
 export const pagesConfig = {

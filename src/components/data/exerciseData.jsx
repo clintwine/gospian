@@ -497,6 +497,58 @@ export const scaleExercises = [
   },
 ];
 
+/**
+ * Returns the full pool of exercise items for a given type+level, suitable
+ * for weighted picking by useItemMastery. Each item has a stable `itemId`.
+ */
+export const getExercisePool = (type, level) => {
+  let exercises = [];
+
+  if (type === 'intervals') {
+    exercises = intervalExercises.filter(e => !level || level === 'all' || e.level === level);
+    if (expandedIntervals[level]) {
+      expandedIntervals[level].forEach(interval => {
+        exercises.push({
+          type: 'intervals', level,
+          answer: interval.name,
+          semitones: interval.semitones,
+          options: generateIntervalOptions(interval.name, level),
+          playMode: 'melodic',
+          baseNote: 'C4',
+        });
+      });
+    }
+  } else if (type === 'chords') {
+    exercises = chordExercises.filter(e => !level || level === 'all' || e.level === level);
+    if (expandedChords[level]) {
+      expandedChords[level].forEach(chord => {
+        exercises.push({
+          type: 'chords', level,
+          answer: chord.name,
+          chordType: chord.name,
+          options: generateChordOptions(chord.name, level),
+          baseNote: 'C4',
+        });
+      });
+    }
+  } else if (type === 'scales') {
+    exercises = scaleExercises.filter(e => !level || level === 'all' || e.level === level);
+    if (expandedScales[level]) {
+      expandedScales[level].forEach(scale => {
+        exercises.push({
+          type: 'scales', level,
+          answer: scale.name,
+          scaleType: scale.name,
+          options: generateScaleOptions(scale.name, level),
+          baseNote: 'C4',
+        });
+      });
+    }
+  }
+
+  return exercises;
+};
+
 // Helper function to get exercises by type and level
 export const getExercises = (type, level) => {
   let exercises = [];

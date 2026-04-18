@@ -1,77 +1,111 @@
 /**
  * Gospian Audio Engine - Singleton
- * Sample-based audio using Tone.js + Salamander Grand Piano
+ * Sample-based audio using Tone.js.
  * All audio in the app MUST go through this module.
- * No createOscillator or new AudioContext anywhere else.
  */
 import * as Tone from 'tone';
 
-// ─── Piano sample URLs (midi-js-soundfonts, acoustic_grand_piano) ─────────────
-// Using a reliable, CORS-friendly CDN instead of tonejs.github.io
-const SF_BASE = 'https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/acoustic_grand_piano-mp3/';
+// ─── Sample sources ───────────────────────────────────────────────────────────
+// We use the gleitz midi-js-soundfonts CDN (CORS-friendly, reliable)
+const SF_CDN = 'https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/';
 
-// Notes available in the soundfont (every 3 semitones roughly, all octaves)
-const SF_NOTES = [
-  'A0','Bb0','B0',
-  'C1','Db1','D1','Eb1','E1','F1','Gb1','G1','Ab1','A1','Bb1','B1',
-  'C2','Db2','D2','Eb2','E2','F2','Gb2','G2','Ab2','A2','Bb2','B2',
-  'C3','Db3','D3','Eb3','E3','F3','Gb3','G3','Ab3','A3','Bb3','B3',
-  'C4','Db4','D4','Eb4','E4','F4','Gb4','G4','Ab4','A4','Bb4','B4',
-  'C5','Db5','D5','Eb5','E5','F5','Gb5','G5','Ab5','A5','Bb5','B5',
-  'C6','Db6','D6','Eb6','E6','F6','Gb6','G6','Ab6','A6','Bb6','B6',
-  'C7','Db7','D7','Eb7','E7','F7','Gb7','G7','Ab7','A7','Bb7','B7',
-  'C8'
-];
+// Notes we load for each instrument (sparse set — Tone.Sampler interpolates between them)
+const PIANO_NOTES = {
+  'A0': `${SF_CDN}acoustic_grand_piano-mp3/A0.mp3`,
+  'C2': `${SF_CDN}acoustic_grand_piano-mp3/C2.mp3`,
+  'Ds2': `${SF_CDN}acoustic_grand_piano-mp3/Ds2.mp3`,
+  'Fs2': `${SF_CDN}acoustic_grand_piano-mp3/Fs2.mp3`,
+  'A2': `${SF_CDN}acoustic_grand_piano-mp3/A2.mp3`,
+  'C3': `${SF_CDN}acoustic_grand_piano-mp3/C3.mp3`,
+  'Ds3': `${SF_CDN}acoustic_grand_piano-mp3/Ds3.mp3`,
+  'Fs3': `${SF_CDN}acoustic_grand_piano-mp3/Fs3.mp3`,
+  'A3': `${SF_CDN}acoustic_grand_piano-mp3/A3.mp3`,
+  'C4': `${SF_CDN}acoustic_grand_piano-mp3/C4.mp3`,
+  'Ds4': `${SF_CDN}acoustic_grand_piano-mp3/Ds4.mp3`,
+  'Fs4': `${SF_CDN}acoustic_grand_piano-mp3/Fs4.mp3`,
+  'A4': `${SF_CDN}acoustic_grand_piano-mp3/A4.mp3`,
+  'C5': `${SF_CDN}acoustic_grand_piano-mp3/C5.mp3`,
+  'Ds5': `${SF_CDN}acoustic_grand_piano-mp3/Ds5.mp3`,
+  'Fs5': `${SF_CDN}acoustic_grand_piano-mp3/Fs5.mp3`,
+  'A5': `${SF_CDN}acoustic_grand_piano-mp3/A5.mp3`,
+  'C6': `${SF_CDN}acoustic_grand_piano-mp3/C6.mp3`,
+  'Ds6': `${SF_CDN}acoustic_grand_piano-mp3/Ds6.mp3`,
+  'Fs6': `${SF_CDN}acoustic_grand_piano-mp3/Fs6.mp3`,
+  'A6': `${SF_CDN}acoustic_grand_piano-mp3/A6.mp3`,
+  'C7': `${SF_CDN}acoustic_grand_piano-mp3/C7.mp3`,
+  'C8': `${SF_CDN}acoustic_grand_piano-mp3/C8.mp3`,
+};
 
-function buildSalamanderUrls() {
-  const urls = {};
-  SF_NOTES.forEach(n => {
-    urls[n] = `${SF_BASE}${n}.mp3`;
-  });
-  return urls;
-}
+const RHODES_NOTES = {
+  'A1': `${SF_CDN}electric_piano_1-mp3/A1.mp3`,
+  'C2': `${SF_CDN}electric_piano_1-mp3/C2.mp3`,
+  'Ds2': `${SF_CDN}electric_piano_1-mp3/Ds2.mp3`,
+  'Fs2': `${SF_CDN}electric_piano_1-mp3/Fs2.mp3`,
+  'A2': `${SF_CDN}electric_piano_1-mp3/A2.mp3`,
+  'C3': `${SF_CDN}electric_piano_1-mp3/C3.mp3`,
+  'Ds3': `${SF_CDN}electric_piano_1-mp3/Ds3.mp3`,
+  'Fs3': `${SF_CDN}electric_piano_1-mp3/Fs3.mp3`,
+  'A3': `${SF_CDN}electric_piano_1-mp3/A3.mp3`,
+  'C4': `${SF_CDN}electric_piano_1-mp3/C4.mp3`,
+  'Ds4': `${SF_CDN}electric_piano_1-mp3/Ds4.mp3`,
+  'Fs4': `${SF_CDN}electric_piano_1-mp3/Fs4.mp3`,
+  'A4': `${SF_CDN}electric_piano_1-mp3/A4.mp3`,
+  'C5': `${SF_CDN}electric_piano_1-mp3/C5.mp3`,
+  'Ds5': `${SF_CDN}electric_piano_1-mp3/Ds5.mp3`,
+  'A5': `${SF_CDN}electric_piano_1-mp3/A5.mp3`,
+  'C6': `${SF_CDN}electric_piano_1-mp3/C6.mp3`,
+};
+
+const ORGAN_NOTES = {
+  'C2': `${SF_CDN}drawbar_organ-mp3/C2.mp3`,
+  'Ds2': `${SF_CDN}drawbar_organ-mp3/Ds2.mp3`,
+  'Fs2': `${SF_CDN}drawbar_organ-mp3/Fs2.mp3`,
+  'A2': `${SF_CDN}drawbar_organ-mp3/A2.mp3`,
+  'C3': `${SF_CDN}drawbar_organ-mp3/C3.mp3`,
+  'Ds3': `${SF_CDN}drawbar_organ-mp3/Ds3.mp3`,
+  'Fs3': `${SF_CDN}drawbar_organ-mp3/Fs3.mp3`,
+  'A3': `${SF_CDN}drawbar_organ-mp3/A3.mp3`,
+  'C4': `${SF_CDN}drawbar_organ-mp3/C4.mp3`,
+  'Ds4': `${SF_CDN}drawbar_organ-mp3/Ds4.mp3`,
+  'Fs4': `${SF_CDN}drawbar_organ-mp3/Fs4.mp3`,
+  'A4': `${SF_CDN}drawbar_organ-mp3/A4.mp3`,
+  'C5': `${SF_CDN}drawbar_organ-mp3/C5.mp3`,
+  'Fs5': `${SF_CDN}drawbar_organ-mp3/Fs5.mp3`,
+  'C6': `${SF_CDN}drawbar_organ-mp3/C6.mp3`,
+};
+
+const UPRIGHT_NOTES = {
+  'A0': `${SF_CDN}acoustic_bass-mp3/A0.mp3`,
+  'C2': `${SF_CDN}bright_acoustic_piano-mp3/C2.mp3`,
+  'Ds2': `${SF_CDN}bright_acoustic_piano-mp3/Ds2.mp3`,
+  'Fs2': `${SF_CDN}bright_acoustic_piano-mp3/Fs2.mp3`,
+  'A2': `${SF_CDN}bright_acoustic_piano-mp3/A2.mp3`,
+  'C3': `${SF_CDN}bright_acoustic_piano-mp3/C3.mp3`,
+  'Ds3': `${SF_CDN}bright_acoustic_piano-mp3/Ds3.mp3`,
+  'Fs3': `${SF_CDN}bright_acoustic_piano-mp3/Fs3.mp3`,
+  'A3': `${SF_CDN}bright_acoustic_piano-mp3/A3.mp3`,
+  'C4': `${SF_CDN}bright_acoustic_piano-mp3/C4.mp3`,
+  'Ds4': `${SF_CDN}bright_acoustic_piano-mp3/Ds4.mp3`,
+  'Fs4': `${SF_CDN}bright_acoustic_piano-mp3/Fs4.mp3`,
+  'A4': `${SF_CDN}bright_acoustic_piano-mp3/A4.mp3`,
+  'C5': `${SF_CDN}bright_acoustic_piano-mp3/C5.mp3`,
+  'A5': `${SF_CDN}bright_acoustic_piano-mp3/A5.mp3`,
+  'C6': `${SF_CDN}bright_acoustic_piano-mp3/C6.mp3`,
+};
 
 // ─── Instrument definitions ───────────────────────────────────────────────────
 const INSTRUMENT_DEFS = {
-  piano: {
-    label: 'Grand Piano',
-    urls: buildSalamanderUrls(),
-    baseUrl: '',
-    release: 1,
-    curve: 'exponential',
-  },
-  rhodes: {
-    label: 'Rhodes Electric',
-    // Fallback to a different octave mapping with Salamander (warm + slight chorus)
-    urls: buildSalamanderUrls(),
-    baseUrl: '',
-    release: 0.8,
-    curve: 'exponential',
-    postFx: 'chorus',
-  },
-  organ: {
-    label: 'Hammond B3 Organ',
-    urls: buildSalamanderUrls(),
-    baseUrl: '',
-    release: 0.05,
-    curve: 'linear',
-    postFx: 'organ',
-  },
-  upright: {
-    label: 'Upright Piano',
-    urls: buildSalamanderUrls(),
-    baseUrl: '',
-    release: 0.5,
-    curve: 'exponential',
-  },
+  piano:   { label: 'Grand Piano',       urls: PIANO_NOTES,   release: 1.2,  curve: 'exponential', postFx: null },
+  rhodes:  { label: 'Rhodes Electric',   urls: RHODES_NOTES,  release: 2.5,  curve: 'exponential', postFx: 'chorus' },
+  organ:   { label: 'Hammond B3 Organ',  urls: ORGAN_NOTES,   release: 0.05, curve: 'linear',      postFx: 'organ' },
+  upright: { label: 'Upright Piano',     urls: UPRIGHT_NOTES, release: 0.4,  curve: 'exponential', postFx: null },
 };
 
 // ─── MIDI utilities ───────────────────────────────────────────────────────────
 export const midiToNoteName = (midi) => {
   const names = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
   const octave = Math.floor(midi / 12) - 1;
-  const note = names[midi % 12];
-  return `${note}${octave}`;
+  return `${names[midi % 12]}${octave}`;
 };
 
 export const noteNameToMidi = (name) => {
@@ -81,68 +115,70 @@ export const noteNameToMidi = (name) => {
   return notes[match[1]] + (parseInt(match[2]) + 1) * 12;
 };
 
-// All 12 chromatic root names for exercises
-export const ALL_ROOTS_MIDI = {
-  'C':  60, 'C#': 61, 'Db': 61, 'D':  62, 'D#': 63, 'Eb': 63,
-  'E':  64, 'F':  65, 'F#': 66, 'Gb': 66, 'G':  67, 'G#': 68,
-  'Ab': 68, 'A':  69, 'A#': 70, 'Bb': 70, 'B':  71,
-};
-
-export const FLAT_KEYS_MIDI  = [65,70,63,68,61,66]; // F,Bb,Eb,Ab,Db,Gb
-export const SHARP_KEYS_MIDI = [67,62,69,64,71,66]; // G,D,A,E,B,F#
-export const ALL_KEYS_MIDI   = Object.values(ALL_ROOTS_MIDI).filter((v,i,a)=>a.indexOf(v)===i);
+export const FLAT_KEYS_MIDI  = [65, 70, 63, 68, 61, 66]; // F Bb Eb Ab Db Gb
+export const SHARP_KEYS_MIDI = [67, 62, 69, 64, 71, 66]; // G D A E B F#
+export const ALL_KEYS_MIDI   = [60,61,62,63,64,65,66,67,68,69,70,71]; // C..B in oct4
 
 // ─── Signal chain ─────────────────────────────────────────────────────────────
-let compressor  = null;
-let reverb      = null;
-let limiter     = null;
-let sampler     = null;
-let dronePlayer = null;
-let chorus      = null;
-let organDist   = null;
+let compressor = null;
+let reverb     = null;
+let limiter    = null;
+let sampler    = null;
+let chorus     = null;
+let organDist  = null;
+
+// Sustained drone — using oscillators so it's truly continuous
+let droneOsc   = null;
+let droneGain  = null;
+let droneFilter= null;
 
 let currentInstrument = 'piano';
 let isInitialized     = false;
-let loadProgress      = 0;
-let onProgressCb      = null;
 let audioUnlocked     = false;
 
 function buildChain() {
   compressor = new Tone.Compressor({ threshold: -18, ratio: 4, attack: 0.003, release: 0.25 });
-  reverb     = new Tone.Reverb({ decay: 1.8, wet: 0.18, preDelay: 0.02 });
+  reverb     = new Tone.Reverb({ decay: 1.8, wet: 0.15, preDelay: 0.02 });
   limiter    = new Tone.Limiter(-1);
-  chorus     = new Tone.Chorus(3, 2.5, 0.35).start();
-  organDist  = new Tone.Distortion(0.15);
+  chorus     = new Tone.Chorus(3, 2.5, 0.4).start();
+  organDist  = new Tone.Distortion(0.12);
+
   compressor.connect(reverb);
   reverb.connect(limiter);
   limiter.toDestination();
-}
 
-function samplerInput(instrumentKey) {
-  if (instrumentKey === 'rhodes') return chorus;
-  if (instrumentKey === 'organ')  return organDist;
-  return compressor;
+  // Rhodes: sampler → chorus → compressor
+  chorus.connect(compressor);
+  // Organ: sampler → organDist → compressor
+  organDist.connect(compressor);
 }
 
 async function buildSampler(instrumentKey) {
   const def = INSTRUMENT_DEFS[instrumentKey] || INSTRUMENT_DEFS.piano;
 
+  // Convert note names to what Tone.Sampler expects (e.g. Ds4 → D#4)
+  const toneUrls = {};
+  Object.entries(def.urls).forEach(([k, v]) => {
+    const key = k.replace('s', '#'); // Ds4 → D#4
+    toneUrls[key] = v;
+  });
+
   return new Promise((resolve, reject) => {
     const s = new Tone.Sampler({
-      urls:    def.urls,
-      baseUrl: def.baseUrl,
+      urls:    toneUrls,
       release: def.release,
       curve:   def.curve,
       onload:  () => resolve(s),
-      onerror: reject,
+      onerror: (e) => {
+        console.warn('Sampler load error (some samples may be missing):', e);
+        resolve(s); // resolve anyway — Tone interpolates from what loaded
+      },
     });
-    // Route rhodes/organ through their FX first
+
     if (instrumentKey === 'rhodes') {
       s.connect(chorus);
-      chorus.connect(compressor);
     } else if (instrumentKey === 'organ') {
       s.connect(organDist);
-      organDist.connect(compressor);
     } else {
       s.connect(compressor);
     }
@@ -151,55 +187,46 @@ async function buildSampler(instrumentKey) {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-/** Call once on first user gesture — resumes AudioContext for iOS */
 export async function init(progressCallback) {
   if (isInitialized) return;
-  onProgressCb = progressCallback || null;
   await Tone.start();
   audioUnlocked = true;
 
   buildChain();
+  await reverb.ready;
 
-  await reverb.ready; // pre-compute impulse
-
-  loadProgress = 0;
-  if (onProgressCb) onProgressCb(5);
-
+  progressCallback?.(10);
   sampler = await buildSampler(currentInstrument);
-  loadProgress = 100;
-  if (onProgressCb) onProgressCb(100);
+  progressCallback?.(100);
 
   isInitialized = true;
 }
 
-export function isReady() { return isInitialized && !!sampler; }
+export function isReady()        { return isInitialized && !!sampler; }
 export function isAudioUnlocked() { return audioUnlocked; }
 
-/** Switch instrument without reloading the page */
 export async function loadInstrument(name) {
-  if (!isInitialized) return;
+  if (!INSTRUMENT_DEFS[name]) return;
   if (name === currentInstrument && sampler) return;
   const old = sampler;
   currentInstrument = name;
   sampler = await buildSampler(name);
-  if (old) old.dispose();
+  if (old) { try { old.dispose(); } catch {} }
 }
 
 export function getCurrentInstrument() { return currentInstrument; }
 
-/** Humanize velocity */
 function hv(base = 0.75) {
   return Math.min(1, Math.max(0.05, base + (Math.random() - 0.5) * 0.16));
 }
 
-/** Play a single note by MIDI number */
-export function playNote(midi, { duration = '2n', velocity = 0.75, time = Tone.now() } = {}) {
+export function playNote(midi, { duration = '2n', velocity = 0.75, time } = {}) {
   if (!sampler) return;
   const note = midiToNoteName(Math.max(21, Math.min(108, midi)));
-  sampler.triggerAttackRelease(note, duration, time, hv(velocity));
+  const t = time ?? Tone.now();
+  sampler.triggerAttackRelease(note, duration, t, hv(velocity));
 }
 
-/** Play a chord — array of MIDI numbers */
 export function playChordMidi(midiArray, { duration = '2n', velocity = 0.75, arpeggiate = false } = {}) {
   if (!sampler) return;
   const now = Tone.now();
@@ -209,24 +236,22 @@ export function playChordMidi(midiArray, { duration = '2n', velocity = 0.75, arp
   });
 }
 
-/** Play an interval */
 export async function playInterval(rootMidi, semitones, { mode = 'melodic-asc' } = {}) {
   if (!sampler) return;
   const top = rootMidi + semitones;
   if (mode === 'harmonic') {
-    playChordMidi([rootMidi, top], { duration: '2n', velocity: 0.75, arpeggiate: false });
+    playChordMidi([rootMidi, top], { duration: '2n', velocity: 0.75 });
   } else if (mode === 'melodic-desc') {
-    playNote(top,     { duration: '4n', velocity: 0.75 });
+    playNote(top,      { duration: '4n', velocity: 0.75 });
     await delay(650);
-    playNote(rootMidi,{ duration: '4n', velocity: 0.75 });
+    playNote(rootMidi, { duration: '4n', velocity: 0.75 });
   } else {
-    playNote(rootMidi,{ duration: '4n', velocity: 0.75 });
+    playNote(rootMidi, { duration: '4n', velocity: 0.75 });
     await delay(650);
-    playNote(top,     { duration: '4n', velocity: 0.75 });
+    playNote(top,      { duration: '4n', velocity: 0.75 });
   }
 }
 
-/** Play a chord progression */
 export async function playProgression(chords, { bpm = 72, velocity = 0.75 } = {}) {
   if (!sampler) return;
   const secPerBeat = 60 / bpm;
@@ -236,125 +261,173 @@ export async function playProgression(chords, { bpm = 72, velocity = 0.75 } = {}
   }
 }
 
-/** Cadence: I–IV–V–I in given root (MIDI) at low velocity */
 export async function playCadence(rootMidi, velocity = 0.5) {
   if (!sampler) return;
-  const I   = [rootMidi, rootMidi+4, rootMidi+7];
-  const IV  = [rootMidi+5, rootMidi+9, rootMidi+12];
-  const V   = [rootMidi+7, rootMidi+11, rootMidi+14];
+  const I  = [rootMidi,   rootMidi+4,  rootMidi+7];
+  const IV = [rootMidi+5, rootMidi+9,  rootMidi+12];
+  const V  = [rootMidi+7, rootMidi+11, rootMidi+14];
   await playProgression([I, IV, V, I], { bpm: 80, velocity });
 }
 
-/** Drone on a MIDI note */
-let droneInterval = null;
-export function playDrone(midi, { gain = 0.25 } = {}) {
+// ─── Gospel voicings ──────────────────────────────────────────────────────────
+/**
+ * True gospel shell+UST voicing.
+ * LH: [root(oct2), 3rd(oct3), 7th(oct3)] — shell voicing
+ * RH: upper structure triad [9th(oct4), 11th(oct4), 13th(oct5)] when available
+ */
+export function buildGospelVoicing(rootMidi, chordIntervals) {
+  // Anchor root in octave 3 range (MIDI ~48-60)
+  let root = rootMidi;
+  // Normalize root to octave 3 area
+  while (root > 60) root -= 12;
+  while (root < 48) root += 12;
+
+  // LH shell: root (one octave below), third, seventh
+  const hasThird   = chordIntervals.includes(4) || chordIntervals.includes(3);
+  const hasSeventh = chordIntervals.includes(10) || chordIntervals.includes(11);
+
+  const lhRoot  = root - 12; // octave below
+  const lhThird = hasThird   ? root + (chordIntervals.includes(4) ? 4 : 3) : null;
+  const lhSev   = hasSeventh ? root + (chordIntervals.includes(11) ? 11 : 10) : null;
+
+  const lh = [lhRoot, lhThird, lhSev].filter(n => n !== null);
+
+  // RH upper structure: 9th, 11th/4th, 13th/6th in octave above root
+  const rhBase = root + 12;
+  const rh = [];
+  if (chordIntervals.includes(14)) rh.push(rhBase + 2);   // 9th
+  else rh.push(rhBase + 2);                               // add 9 anyway for colour
+
+  if (chordIntervals.includes(17) || chordIntervals.includes(5)) rh.push(rhBase + 5); // 11th
+  if (chordIntervals.includes(21) || chordIntervals.includes(9)) rh.push(rhBase + 9); // 13th
+  else if (chordIntervals.includes(7)) rh.push(rhBase + 7); // 5th as fallback
+
+  return [...lh, ...rh];
+}
+
+// ─── Drone — truly continuous via oscillator (no pulsing) ─────────────────────
+export function playDrone(midi, { gain = 0.18 } = {}) {
   stopDrone();
-  const note = midiToNoteName(midi);
-  sampler.triggerAttack(note, Tone.now(), gain);
-  // retrigger every 4s to sustain
-  droneInterval = setInterval(() => {
-    if (sampler) sampler.triggerAttack(note, Tone.now(), gain * 0.6);
-  }, 4000);
+  if (!limiter) return;
+
+  const freq = Tone.Frequency(midiToNoteName(midi)).toFrequency();
+
+  droneFilter = new Tone.Filter(800, 'lowpass');
+  droneGain   = new Tone.Gain(gain);
+
+  // Fundamental + soft octave above for warmth
+  droneOsc = new Tone.OmniOscillator({ type: 'sine', frequency: freq }).start();
+  const osc2 = new Tone.OmniOscillator({ type: 'sine', frequency: freq * 2 }).start();
+  const g2   = new Tone.Gain(0.3);
+
+  osc2.connect(g2);
+  g2.connect(droneFilter);
+  droneOsc.connect(droneFilter);
+  droneFilter.connect(droneGain);
+  droneGain.connect(limiter);
+
+  // Store osc2 for cleanup
+  droneOsc._osc2 = osc2;
+  droneOsc._g2   = g2;
 }
 
 export function stopDrone() {
-  if (droneInterval) { clearInterval(droneInterval); droneInterval = null; }
-  if (sampler) sampler.releaseAll();
+  try {
+    if (droneOsc) {
+      droneOsc._osc2?.stop();
+      droneOsc._osc2?.dispose();
+      droneOsc._g2?.dispose();
+      droneOsc.stop();
+      droneOsc.dispose();
+    }
+    droneFilter?.dispose();
+    droneGain?.dispose();
+  } catch {}
+  droneOsc = droneGain = droneFilter = null;
 }
 
 export function stopAll() {
   stopDrone();
-  if (sampler) sampler.releaseAll();
+  try { sampler?.releaseAll(); } catch {}
 }
 
-// ─── Gospel chord vocabulary ──────────────────────────────────────────────────
+// ─── Chord / scale / interval vocabulary ─────────────────────────────────────
 export const CHORD_TYPES = [
-  { name: 'Major',          intervals: [0,4,7] },
-  { name: 'Minor',          intervals: [0,3,7] },
-  { name: 'Diminished',     intervals: [0,3,6] },
-  { name: 'Augmented',      intervals: [0,4,8] },
-  { name: 'Dominant7',      intervals: [0,4,7,10] },
-  { name: 'Major7',         intervals: [0,4,7,11] },
-  { name: 'Minor7',         intervals: [0,3,7,10] },
-  { name: 'HalfDiminished7',intervals: [0,3,6,10] },
-  { name: 'Diminished7',    intervals: [0,3,6,9] },
-  // Extended gospel vocabulary
-  { name: 'maj9',           intervals: [0,4,7,11,14] },
-  { name: 'maj13',          intervals: [0,4,7,11,14,21] },
-  { name: 'min9',           intervals: [0,3,7,10,14] },
-  { name: 'min11',          intervals: [0,3,7,10,14,17] },
-  { name: 'dom7b9',         intervals: [0,4,7,10,13] },
-  { name: 'dom7#9',         intervals: [0,4,7,10,15] },
-  { name: 'dom7#11',        intervals: [0,4,7,10,18] },
-  { name: 'dom7alt',        intervals: [0,4,7,10,13,15] },
-  { name: 'dom13',          intervals: [0,4,7,10,14,21] },
-  { name: 'sus2',           intervals: [0,2,7] },
-  { name: 'sus4',           intervals: [0,5,7] },
-  { name: '7sus4',          intervals: [0,5,7,10] },
-  { name: 'm7b5',           intervals: [0,3,6,10] },
-  { name: 'dim7',           intervals: [0,3,6,9] },
-  { name: 'add9',           intervals: [0,4,7,14] },
-  { name: '6',              intervals: [0,4,7,9] },
-  { name: 'm6',             intervals: [0,3,7,9] },
+  { name: 'Major',           intervals: [0,4,7] },
+  { name: 'Minor',           intervals: [0,3,7] },
+  { name: 'Diminished',      intervals: [0,3,6] },
+  { name: 'Augmented',       intervals: [0,4,8] },
+  { name: 'Dominant7',       intervals: [0,4,7,10] },
+  { name: 'Major7',          intervals: [0,4,7,11] },
+  { name: 'Minor7',          intervals: [0,3,7,10] },
+  { name: 'HalfDiminished7', intervals: [0,3,6,10] },
+  { name: 'Diminished7',     intervals: [0,3,6,9] },
+  { name: 'maj9',            intervals: [0,4,7,11,14] },
+  { name: 'maj13',           intervals: [0,4,7,11,14,21] },
+  { name: 'min9',            intervals: [0,3,7,10,14] },
+  { name: 'min11',           intervals: [0,3,7,10,14,17] },
+  { name: 'dom7b9',          intervals: [0,4,7,10,13] },
+  { name: 'dom7#9',          intervals: [0,4,7,10,15] },
+  { name: 'dom7#11',         intervals: [0,4,7,10,18] },
+  // dom7alt: root, M3, b7, b9, #9 — NO perfect 5th
+  { name: 'dom7alt',         intervals: [0,4,10,13,15] },
+  { name: 'dom13',           intervals: [0,4,7,10,14,21] },
+  { name: 'sus2',            intervals: [0,2,7] },
+  { name: 'sus4',            intervals: [0,5,7] },
+  { name: '7sus4',           intervals: [0,5,7,10] },
+  { name: 'm7b5',            intervals: [0,3,6,10] },
+  { name: 'dim7',            intervals: [0,3,6,9] },
+  { name: 'add9',            intervals: [0,4,7,14] },
+  { name: '6',               intervals: [0,4,7,9] },
+  { name: 'm6',              intervals: [0,3,7,9] },
 ];
 
-// ─── Gospel progression patterns ──────────────────────────────────────────────
 export const GOSPEL_PROGRESSIONS = [
   { name: '2-5-1',            degrees: [2,5,1] },
   { name: '1-6-2-5',          degrees: [1,6,2,5] },
   { name: '3-6-2-5',          degrees: [3,6,2,5] },
-  { name: 'Backdoor 2-5',     degrees: [7,1],  custom: true,  desc: 'bVII7→I' },
-  { name: 'Tritone Sub 2-5',  degrees: [6,5,1],custom: true,  desc: 'bII7→I' },
+  { name: 'Backdoor 2-5',     degrees: [7,1],   desc: 'bVII7→I' },
+  { name: 'Tritone Sub 2-5',  degrees: [6,5,1], desc: 'bII7→I' },
   { name: '1-4-1-5',          degrees: [1,4,1,5] },
   { name: '6-2-5-1',          degrees: [6,2,5,1] },
-  { name: 'Chromatic Walk-up',degrees: [1,2,3,4], custom: true, desc: 'I-#Idim-IIm-IV' },
+  { name: 'Chromatic Walk-up',degrees: [1,2,3,4], desc: 'I-#Idim-IIm-IV' },
 ];
 
-// Build gospel voicing for a degree in a key (shell voicing: root+3+7)
-export function buildGospelVoicing(rootMidi, chordIntervals) {
-  return chordIntervals.map(s => rootMidi + s);
-}
-
-// ─── Interval data ────────────────────────────────────────────────────────────
 export const INTERVALS = [
-  { name: 'Unison',    semitones: 0  },
-  { name: 'Minor 2nd', semitones: 1  },
-  { name: 'Major 2nd', semitones: 2  },
-  { name: 'Minor 3rd', semitones: 3  },
-  { name: 'Major 3rd', semitones: 4  },
-  { name: 'Perfect 4th',semitones: 5 },
-  { name: 'Tritone',   semitones: 6  },
-  { name: 'Perfect 5th',semitones: 7 },
-  { name: 'Minor 6th', semitones: 8  },
-  { name: 'Major 6th', semitones: 9  },
-  { name: 'Minor 7th', semitones: 10 },
-  { name: 'Major 7th', semitones: 11 },
-  { name: 'Octave',    semitones: 12 },
+  { name: 'Unison',     semitones: 0  },
+  { name: 'Minor 2nd',  semitones: 1  },
+  { name: 'Major 2nd',  semitones: 2  },
+  { name: 'Minor 3rd',  semitones: 3  },
+  { name: 'Major 3rd',  semitones: 4  },
+  { name: 'Perfect 4th',semitones: 5  },
+  { name: 'Tritone',    semitones: 6  },
+  { name: 'Perfect 5th',semitones: 7  },
+  { name: 'Minor 6th',  semitones: 8  },
+  { name: 'Major 6th',  semitones: 9  },
+  { name: 'Minor 7th',  semitones: 10 },
+  { name: 'Major 7th',  semitones: 11 },
+  { name: 'Octave',     semitones: 12 },
 ];
 
 export const SCALES = [
-  { name: 'Major',           intervals: [0,2,4,5,7,9,11,12] },
-  { name: 'Natural Minor',   intervals: [0,2,3,5,7,8,10,12] },
-  { name: 'Harmonic Minor',  intervals: [0,2,3,5,7,8,11,12] },
-  { name: 'Melodic Minor',   intervals: [0,2,3,5,7,9,11,12] },
-  { name: 'Dorian',          intervals: [0,2,3,5,7,9,10,12] },
-  { name: 'Mixolydian',      intervals: [0,2,4,5,7,9,10,12] },
-  { name: 'Pentatonic Major',intervals: [0,2,4,7,9,12] },
-  { name: 'Pentatonic Minor',intervals: [0,3,5,7,10,12] },
+  { name: 'Major',            intervals: [0,2,4,5,7,9,11,12] },
+  { name: 'Natural Minor',    intervals: [0,2,3,5,7,8,10,12] },
+  { name: 'Harmonic Minor',   intervals: [0,2,3,5,7,8,11,12] },
+  { name: 'Melodic Minor',    intervals: [0,2,3,5,7,9,11,12] },
+  { name: 'Dorian',           intervals: [0,2,3,5,7,9,10,12] },
+  { name: 'Mixolydian',       intervals: [0,2,4,5,7,9,10,12] },
+  { name: 'Pentatonic Major', intervals: [0,2,4,7,9,12] },
+  { name: 'Pentatonic Minor', intervals: [0,3,5,7,10,12] },
 ];
 
-// ─── SM-2 lite spaced repetition ─────────────────────────────────────────────
-/**
- * Returns a weight (0–1) for an item based on recent accuracy.
- * Lower accuracy → higher weight → more likely to be selected.
- */
+// ─── SM-2 adaptive weights ────────────────────────────────────────────────────
 export function sm2Weight(accuracyHistory = []) {
   if (accuracyHistory.length === 0) return 1;
   const recent = accuracyHistory.slice(-10);
   const avg = recent.reduce((a,b) => a+b, 0) / recent.length;
-  if (avg >= 90) return 0.1; // mastered
+  if (avg >= 90) return 0.1;
   if (avg >= 70) return 0.5;
-  return 1.0;               // weak
+  return 1.0;
 }
 
 export function weightedPick(items, weightFn) {
@@ -368,7 +441,4 @@ export function weightedPick(items, weightFn) {
   return items[items.length - 1];
 }
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-export { delay };
+export function delay(ms) { return new Promise(r => setTimeout(r, ms)); }

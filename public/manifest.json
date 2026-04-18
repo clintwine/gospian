@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192x192/0A1A2F/3E82FC?text=G",
+      "src": "https://media.base44.com/images/public/6926dbfcce0bf7620606c26c/e008f09be_generated_image.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "https://via.placeholder.com/512x512/0A1A2F/3E82FC?text=G",
+      "src": "https://media.base44.com/images/public/6926dbfcce0bf7620606c26c/e008f09be_generated_image.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"

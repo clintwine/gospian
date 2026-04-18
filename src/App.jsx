@@ -2,9 +2,6 @@ import './App.css'
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { AudioProvider } from '@/lib/audio/AudioProvider'
-import GospelProgressions from './pages/GospelProgressions'
-import WeaknessDashboard from './pages/WeaknessDashboard'
-import DroneMode from './pages/DroneMode'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
@@ -60,22 +57,6 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
-      {/* New audio-upgrade pages */}
-      <Route path="/GospelProgressions" element={
-        <LayoutWrapper currentPageName="GospelProgressions">
-          <GospelProgressions />
-        </LayoutWrapper>
-      } />
-      <Route path="/WeaknessDashboard" element={
-        <LayoutWrapper currentPageName="WeaknessDashboard">
-          <WeaknessDashboard />
-        </LayoutWrapper>
-      } />
-      <Route path="/DroneMode" element={
-        <LayoutWrapper currentPageName="DroneMode">
-          <DroneMode />
-        </LayoutWrapper>
-      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
