@@ -124,6 +124,7 @@ let compressor = null;
 let reverb     = null;
 let limiter    = null;
 let sampler    = null;
+let synth      = null;
 let chorus     = null;
 let organDist  = null;
 
