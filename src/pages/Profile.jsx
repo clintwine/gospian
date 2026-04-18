@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAudio } from '@/lib/audio/AudioProvider';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +41,7 @@ export default function Profile() {
   const [showEditor, setShowEditor] = useState(false);
   const queryClient = useQueryClient();
   const [theme, setTheme] = useState('light');
+  const { switchInstrument } = useAudio();
   
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -111,6 +113,8 @@ export default function Profile() {
         data: { audio_type: value },
       });
     }
+    // Switch Tone.js sampler live — no reload
+    switchInstrument(value);
   };
 
   const handleLogout = () => {
@@ -308,10 +312,10 @@ export default function Profile() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="piano">Piano</SelectItem>
-                <SelectItem value="guitar">Guitar</SelectItem>
-                <SelectItem value="synth">Synth</SelectItem>
-                <SelectItem value="sine">Pure Tone</SelectItem>
+                <SelectItem value="piano">Grand Piano</SelectItem>
+                <SelectItem value="rhodes">Rhodes Electric</SelectItem>
+                <SelectItem value="organ">Hammond Organ</SelectItem>
+                <SelectItem value="upright">Upright Piano</SelectItem>
               </SelectContent>
             </Select>
           </div>

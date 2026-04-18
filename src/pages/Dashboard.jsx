@@ -429,6 +429,21 @@ export default function Dashboard() {
                     View Leaderboard
                   </Button>
                 </Link>
+                <Link to="/WeaknessDashboard">
+                  <Button variant="outline" className="w-full text-xs border-[#E76F51] text-[#E76F51]">
+                    📊 My Weaknesses
+                  </Button>
+                </Link>
+                <Link to="/GospelProgressions">
+                  <Button variant="outline" className="w-full text-xs border-[#E9C46A] text-[#E9C46A]">
+                    🎹 Gospel Progressions
+                  </Button>
+                </Link>
+                <Link to="/DroneMode">
+                  <Button variant="outline" className="w-full text-xs border-[#2A9D8F] text-[#2A9D8F]">
+                    🎵 Drone Mode
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

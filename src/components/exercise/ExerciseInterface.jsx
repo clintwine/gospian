@@ -15,18 +15,30 @@ import {
 } from '../audio/AudioEngine';
 import PianoKeyboard from '../audio/PianoKeyboard';
 import { getRandomExercise } from '@/components/data/exerciseData';
+import { useItemMastery } from '@/lib/audio/useItemMastery';
+import { playCadence, midiToNoteName, ALL_KEYS_MIDI, FLAT_KEYS_MIDI } from '@/lib/audio/audioEngine';
+
+// Pick a random root from all 12 keys
+function pickRootMidi(keyFilter = 'all') {
+  const pool = keyFilter === 'flat' ? FLAT_KEYS_MIDI : ALL_KEYS_MIDI;
+  const midi = pool[Math.floor(Math.random() * pool.length)];
+  return midiToNoteName(midi); // e.g. "C4", "F#3"
+}
 
 export default function ExerciseInterface({ 
   exerciseType = 'intervals',
   difficulty = 'beginner',
-  audioType = 'sine',
+  audioType = 'piano',
   onComplete,
   onXPEarned,
   questionsCount = 10,
   isPracticeMode = false,
   questionSupplier = null,
-  onChordAttempt = null
+  onChordAttempt = null,
+  playInContext = false,
+  keyFilter = 'all',
 }) {
+  const { recordAttempt, getWeight } = useItemMastery();
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questionNumber, setQuestionNumber] = useState(1);
   const [firstLoad, setFirstLoad] = useState(true);
@@ -53,7 +65,9 @@ export default function ExerciseInterface({
     const exercise = getRandomExercise(exerciseType, difficulty);
     if (!exercise) return null;
     
-    // Transform exercise data to match expected format
+    // Use all 12 keys — override fixed baseNote with random key
+    const baseNote = pickRootMidi(keyFilter);
+    
     return {
       ...exercise,
       correctAnswer: { name: exercise.answer },
@@ -62,13 +76,28 @@ export default function ExerciseInterface({
       chordType: exercise.chordType,
       scaleType: exercise.scaleType,
       playMode: exercise.playMode || 'melodic',
-      baseNote: exercise.baseNote,
+      baseNote,
     };
-  }, [exerciseType, difficulty, isPracticeMode, questionSupplier]);
+  }, [exerciseType, difficulty, isPracticeMode, questionSupplier, keyFilter]);
 
   useEffect(() => {
     setCurrentQuestion(generateQuestion());
   }, [generateQuestion]);
+
+  // Keyboard shortcuts: Space=replay, 1-9=answer, Enter=next
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.code === 'Space') { e.preventDefault(); handlePlaySound(); }
+      if (e.code === 'Enter' && showFeedback) { handleNext(); }
+      const num = parseInt(e.key);
+      if (!isNaN(num) && num >= 1 && currentQuestion?.options) {
+        const opt = currentQuestion.options[num - 1];
+        if (opt && !showFeedback && hasPlayed) handleAnswer(opt);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [showFeedback, hasPlayed, currentQuestion]);
 
   // Auto-play on first question load
   useEffect(() => {
@@ -87,6 +116,14 @@ export default function ExerciseInterface({
     initAudioContext();
     setIsPlaying(true);
     setHasPlayed(true);
+
+    // Play I–IV–V–I cadence as context if enabled
+    if (playInContext && currentBaseNote) {
+      const { noteNameToMidi } = await import('@/lib/audio/audioEngine');
+      const rootMidi = noteNameToMidi(currentBaseNote || currentQuestion.baseNote);
+      await playCadence(rootMidi - 12, 0.45);
+      await new Promise(r => setTimeout(r, 200));
+    }
 
     // Use the baseNote from the exercise data, or fall back to stored/random
     const noteToUse = currentBaseNote || currentQuestion.baseNote;
@@ -265,6 +302,11 @@ export default function ExerciseInterface({
     if (exerciseType === 'chords' && onChordAttempt && currentQuestion.chordType) {
       onChordAttempt(currentQuestion.chordType, correct);
     }
+
+    // SM-2 record
+    const itemId = currentQuestion.chordType || currentQuestion.scaleType || 
+                   (currentQuestion.semitones !== undefined ? `${currentQuestion.semitones}st` : 'unknown');
+    recordAttempt(exerciseType, itemId, correct);
 
     if (correct) {
       if (!isPracticeMode) {

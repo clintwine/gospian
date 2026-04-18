@@ -1,77 +1,85 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, Music } from 'lucide-react';
+import * as Tone from 'tone';
+
+/**
+ * Metronome using Tone.js MembraneSynth.
+ * Woodblock click for regular beats, accented cowbell-style for downbeat.
+ * NO createOscillator. NO new AudioContext.
+ */
+function makeClickSynth(isDownbeat) {
+  return new Tone.MembraneSynth({
+    pitchDecay:  isDownbeat ? 0.015 : 0.008,
+    octaves:     isDownbeat ? 5 : 2.5,
+    envelope: {
+      attack:  0.001,
+      decay:   isDownbeat ? 0.12 : 0.07,
+      sustain: 0,
+      release: 0.1,
+    },
+  }).toDestination();
+}
 
 export default function Metronome() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [bpm, setBpm] = useState(120);
-  const [beat, setBeat] = useState(0);
-  const audioContextRef = useRef(null);
-  const nextNoteTimeRef = useRef(0);
-  const timerIdRef = useRef(null);
+  const [bpm, setBpm]             = useState(120);
+  const [beat, setBeat]           = useState(0);
+  const loopRef    = useRef(null);
+  const beatRef    = useRef(0);
+  const downSynth  = useRef(null);
+  const clickSynth = useRef(null);
 
-  useEffect(() => {
-    audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    return () => {
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
-  }, []);
-
-  const playClick = (time, isDownbeat = false) => {
-    const audioContext = audioContextRef.current;
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-
-    osc.connect(gain);
-    gain.connect(audioContext.destination);
-
-    osc.frequency.value = isDownbeat ? 1000 : 800;
-    gain.gain.value = 0.3;
-
-    osc.start(time);
-    osc.stop(time + 0.05);
-  };
-
-  const scheduleNote = () => {
-    const audioContext = audioContextRef.current;
-    const secondsPerBeat = 60.0 / bpm;
-
-    while (nextNoteTimeRef.current < audioContext.currentTime + 0.1) {
-      playClick(nextNoteTimeRef.current, beat % 4 === 0);
-      nextNoteTimeRef.current += secondsPerBeat;
-      setBeat((prev) => (prev + 1) % 4);
-    }
-
-    timerIdRef.current = setTimeout(scheduleNote, 25);
-  };
-
-  const start = () => {
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
-    }
-    nextNoteTimeRef.current = audioContextRef.current.currentTime;
-    scheduleNote();
-    setIsPlaying(true);
-  };
-
-  const stop = () => {
-    if (timerIdRef.current) {
-      clearTimeout(timerIdRef.current);
-    }
+  const stop = useCallback(() => {
+    if (loopRef.current) { loopRef.current.stop(); loopRef.current.dispose(); loopRef.current = null; }
+    Tone.getTransport().stop();
     setIsPlaying(false);
     setBeat(0);
-  };
+    beatRef.current = 0;
+  }, []);
+
+  const start = useCallback(async () => {
+    await Tone.start();
+
+    // Build synths fresh each start
+    if (downSynth.current)  downSynth.current.dispose();
+    if (clickSynth.current) clickSynth.current.dispose();
+    downSynth.current  = makeClickSynth(true);
+    clickSynth.current = makeClickSynth(false);
+
+    beatRef.current = 0;
+    Tone.getTransport().bpm.value = bpm;
+
+    loopRef.current = new Tone.Sequence(
+      (time, step) => {
+        const isDown = step === 0;
+        const synth  = isDown ? downSynth.current : clickSynth.current;
+        const note   = isDown ? 'G2' : 'C2';
+        const vel    = isDown ? 1.0 : 0.6; // downbeat +6dB equiv
+        synth.triggerAttackRelease(note, '32n', time, vel);
+        // Schedule UI update
+        Tone.getDraw().schedule(() => {
+          setBeat(step);
+        }, time);
+      },
+      [0, 1, 2, 3],
+      '4n'
+    );
+
+    loopRef.current.start(0);
+    Tone.getTransport().start();
+    setIsPlaying(true);
+  }, [bpm]);
 
   const togglePlay = () => {
-    if (isPlaying) {
-      stop();
-    } else {
-      start();
-    }
+    if (isPlaying) { stop(); } else { start(); }
+  };
+
+  const handleBpmChange = (val) => {
+    setBpm(val[0]);
+    if (isPlaying) Tone.getTransport().bpm.value = val[0];
   };
 
   return (
@@ -90,20 +98,21 @@ export default function Metronome() {
 
         <Slider
           value={[bpm]}
-          onValueChange={(val) => setBpm(val[0])}
+          onValueChange={handleBpmChange}
           min={40}
           max={220}
           step={1}
-          disabled={isPlaying}
         />
 
         <div className="flex justify-center gap-2">
-          {[0, 1, 2, 3].map((i) => (
+          {[0, 1, 2, 3].map(i => (
             <div
               key={i}
               className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                isPlaying && beat % 4 === i
-                  ? 'bg-[#3E82FC] scale-110'
+                isPlaying && beat === i
+                  ? i === 0
+                    ? 'bg-[#E9C46A] scale-125'
+                    : 'bg-[#3E82FC] scale-110'
                   : 'bg-muted'
               }`}
             >
@@ -114,15 +123,9 @@ export default function Metronome() {
 
         <Button onClick={togglePlay} className="w-full" size="lg">
           {isPlaying ? (
-            <>
-              <Pause className="w-5 h-5 mr-2" />
-              Stop
-            </>
+            <><Pause className="w-5 h-5 mr-2" />Stop</>
           ) : (
-            <>
-              <Play className="w-5 h-5 mr-2" />
-              Start
-            </>
+            <><Play className="w-5 h-5 mr-2" />Start</>
           )}
         </Button>
       </CardContent>

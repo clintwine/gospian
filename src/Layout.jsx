@@ -26,6 +26,7 @@ import XPBar from '@/components/ui/XPBar';
 import StreakBadge from '@/components/ui/StreakBadge';
 import SuggestionButton from '@/components/feedback/SuggestionButton';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import MidiDeviceIndicator from '@/components/audio/MidiDeviceIndicator';
 
 export default function Layout({ children, currentPageName }) {
   const [theme, setTheme] = useState('light');
@@ -78,6 +79,9 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Classrooms', icon: BookOpen, path: 'ClassroomMarketplace' },
     { name: 'Friends', icon: Users, path: 'Friends' },
     { name: 'Profile', icon: User, path: 'Profile' },
+    { name: 'Gospel', icon: Music2, path: 'GospelProgressions' },
+    { name: 'Weaknesses', icon: Trophy, path: 'WeaknessDashboard' },
+    { name: 'Drone', icon: Music2, path: 'DroneMode' },
   ];
 
   const teacherItems = user?.role === 'admin' ? [
@@ -209,10 +213,11 @@ export default function Layout({ children, currentPageName }) {
           </Link>
 
           <div className="flex items-center gap-2">
-              {userStats && (
-                <StreakBadge streak={userStats.streak || 0} freezeTokens={userStats.freeze_tokens || 0} />
-              )}
-              {user && <NotificationBell userEmail={user.email} />}
+            {userStats && (
+              <StreakBadge streak={userStats.streak || 0} freezeTokens={userStats.freeze_tokens || 0} />
+            )}
+            {user && <NotificationBell userEmail={user.email} />}
+            <MidiDeviceIndicator />
               <Button
                 variant="ghost"
                 size="icon"
