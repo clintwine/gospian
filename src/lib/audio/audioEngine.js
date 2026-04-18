@@ -277,7 +277,7 @@ export function playChordMidi(midiArray, { duration = '2n', velocity = 0.75, arp
 }
 
 export async function playInterval(rootMidi, semitones, { mode = 'melodic-asc' } = {}) {
-  if (!sampler && !synth) return;
+  if (!sampler) return;
   const top = rootMidi + semitones;
   if (mode === 'harmonic') {
     playChordMidi([rootMidi, top], { duration: '2n', velocity: 0.75 });
@@ -293,7 +293,7 @@ export async function playInterval(rootMidi, semitones, { mode = 'melodic-asc' }
 }
 
 export async function playProgression(chords, { bpm = 72, velocity = 0.75 } = {}) {
-  if (!sampler && !synth) return;
+  if (!sampler) return;
   const secPerBeat = 60 / bpm;
   for (const chord of chords) {
     playChordMidi(chord, { duration: '2n', velocity, arpeggiate: true });
@@ -302,7 +302,7 @@ export async function playProgression(chords, { bpm = 72, velocity = 0.75 } = {}
 }
 
 export async function playCadence(rootMidi, velocity = 0.5) {
-  if (!sampler && !synth) return;
+  if (!sampler) return;
   const I  = [rootMidi,   rootMidi+4,  rootMidi+7];
   const IV = [rootMidi+5, rootMidi+9,  rootMidi+12];
   const V  = [rootMidi+7, rootMidi+11, rootMidi+14];
