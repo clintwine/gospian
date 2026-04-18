@@ -6,34 +6,34 @@
 import * as Tone from 'tone';
 
 // ─── Sample sources ───────────────────────────────────────────────────────────
-// We use the gleitz midi-js-soundfonts CDN (CORS-friendly, reliable)
-const SF_CDN = 'https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/';
+// Using alternative soundfont CDN (gleitz CDN is down, using backup)
+const SF_CDN = 'https://cdn.jsdelivr.net/npm/@ledfx/soundfonts@1.0.0/samples/';
 
 // Notes we load for each instrument (sparse set — Tone.Sampler interpolates between them)
 const PIANO_NOTES = {
-  'A0': `${SF_CDN}acoustic_grand_piano-mp3/A0.mp3`,
-  'C2': `${SF_CDN}acoustic_grand_piano-mp3/C2.mp3`,
-  'Ds2': `${SF_CDN}acoustic_grand_piano-mp3/Ds2.mp3`,
-  'Fs2': `${SF_CDN}acoustic_grand_piano-mp3/Fs2.mp3`,
-  'A2': `${SF_CDN}acoustic_grand_piano-mp3/A2.mp3`,
-  'C3': `${SF_CDN}acoustic_grand_piano-mp3/C3.mp3`,
-  'Ds3': `${SF_CDN}acoustic_grand_piano-mp3/Ds3.mp3`,
-  'Fs3': `${SF_CDN}acoustic_grand_piano-mp3/Fs3.mp3`,
-  'A3': `${SF_CDN}acoustic_grand_piano-mp3/A3.mp3`,
-  'C4': `${SF_CDN}acoustic_grand_piano-mp3/C4.mp3`,
-  'Ds4': `${SF_CDN}acoustic_grand_piano-mp3/Ds4.mp3`,
-  'Fs4': `${SF_CDN}acoustic_grand_piano-mp3/Fs4.mp3`,
-  'A4': `${SF_CDN}acoustic_grand_piano-mp3/A4.mp3`,
-  'C5': `${SF_CDN}acoustic_grand_piano-mp3/C5.mp3`,
-  'Ds5': `${SF_CDN}acoustic_grand_piano-mp3/Ds5.mp3`,
-  'Fs5': `${SF_CDN}acoustic_grand_piano-mp3/Fs5.mp3`,
-  'A5': `${SF_CDN}acoustic_grand_piano-mp3/A5.mp3`,
-  'C6': `${SF_CDN}acoustic_grand_piano-mp3/C6.mp3`,
-  'Ds6': `${SF_CDN}acoustic_grand_piano-mp3/Ds6.mp3`,
-  'Fs6': `${SF_CDN}acoustic_grand_piano-mp3/Fs6.mp3`,
-  'A6': `${SF_CDN}acoustic_grand_piano-mp3/A6.mp3`,
-  'C7': `${SF_CDN}acoustic_grand_piano-mp3/C7.mp3`,
-  'C8': `${SF_CDN}acoustic_grand_piano-mp3/C8.mp3`,
+  'A0': `${SF_CDN}piano/A0.mp3`,
+  'C2': `${SF_CDN}piano/C2.mp3`,
+  'Ds2': `${SF_CDN}piano/Ds2.mp3`,
+  'Fs2': `${SF_CDN}piano/Fs2.mp3`,
+  'A2': `${SF_CDN}piano/A2.mp3`,
+  'C3': `${SF_CDN}piano/C3.mp3`,
+  'Ds3': `${SF_CDN}piano/Ds3.mp3`,
+  'Fs3': `${SF_CDN}piano/Fs3.mp3`,
+  'A3': `${SF_CDN}piano/A3.mp3`,
+  'C4': `${SF_CDN}piano/C4.mp3`,
+  'Ds4': `${SF_CDN}piano/Ds4.mp3`,
+  'Fs4': `${SF_CDN}piano/Fs4.mp3`,
+  'A4': `${SF_CDN}piano/A4.mp3`,
+  'C5': `${SF_CDN}piano/C5.mp3`,
+  'Ds5': `${SF_CDN}piano/Ds5.mp3`,
+  'Fs5': `${SF_CDN}piano/Fs5.mp3`,
+  'A5': `${SF_CDN}piano/A5.mp3`,
+  'C6': `${SF_CDN}piano/C6.mp3`,
+  'Ds6': `${SF_CDN}piano/Ds6.mp3`,
+  'Fs6': `${SF_CDN}piano/Fs6.mp3`,
+  'A6': `${SF_CDN}piano/A6.mp3`,
+  'C7': `${SF_CDN}piano/C7.mp3`,
+  'C8': `${SF_CDN}piano/C8.mp3`,
 };
 
 const RHODES_NOTES = {
