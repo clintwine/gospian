@@ -9,7 +9,7 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Volume2, VolumeX, Music } from 'lucide-react';
-import { playDrone, stopDrone, midiToNoteName, ALL_ROOTS_MIDI } from '@/lib/audio/audioEngine';
+import { playDrone, stopDrone, midiToNoteName } from '@/lib/audio/audioEngine';
 import { useAudio } from '@/lib/audio/AudioProvider';
 
 const KEY_NAMES = ['C','C#','Db','D','D#','Eb','E','F','F#','Gb','G','G#','Ab','A','A#','Bb','B'];
