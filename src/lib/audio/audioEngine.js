@@ -168,10 +168,13 @@ async function buildSampler(instrumentKey) {
       urls:    toneUrls,
       release: def.release,
       curve:   def.curve,
-      onload:  () => resolve(s),
+      onload:  () => {
+        // Ensure buffers are truly loaded
+        setTimeout(() => resolve(s), 100);
+      },
       onerror: (e) => {
         console.warn('Sampler load error (some samples may be missing):', e);
-        resolve(s); // resolve anyway — Tone interpolates from what loaded
+        setTimeout(() => resolve(s), 100); // resolve anyway — Tone interpolates from what loaded
       },
     });
 
@@ -221,19 +224,27 @@ function hv(base = 0.75) {
 }
 
 export function playNote(midi, { duration = '2n', velocity = 0.75, time } = {}) {
-  if (!sampler) return;
-  const note = midiToNoteName(Math.max(21, Math.min(108, midi)));
-  const t = time ?? Tone.now();
-  sampler.triggerAttackRelease(note, duration, t, hv(velocity));
+  if (!sampler || !isInitialized) return;
+  try {
+    const note = midiToNoteName(Math.max(21, Math.min(108, midi)));
+    const t = time ?? Tone.now();
+    sampler.triggerAttackRelease(note, duration, t, hv(velocity));
+  } catch (e) {
+    console.warn('Playback error:', e.message);
+  }
 }
 
 export function playChordMidi(midiArray, { duration = '2n', velocity = 0.75, arpeggiate = false } = {}) {
-  if (!sampler) return;
-  const now = Tone.now();
-  midiArray.forEach((midi, i) => {
-    const t = arpeggiate ? now + i * (0.002 + Math.random() * 0.006) : now;
-    playNote(midi, { duration, velocity, time: t });
-  });
+  if (!sampler || !isInitialized) return;
+  try {
+    const now = Tone.now();
+    midiArray.forEach((midi, i) => {
+      const t = arpeggiate ? now + i * (0.002 + Math.random() * 0.006) : now;
+      playNote(midi, { duration, velocity, time: t });
+    });
+  } catch (e) {
+    console.warn('Chord playback error:', e.message);
+  }
 }
 
 export async function playInterval(rootMidi, semitones, { mode = 'melodic-asc' } = {}) {
