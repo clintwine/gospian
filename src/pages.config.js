@@ -82,8 +82,8 @@ import WeeklyChallenge from './pages/WeeklyChallenge';
 import GospelProgressions from './pages/GospelProgressions';
 import DroneMode from './pages/DroneMode';
 import WeaknessDashboard from './pages/WeaknessDashboard';
-import PlacementTest from './pages/PlacementTest';
-import SingBack from './pages/SingBack';
+import PlacementTest from './pages/PlacementTest.jsx';
+import SingBack from './pages/SingBack.jsx';
 import __Layout from './Layout.jsx';
 
 
